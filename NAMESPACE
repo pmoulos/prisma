@@ -1,0 +1,4 @@
+import(httr)
+
+export(getAPIBase)
+export(setAPIBase)

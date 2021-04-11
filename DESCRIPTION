@@ -1,0 +1,32 @@
+Package: prisma
+Type: Package
+Title: Automated Polygenic Risk Score modeling and evaluation
+Authors@R: c(person(given="Panagiotis", family="Moulos",
+    email="moulos@fleming.gr", role=c("aut", "cre")))
+Depends:
+    R (>= 4.1.0)
+Imports:
+    Biobase,
+    BiocGenerics,
+    httr,
+    methods,
+    parallel,
+    S4Vectors,
+    tools,
+    utils
+Suggests:
+    knitr,
+    testthat
+Description: TBD
+License: Artistic-2.0
+Encoding: UTF-8
+LazyData: false
+URL: https://github.com/pmoulos/prisma
+biocViews: Software, WorkflowStep, BiomedicalInformatics
+VignetteBuilder: knitr
+BugReports: https://github.com/pmoulos/prisma/issues
+Version: 0.0.1
+Date: 2021-04-06
+Collate:
+    'utils.R'
+    'zzz.R'
