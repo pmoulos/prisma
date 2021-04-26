@@ -8,10 +8,10 @@ Depends:
 Imports:
     Biobase,
     BiocGenerics,
-    httr,
     methods,
     parallel,
     S4Vectors,
+    snpStats,
     tools,
     utils
 Suggests:
@@ -28,5 +28,7 @@ BugReports: https://github.com/pmoulos/prisma/issues
 Version: 0.0.1
 Date: 2021-04-06
 Collate:
+    'extapicalls.R'
+    'gwasfilters.R'
     'utils.R'
     'zzz.R'

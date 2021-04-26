@@ -333,7 +333,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
 
 # Consider of add hoardr for file caching
 # OR = exp(effect_weight)
-# effect_weight = log(OR)
+# effect_weight (beta) = log(OR)
 enrichScoreFile <- function(scoreFile,gb=c("hg19","hg38","nr"),clean=FALSE) {
     gb <- gb[1]
     
