@@ -1,3 +1,52 @@
+getDefaults <- function(what) {
+    allowed <- c("filters")
+    
+    if (!(what %in% allowed))
+        stop("what must be one of ",paste(allowed,collapse=", "))
+    
+    switch(what,
+        filters = {
+            return(list(
+                snpCallRate=0.98,
+                sampleCallRate=0.95,
+                maf=0.05,
+                hwe=1e-6,
+                heteroStat="median",
+                heteroFac=3,
+                heteroHard=NA,
+                pcaOut=TRUE,
+                LD=0.2,
+                IBD=0.1,
+                inbreed=0.1
+            ))
+        }
+    )
+}
+
+cmclapply <- function(...,rc) {
+    if (suppressWarnings(!requireNamespace("parallel")) 
+        || .Platform$OS.type!="unix")
+        ncores <- 1
+    else
+        ncores <- .coresFrac(rc)
+    if (ncores > 1)
+        return(mclapply(...,mc.cores=ncores,mc.set.seed=FALSE))
+    else
+        return(lapply(...))
+}
+
+.coresFrac <- function(rc=NULL) {
+    if (missing(rc) || is.null(rc))
+        return(1)
+    else {
+        n <- parallel::detectCores()
+        if (n > 1)
+            return(ceiling(rc*ncores))
+        else 
+            return(1)
+    }
+}
+
 .checkEFOFormat <- function(id) {
     nInput <- length(id)
     notPrefixCompliant <- notUnderscoreCompliant <- notSuffixCompliant <- NULL
@@ -121,7 +170,6 @@
         "((?:\\/[\\+~%\\/.\\w\\-_]*)?\\??(?:[-\\+=&;%@.\\w_]*)#?(?:[\\w]*))?)")
     return(is.character(url) && grepl(regx,url,perl=TRUE))
 }
-
 
 .checkNumArgs <- function(argName,argValue,argType,argBounds,direction) {
     # First generic check so not to continue if fail

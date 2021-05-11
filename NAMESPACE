@@ -1,4 +1,2 @@
 import(httr)
-
-export(getAPIBase)
-export(setAPIBase)
+import(snpStats)
