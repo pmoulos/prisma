@@ -1,10 +1,6 @@
 test_that("GWASExperiment from snpStats PLINK works",{
-    fam <- system.file("extdata/sample.fam",package="snpStats")
-    bim <- system.file("extdata/sample.bim",package="snpStats")
-    bed <- system.file("extdata/sample.bed",package="snpStats") 
-    sample <- snpStats::read.plink(bed,bim,fam)
-    
-    input <- list(bed=bed,bim=bim,fam=fam)
+    input <- .gimmeTestFiles()
+    sample <- snpStats::read.plink(input$bed,input$bim,input$fam)
     
     # Without phenotypes
     gwe <- importGWAS(input,backend="snpStats")
@@ -78,32 +74,22 @@ test_that("Basic snpStats filters work",{
     expect_equal(length(which(hetF > filts$inbreed)),64)
 })
 
-test_that("IBD filter works",{
-    fam <- system.file("extdata/sample.fam",package="snpStats")
-    bim <- system.file("extdata/sample.bim",package="snpStats")
-    bed <- system.file("extdata/sample.bed",package="snpStats") 
-    input <- list(bed=bed,bim=bim,fam=fam)
+test_that("IBD filter and SNPRelate PCA calculation work",{
+    input <- .gimmeTestFiles()
     gwe <- importGWAS(input,backend="snpStats")
     
     filts <- getDefaults("filters")
+    # Change this as number of SNPs in test make it really strict
+    filts$IBD <- 0.45
     
     # Test
     gweFilt <- .filterWithSnpStatsIbd(gwe,filts,.testing=TRUE)
-    expect_equal(nrow(gweFilt1),5)
-    expect_equal(ncol(gweFilt1),37)
+    expect_equal(nrow(gweFilt),20)
+    expect_equal(ncol(gweFilt),7)
     
-    x <- t(assay(gweFilt1,1))
-    snpSum <- col.summary(x)
-    sampleSum <- row.summary(x)
-    
-    expect_true(all(snpSum$Call.rate > filts$snpCallRate))
-    expect_true(all(snpSum$MAF > filts$maf))
-    expect_true(all(abs(snpSum$z.HWE) < abs(qnorm(filts$hwe/2))))
-    expect_true(all(sampleSum$Call.rate > filts$sampleCallRate))
-    expect_true(all(sampleSum$Heterozygosity > loc - filts$heteroFac*sca
-        & sampleSum$Heterozygosity < loc + filts$heteroFac*sca))
-    expect_true(all(sampleSum$Call.rate > filts$sampleCallRate))
-    expect_equal(length(which(hetF > filts$inbreed)),64)
+    m <- metadata(gweFilt)
+    expect_true(!is.null(m$pcaOut))
+    expect_true(is(m$pcaOut,"snpgdsPCAClass"))
 })
 
 

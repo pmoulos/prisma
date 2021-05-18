@@ -76,6 +76,34 @@ test_that(".checkNumArgs works",{
     expect_error(.checkNumArgs("test",3L,"integer",3L,"gt"))
 })
 
+test_that("Getting test files works",{
+    input <- .gimmeTestFiles()
+    expect_equal(length(input),3)
+}
+
+test_that(".isEmpty works",{
+    x1 <- NULL
+    expect_true(.isEmpty(x1))
+    
+    x2 <- NA
+    expect_true(.isEmpty(x2))
+    
+    x3 <- ""
+    expect_true(.isEmpty(x3))
+    
+    x4 <- integer(0)
+    expect_true(.isEmpty(x4))
+    
+    x5 <- list()
+    expect_true(.isEmpty(x5))
+    
+    x6 <- 42
+    expect_false(.isEmpty(x6))
+    
+    x7 <- list(a=42)
+    expect_false(.isEmpty(x7))
+}
+
 #~ test_that("Get/Set API base works",{
 #~     # Set API base
 #~     mock <- "https://www.example.com/api"

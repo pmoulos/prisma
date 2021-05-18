@@ -15,6 +15,8 @@ getDefaults <- function(what) {
                 heteroFac=3,
                 heteroHard=NA,
                 pcaOut=TRUE,
+                pcaRobust="grid",
+                nPC=0,
                 LD=0.2,
                 IBD=0.1,
                 inbreed=0.1
@@ -258,12 +260,16 @@ cmclapply <- function(...,rc) {
     return(argList)
 }
 
+.gimmeTestFiles <- function() {
+    fam <- system.file("extdata/sample.fam",package="snpStats")
+    bim <- system.file("extdata/sample.bim",package="snpStats")
+    bed <- system.file("extdata/sample.bed",package="snpStats")
+    return(list(fam=fam,bim=bim,bed=bed))
+}
 
-
-
-
-
-
+.isEmpty <- function(x) {
+    return(is.null(x) || is.na(x) || x == "" || length(x) == 0)
+}
 
 
 #~ getAPIBase <- function() {

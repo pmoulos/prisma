@@ -18,6 +18,31 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
         filters=setNames(data.frame(matrix(ncol=4,nrow=0)),
             c("parameter","name","value","type","filtered"))),...) {
     
+    # It MUST have metadata with certain names in the list
+    if (!is.list(metadata)) {
+        warning("The provided metadata argument is not a list! ",
+            "Reinitializing... ")
+        metadata <- list(genome=NA_character_,backend=NA_character_,
+            filters=setNames(data.frame(matrix(ncol=4,nrow=0)),
+            c("parameter","name","value","type","filtered")))
+    }
+        
+    if (!("genome" %in% names(metadata))) {
+        warning("Required 'genome' member was not found in metadata list and ",
+            "was be added automatically.")
+        metadata$genome <- NA_character_
+    }
+    if (!("backend" %in% names(metadata))) {
+        warning("Required 'backend' member was not found in metadata list and ",
+            "was be added automatically.")
+        m$backend <- NA_character_
+    }
+    if (!("filters" %in% names(metadata))) {
+        warning("Required 'filters' member was not found in metadata list and ",
+            "was be added automatically.")
+        metadata$filters <- .initFilterInfo()
+    }
+    
     se <- SummarizedExperiment(assays=genotypes,rowData=features,
         colData=samples,metadata=metadata)
     return(.GWASExperiment(se,phenotypes=phenotypes))
@@ -259,40 +284,13 @@ setValidity2("GWASExperiment",function(obj) {
     
     # It MUST have metadata with certain names in the list
     m <- metadata(obj)
-    metaIncomplete <- FALSE
-    if (!("genome" %in% names(m))) {
-        warning("Required 'genome' member was not found in metadata list and ",
-            "will be added automatically.")
-        m$genome <- NA_character_
-        metaIncomplete <- TRUE
-    }
-    else {
-        if (!is.character(m$genome))
-            msg < c(msg,"The 'genome' member of metadata must be a character!")
-    }
-    if (!("backend" %in% names(m))) {
-        warning("Required 'backend' member was not found in metadata list and ",
-            "will be added automatically.")
-        m$backend <- NA_character_
-        metaIncomplete <- TRUE
-    }
-    else {
-        if (!is.character(m$backend))
-            msg < c(msg,"The 'backend' member of metadata must be a character!")
-    }
-    if (!("filters" %in% names(m))) {
-        warning("Required 'filters' member was not found in metadata list and ",
-            "will be added automatically.")
-        m$filters <- .initFilterInfo()
-        metaIncomplete <- TRUE
-    }
-    else {
-        if (!.checkFilterInfo(m$filters))
-            msg <- c(msg,paste0("The 'filters' member of metadata is not ",
-                "properly formatted!"))
-    }
-    if (metaIncomplete)
-        metadata(obj) <- m
+    if (!is.character(m$genome))
+        msg < c(msg,"The 'genome' member of metadata must be a character!")
+    if (!is.character(m$backend))
+        msg < c(msg,"The 'backend' member of metadata must be a character!")
+    if (!.checkFilterInfo(m$filters))
+        msg <- c(msg,paste0("The 'filters' member of metadata is not properly ",
+            "formatted!"))
 
     if (length(msg) > 0)
         return(msg)

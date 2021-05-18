@@ -71,11 +71,17 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),verbose=TRUE,
 }
 
 .filterWithSnpStats <- function(obj,filters,verbose=TRUE,rc=NULL) {
-    message("Performing first round of GWAS filtering")
+    message("Performing basic filtering")
     objBas <- .filterWithSnpStatsBasic(obj,filters)
     
+    message("\nPerforming sample IBD filtering and classic PCA")
+    objIbd <- .filterWithSnpStatsIbd(objBas,filters,rc)
+    
+    message("\nPerforming robust PCA filtering for automatic outlier detection")
+    objPca <- .filterWithSnpStatsRobustPca(objIbd,filters)
+    
     if (verbose) {
-        filtDf <- filters(objBas)
+        filtDf <- filters(objIbd)
         if (nrow(filtDf) > 0) {
             message("\nFiltered SNPs:")
             message("  SNP call rate             : ",
@@ -90,11 +96,13 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),verbose=TRUE,
                 filtDf["heteroHard","filtered"])
             message("  Inbreed                   : ",
                 filtDf["inbreed","filtered"])
+            message("  Identity By Descent (IBD) : ",filtDf["IBD","filtered"])
+            message("  Robust PCA                : ",
+                filtDf["pcaOut","filtered"])
         }
     }
     
-    message("\nPerforming second round of GWAS filtering")
-    objAdv <- .filterWithSnpStatsIbd(obj,filters,rc)
+    return(objPca)
 }
 
 .filterWithSnpStatsBasic <- function(obj,filters) {
@@ -173,12 +181,18 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),verbose=TRUE,
     sampleInd <- Reduce("union",list(filteredSampleCallRateInd,
         filteredHeteroInd,filteredInbreedInd))
     
-    return(obj[-snpInd,-sampleInd])
+    if (any(is.na(snpInd)))
+        snpInd <- snpInd[-which(is.na(snpInd))]
+    if (any(is.na(sampleInd)))
+        sampleInd <- sampleInd[-which(is.na(sampleInd))]
     
-    # The aforementioned SNP and sample filters must be executed in a first
-    # round of filters, prior to LD pruning, IBD (for SNPs) and PCA for samples
-    # obj1 <- .filterWithSnpStatsBasic(obj1) # fill also related metadata
-    # obj2 <- .filterWithSnpStatsAdvanced(obj1) # as above
+    out <- obj
+    if (length(snpInd) > 0)
+        out <- out[-snpInd,,drop=FALSE]
+    if (length(sampleInd) > 0)
+        out <- out[,-sampleInd,drop=FALSE]
+    
+    return(out)
 }
 
 .filterWithSnpStatsIbd <- function(obj,filters,rc=NULL,.testing=FALSE) {
@@ -192,59 +206,142 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),verbose=TRUE,
     add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
-    message("  performing LD pruning...")
-    x <- t(assay(obj,1))
-    if (.testing)
-        snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,maf=0.1,
-            autosome.only=FALSE,sample.id=rownames(x),snp.id=colnames(x))
+    if (!is.na(filters$LD)) {
+        message("  performing LD pruning...\n")
+        x <- t(assay(obj,1))
+        if (.testing)
+            snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,maf=0.1,
+                autosome.only=FALSE,sample.id=rownames(x),snp.id=colnames(x))
+        else
+            # Default is start.pos="random" but this requires a seed for reprod
+            snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
+                sample.id=rownames(x),snp.id=colnames(x),start.pos="first")
+                
+        snpsetIbd <- unlist(snpSub,use.names=FALSE)
+        message("  LD pruning finished! ",length(snpsetIbd)," SNPs will be ",
+            "used for IBD analysis.")
+    }
     else
-        snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
-            sample.id=rownames(x),snp.id=colnames(x))
-            
-    snpsetIbd <- unlist(snpSub,use.names=FALSE)
-    message("  LD pruning finished! ",length(snpsetIbd)," SNPs will be used ",
-        "for IBD analysis.")
+        snpsetIbd <- colnames(x)
     
     # IBD analysis
-    message("  performing IBD calculation...")
-    if (.testing)
-        ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
-            snp.id=snpsetIbd,num.thread=.coresFrac(rc),maf=0.1,
-            autosome.only=FALSE)
-    else
-        ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
-            snp.id=snpsetIbd,num.thread=.coresFrac(rc))
-    message("  performing IBD selection...")
-    ibdCoeff <- snpgdsIBDSelection(ibd)
-    
-    # Are there related samples?
-    ibdCoeff <- ibdCoeff[ibdCoeff$kinship>=filters$IBD,,drop=FALSE]
-    # If yes, mark for removal
     ir <- NULL
-    if (nrow(ibdCoeff) > 0) {
-        sr <- unique(c(ibdCoeff$ID1,ibdCoeff$ID2))
-        ir <- match(sr,colnames(obj))
+    sr <- rownames(x)
+    if (!is.na(filters$IBD)) {
+        message("  performing IBD calculation...")
+        if (.testing)
+            ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
+                snp.id=snpsetIbd,num.thread=.coresFrac(rc),maf=0.1,
+                autosome.only=FALSE)
+        else
+            ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
+                snp.id=snpsetIbd,num.thread=.coresFrac(rc))
+        message("  performing IBD selection...")
+        ibdCoeff <- snpgdsIBDSelection(ibd)
+        
+        # Are there related samples?
+        ibdCoeff <- ibdCoeff[ibdCoeff$kinship>=filters$IBD,,drop=FALSE]
+        # If yes, mark for removal
+        if (nrow(ibdCoeff) > 0) {
+            sr <- unique(c(ibdCoeff$ID1,ibdCoeff$ID2))
+            ir <- match(sr,colnames(obj))
+        }
+        
+        # Update filters
+        filtDf <- data.frame(parameter="IBD",name="IBD",value=filters$IBD,
+            type="Sample",filtered=length(ir),row.names="IBD")
+        currFiltDf <- filters(obj)
+        if (nrow(currFiltDf) == 0)
+            filters(obj) <- filtDf
+        else
+            filters(obj) <- rbind(currFiltDf,filtDf)
     }
+           
+    # Finally, perform a PCA with SNPRelate using IBD filtered samples
+    message("  performing PCA...")
+    if (.testing)
+        pca <- snpgdsPCA(gdsHandle,maf=0.1,autosome.only=FALSE,sample.id=sr,
+            snp.id=snpsetIbd)
+    else
+        pca <- snpgdsPCA(gdsHandle,sample.id=sr,snp.id=snpsetIbd,
+            num.thread=.coresFrac(rc))
+    
+    m <- metadata(obj)
+    m$pcaOut <- pca
+    metadata(obj) <- m
+    
+    # Close GDS
+    closefn.gds(gdsHandle)
+    
+    if (!is.null(ir))
+        return(obj[,-ir,drop=FALSE])
+    else
+        return(obj)
+    
+    #pctab <- data.frame(sampleId=pca$sample.id,PC1=pca$eigenvect[,1],
+    #   PC2=pca$eigenvect[,2],stringsAsFactors=FALSE)
+}
+
+.filterWithSnpStatsRobustPca <- function(obj,filters) {
+    if (!requireNamespace("rrcov"))
+        stop("R package rrcov is required for robust PCA!")
+    
+    if (!filters$pcaOut)
+        return(obj)
+    
+    method <- filters$pcaRobust
+    npc <- filters$nPC
+    obj <- .robustPcaWithSnpStats(obj,method,npc)
+    m <- metadata(obj)
+    jj <- which(!m$pcaRob$flag)
     
     # Update filters
-    filtDf <- data.frame(
-        parameter="IBD",
-        name="IBD",
-        value=filters$IBD,
-        type="Sample",
-        filtered=length(ir),
-        row.names="IBD"
-    )
+    filtDf <- data.frame(parameter="pcaOut",name="Robust PCA",
+        value=filters$pcaRobust,type="Sample",filtered=length(jj),
+        row.names="pcaOut")
     currFiltDf <- filters(obj)
     if (nrow(currFiltDf) == 0)
         filters(obj) <- filtDf
     else
         filters(obj) <- rbind(currFiltDf,filtDf)
     
-    # Close GDS
-    closefn.gds(gdsHandle)
+    # Return possibly filtered object
+    if (length(jj) > 0)
+        return(obj[,-jj,drop=FALSE])
+    else
+        return(obj)
+}
+
+.robustPcaWithSnpStats <- function(obj,method=c("grid","hubert"),npc=0) {
+    m <- metadata(obj)
+    if ("pcaOut" %in% names(m)) {
+        snps <- m$pcaOut$snp.id
+        if (npc == 0)
+            npc <- ncol(m$pcaOut$eigenvect)
+    }
+    else
+        snps <- rownames(obj)
     
-    return(obj[,-ir,drop=FALSE])
+    x <- assay(obj,1)
+    y <- as(x,"numeric")
+    if (any(is.na(y))) # Not imputed, assume 0
+        y[is.na(x)] <- 0
+    y <- y[snps,,drop=FALSE]
+    
+    if (method == "grid") {
+        message("  with grid search method")
+        P <- PcaGrid(t(y),k=npc)
+    }
+    else if (method == "hubert") {
+        message("  with Hubert method")
+        kmax <- ifelse(npc>10,npc,10)
+        P <- PcaGrid(t(y),k=npc,kmax=kmax)
+    }
+    
+    m$pcaRob <- P
+    metadata(obj) <- m
+    
+    return(obj)
 }
 
 .filterWithBigSnpr <- function(obj,filters,verbose=TRUE) {
@@ -327,31 +424,36 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),verbose=TRUE,
     }
     
     # Check remaining filter values
-    if (!is.null(f$snpCallRate))
+    if (!.isEmpty(f$snpCallRate))
         .checkNumArgs("snpCallRate filter",f$snpCallRate,"numeric",c(0,1),
             "both")
-    if (!is.null(f$sampleCallRate))
+    if (!.isEmpty(f$sampleCallRate))
         .checkNumArgs("sampleCallRate filter",f$sampleCallRate,"numeric",c(0,1),
             "both")
-    if (!is.null(f$maf))
+    if (!.isEmpty(f$maf))
         .checkNumArgs("maf filter",f$maf,"numeric",c(0,1),"botheq")
-    if (!is.null(f$hwe))
+    if (!.isEmpty(f$hwe))
         .checkNumArgs("hwe filter",f$hwe,"numeric",c(0,1),"both")
-    if (!is.null(f$LD))
+    if (!.isEmpty(f$LD))
         .checkNumArgs("LD filter",f$LD,"numeric",0,"gte")
-    if (!is.null(f$heteroFac))
+    if (!.isEmpty(f$heteroFac))
         .checkNumArgs("heteroFac filter",f$heteroFac,"numeric",0,"gte")
-    if (!is.null(f$heteroHard) && !is.na(f$heteroHard))
+    if (!.isEmpty(f$heteroHard) && !is.na(f$heteroHard))
         .checkNumArgs("heteroHard filter",f$heteroHard,"numeric",0,"gte")
-    if (!is.null(f$IBD))
+    if (!.isEmpty(f$IBD))
         .checkNumArgs("IBD filter",f$IBD,"numeric",0,"gte")
-    if (!is.null(f$inbreed))
+    if (!.isEmpty(f$inbreed))
         .checkNumArgs("inbreed filter",f$inbreed,"numeric",0,"gte")
-    if (!is.null(f$heteroStat))
+    if (!.isEmpty(f$heteroStat))
         .checkTextArgs("heteroStat filter",f$heteroStat,c("mean","median"),
             multiarg=FALSE)
-    if (!is.null(f$pcaOut) && !is.logical(f$pcaOut))
+    if (!.isEmpty(f$pcaRobust))
+        .checkTextArgs("pcaRobust filter",f$pcaRobust,c("none","grid","hubert"),
+            multiarg=FALSE)
+    if (!.isEmpty(f$pcaOut) && !is.logical(f$pcaOut))
         stop("pcaOut filter should be TRUE or FALSE!")
+    if (!.isEmpty(f$nPC))
+        .checkNumArgs("nPC filter",f$nPC,"numeric",0,"gte")
     
     # Replace the defaults after value checking
     return(.setArg(defaults,f))
