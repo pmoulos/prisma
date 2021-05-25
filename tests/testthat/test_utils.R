@@ -1,3 +1,49 @@
+test_that("partitionGWAS works",{
+    input <- .gimmeTestFiles()    
+    gwe <- importGWAS(input,backend="snpStats")
+    n1 <- ceiling(ncol(gwe)/3)
+    n2 <- 2*floor(ncol(gwe)/3)
+    ph <- data.frame(x=round(runif(ncol(gwe))),y=c(rep("A",n1),rep("B",n2)),
+        row.names=colnames(gwe))
+    phenotypes(gwe) <- ph
+    
+    expect_true(is(gwe,"GWASExperiment"))
+    
+    expect_warning(o1 <- partitionGWAS(gwe,n=10))
+    expect_true(is(o1,"list"))
+    
+    o2 <- partitionGWAS(gwe,by="y",n=10,frac=0.8)
+    expect_true(is(o2,"list"))
+    expect_true(all(lengths(o2) == 0.8*(n1+n2)))
+    
+    o3 <- partitionGWAS(gwe,by="y",n=1,out="object")
+    expect_true(is(o3,"GWASExperiment"))
+    expect_equal(ncol(o3),0.5*ncol(gwe))
+    
+    # Partition a non-GWAS object - expect error
+    expect_error(partitionGWAS(ph,n=10))
+    expect_error(partitionGWAS(gwe,by="y",n=10,frac=1.1))
+})
+
+test_that("createSplit works",{
+    y <- runif(100)
+    y[y<0.5] <- 0
+    y[y>=0.5] <- 1
+    
+    o1 <- createSplit(y,n=10)
+    expect_equal(length(o1),10)
+    expect_true(all(lengths(o1)==50))
+    
+    o2 <- createSplit(y,n=10,frac=0.8)
+    expect_true(all(lengths(o2)==80))
+    
+    o3 <- createSplit(y,n=5,out="binary")
+    expect_true(all(unlist(o3,use.names=FALSE) %in% c(0,1)))
+    
+    expect_error(createSplit(y,n=10,frac=1.1))
+    expect_error(createSplit(y,n=10,object="brick"))
+})
+
 # Test suite for .checkEFOFormat
 test_that(".checkEFOFormat works",{
     # Properly formatted scalar input

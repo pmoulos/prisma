@@ -90,7 +90,6 @@
     }
 }
 
-
 test_that("GWASExperiment definition works",{
     expect_error(validObject(.GWASExperiment())) # should not be used
     expect_silent(GWASExperiment())

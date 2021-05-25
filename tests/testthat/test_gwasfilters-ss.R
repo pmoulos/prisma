@@ -1,36 +1,5 @@
-test_that("GWASExperiment from snpStats PLINK works",{
-    input <- .gimmeTestFiles()
-    sample <- snpStats::read.plink(input$bed,input$bim,input$fam)
-    
-    # Without phenotypes
-    gwe <- importGWAS(input,backend="snpStats")
-    expect_true(is(gwe,"GWASExperiment"))
-    expect_equal(nrow(gwe),nrow(sample$map))
-    expect_equal(ncol(gwe),nrow(sample$fam))
-    expect_identical(rowData(gwe),DataFrame(sample$map))
-    expect_identical(colData(gwe),DataFrame(sample$fam))
-    expect_identical(phenotypes(gwe),NULL)
-    expect_identical(metadata(gwe)$backend,"snpStats")
-    
-    # With phenotypes
-    set.seed(42)
-    pseudopheno <- data.frame(
-        case_control=sample(c(0,1),nrow(sample$fam),replace=TRUE),
-        other_pheno=sample(c("drug","nodrug"),nrow(sample$fam),replace=TRUE),
-        yap=sample(c("normal","demipsek","psek"),nrow(sample$fam),replace=TRUE),
-        cont=round(runif(nrow(sample$fam)),3),
-        row.names=rownames(sample$fam)
-    )
-    gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats")
-    expect_true(is(gwe,"GWASExperiment"))
-    expect_identical(phenotypes(gwe),pseudopheno)
-})
-
 test_that("Basic snpStats filters work",{
-    fam <- system.file("extdata/sample.fam",package="snpStats")
-    bim <- system.file("extdata/sample.bim",package="snpStats")
-    bed <- system.file("extdata/sample.bed",package="snpStats") 
-    input <- list(bed=bed,bim=bim,fam=fam)
+    input <- .gimmeTestFiles()
     gwe <- importGWAS(input,backend="snpStats")
     
     filts <- list(
@@ -92,6 +61,43 @@ test_that("IBD filter and SNPRelate PCA calculation work",{
     expect_true(is(m$pcaOut,"snpgdsPCAClass"))
 })
 
+test_that("Robust sample PCA filtering works",{
+    input <- .gimmeTestFiles()
+    gwe <- importGWAS(input,backend="snpStats")
+    
+    filts <- getDefaults("filters")
+    # Do not IBD
+    filts$IBD <- NA
+    
+    # Test PcaGrid
+    gweFilt1 <- .filterWithSnpStatsRobustPca(gwe,filts)
+    expect_equal(nrow(gweFilt1),20)
+    expect_equal(ncol(gweFilt1),86)
+    
+    m <- metadata(gweFilt1)
+    expect_true(!is.null(m$pcaRob))
+    expect_true(is(m$pcaRob,"PcaGrid"))
+    
+    # Test PcaHubert
+    filts$pcaRobust <- "hubert"
+    gweFilt2 <- .filterWithSnpStatsRobustPca(gwe,filts)
+    expect_equal(nrow(gweFilt2),20)
+    expect_equal(ncol(gweFilt2),93)
+    
+    m <- metadata(gweFilt2)
+    expect_true(!is.null(m$pcaRob))
+    expect_true(is(m$pcaRob,"PcaHubert"))
+})
+
+test_that("kNN impute works",{
+    input <- .gimmeTestFiles()
+    gwe <- importGWAS(input,backend="snpStats")
+    a <- as(assay(gwe,1),"numeric")
+    
+    expect_true(any(is.na(a)))
+    b <- .internalImputeKnn(a)
+    expect_false(any(is.na(b)))
+})
 
 test_that(".checkSelection works",{
     s1 <- NULL

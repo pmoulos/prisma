@@ -1,3 +1,93 @@
+partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,length(y)),
+    out=c("index","object"),rc=NULL) {
+    if (!is(obj,"GWASExperiment"))
+        stop("obj must be a GWASExperiment object!")
+    
+    p <- phenotypes(obj)
+    if (is.null(p) || nrow(p) == 0)
+        stop("obj does not have associated phenotypes!")
+    
+    if (missing(by)) {
+        warning("by argument is missing! Will use the first variable ",
+            "from object's phenotypes...",immediate.=TRUE)
+        by <- names(p)[1]
+    }
+    if (!(by %in% names(p)))
+        stop("Unkonwn phenotype ",by,"! The provided phenotypes are: ",
+            paste(names(p),collapse=", "))
+    
+    out <- out[1]
+    .checkTextArgs("out",out,c("index","object"),multiarg=FALSE)
+    .checkNumArgs("n",as.integer(n),"integer",1L,"gte")
+    .checkNumArgs("frac",frac,"numeric",c(0,1),"both")
+    .checkNumArgs("ngrp",as.integer(ngrp),"integer",1L,"gte")
+    
+    message("Partitioning dataset into ",n," partitions by ",by)
+    y <- p[,by]
+    split <- createSplit(y,n=n,frac=frac,ngrp=ngrp,rc=rc)
+    if (n == 1 && out == "object")
+        return(obj[,split[[1]],drop=FALSE])
+    else
+        return(split)
+}
+
+createSplit <- function (y,n=1,frac=0.5,ngrp=min(5,length(y)),
+    out=c("index","binary"),rc=NULL) {
+    out <- out[1]
+    .checkTextArgs("out",out,c("index","binary"),multiarg=FALSE)
+    .checkNumArgs("n",as.integer(n),"integer",1L,"gte")
+    .checkNumArgs("frac",frac,"numeric",c(0,1),"both")
+    .checkNumArgs("ngrp",as.integer(ngrp),"integer",1L,"gte")
+    
+    if (length(y) < 2) 
+        stop("The class to be split must have at least 2 data points!")
+    if (ngrp < 2) 
+        ngrp <- 2
+    if (is.numeric(y) || is.integer(y)) {
+        y <- cut(y,unique(quantile(y,probs=seq(0,1,length=ngrp))), 
+            include.lowest=TRUE)
+    }
+    else {
+        xtab <- table(y)
+        if (any(xtab == 0)) {
+            warning(paste("Some classes have no records (",
+                paste(names(xtab)[xtab==0],sep="",collapse= ", "),") and ",
+                "these will be ignored"),immediate.=TRUE)
+            y <- factor(as.character(y))
+        }
+        if (any(xtab == 1)) {
+            warning(paste("Some classes have a single record (", 
+                paste(names(xtab)[xtab==1],sep="",collapse=", "), ") and ",
+                "these will be selected for the sample"),immediate.=TRUE)
+        }
+    }
+    
+    N <- seq_len(n)
+    splits <- cmclapply(N,function(i,x,p) {
+        tmp <- data.frame(x=x,index=seq_along(x))
+        if (nrow(tmp) == 1)
+            return(tmp$index)
+        else
+            return(sort(sample(tmp$index,size=ceiling(nrow(tmp)*p))))
+    },y,frac,rc=rc)
+    
+    if (out=="binary") {
+        splits <- cmclapply(splits,function(x,n) {
+            z <- integer(n)
+            z[x] <- 1
+            return(z)
+        },length(y))
+    }
+    
+    names(splits) <- as.character(N)
+    
+    return(splits)
+}
+
+createSample <- function() {
+    
+}
+
 getDefaults <- function(what) {
     allowed <- c("filters")
     
@@ -47,6 +137,13 @@ cmclapply <- function(...,rc) {
         else 
             return(1)
     }
+}
+
+.toIntMat <- function(x) {
+    x <- round(x,digits=1)
+    for (i in seq_len(ncol(x)))
+        x[,i] <- as.integer(x[,i])
+    return(x)
 }
 
 .checkEFOFormat <- function(id) {
