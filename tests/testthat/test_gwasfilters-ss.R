@@ -89,6 +89,21 @@ test_that("Robust sample PCA filtering works",{
     expect_true(is(m$pcaRob,"PcaHubert"))
 })
 
+test_that("Imputation with snpStats works",{
+    input <- .gimmeTestFiles()
+    gwe <- importGWAS(input,backend="snpStats")
+    
+    expect_true(any(is.na(assay(gwe,1))))
+    
+    # Small hack as the dataset is small and non-heterogeneous enough
+    x <- assay(gwe,1)
+    x["TSC0101718","430"] <- as.raw(1)
+    assay(gwe,1) <- x
+
+    o1 <- .internalImputeWithSnpStats(gwe)
+    expect_false(any(is.na(assay(o1,1))))
+})
+
 test_that("kNN impute works",{
     input <- .gimmeTestFiles()
     gwe <- importGWAS(input,backend="snpStats")

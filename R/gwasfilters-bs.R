@@ -1,3 +1,3 @@
-.filterWithBigSnpr <- function(obj,filters,verbose=TRUE) {
+.filterWithBigSnpr <- function(obj,filters) {
     # Stub
 }

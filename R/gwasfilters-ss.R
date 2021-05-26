@@ -1,40 +1,20 @@
-.filterWithSnpStats <- function(obj,filters,imputeMissing=TRUE,verbose=TRUE,
-    rc=NULL) {
-    message("Performing basic filtering")
+.filterWithSnpStats <- function(obj,filters,imputeMissing=TRUE,rc=NULL) {
+    disp("Performing basic filtering",level="normal")
     objBas <- .filterWithSnpStatsBasic(obj,filters)
     
-    message("\nPerforming sample IBD filtering and classic PCA")
+    disp("\nPerforming sample IBD filtering and classic PCA")
     objIbd <- .filterWithSnpStatsIbd(objBas,filters,rc)
     
     if (imputeMissing) {
-        message("\nImputing missing values with snpStats rules and MICE")
+        disp("\nImputing missing values with snpStats rules and scrime kNN")
         objIbd <- .internalImputeWithSnpStats(objIbd,rc)
     }
     
-    message("\nPerforming robust PCA filtering for automatic outlier detection")
+    disp("\nPerforming robust PCA filtering for automatic outlier detection")
     objPca <- .filterWithSnpStatsRobustPca(objIbd,filters)
     
-    if (verbose) {
-        filtDf <- filters(objIbd)
-        if (nrow(filtDf) > 0) {
-            message("\nFiltered SNPs:")
-            message("  SNP call rate             : ",
-                filtDf["snpCallRate","filtered"])
-            message("  Minor Allele Frequency    : ",filtDf["maf","filtered"])
-            message("  Hardy-Weinberg equilibrium: ",filtDf["hwe","filtered"])
-            
-            message("\nFiltered samples:")
-            message("  Sample call rate          : ",
-                filtDf["sampleCallRate","filtered"])
-            message("  Heterozygosity            : ",
-                filtDf["heteroHard","filtered"])
-            message("  Inbreed                   : ",
-                filtDf["inbreed","filtered"])
-            message("  Identity By Descent (IBD) : ",filtDf["IBD","filtered"])
-            message("  Robust PCA                : ",
-                filtDf["pcaOut","filtered"])
-        }
-    }
+    if (prismaVerbosity() %in% c("normal","full"))
+        .filterReport(objPca)
     
     return(objPca)
 }
@@ -133,15 +113,16 @@
     m <- metadata(obj)
     
     # Read GDS
-    message("  reading GDS file ",m$gdsfile,"...")
-    gdsHandle <- openfn.gds(m$gdsfile,readonly=FALSE)
+    disp("Reading GDS file ",m$gdsfile,"...")
+    #gdsHandle <- openfn.gds(m$gdsfile,readonly=FALSE)
+    gdsHandle <- snpgdsOpen(m$gdsfile,readonly=FALSE)
     gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
     add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
     if (!is.na(filters$LD)) {
-        message("  performing LD pruning...\n")
+        disp("Performing LD pruning...\n")
         x <- t(assay(obj,1))
         if (.testing)
             snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,maf=0.1,
@@ -150,10 +131,18 @@
             # Default is start.pos="random" but this requires a seed for reprod
             snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
                 sample.id=rownames(x),snp.id=colnames(x),start.pos="first")
+        #else {
+        #    # Default is start.pos="random" but this requires a seed for reprod
+        #    tmp <- capture.output({
+        #        snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
+        #            sample.id=rownames(x),snp.id=colnames(x),start.pos="first")
+        #    })
+        #    disp(paste(tmp,collapse="\n"))
+        #}
                 
         snpsetIbd <- unlist(snpSub,use.names=FALSE)
-        message("  LD pruning finished! ",length(snpsetIbd)," SNPs will be ",
-            "used for IBD analysis.")
+        disp("LD pruning finished! ",length(snpsetIbd)," SNPs will be used ",
+            "for IBD analysis.")
     }
     else
         snpsetIbd <- colnames(x)
@@ -162,7 +151,7 @@
     ir <- NULL
     sr <- rownames(x)
     if (!is.na(filters$IBD)) {
-        message("  performing IBD calculation...")
+        disp("Performing IBD calculation...")
         if (.testing)
             ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
                 snp.id=snpsetIbd,num.thread=.coresFrac(rc),maf=0.1,
@@ -170,7 +159,7 @@
         else
             ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
                 snp.id=snpsetIbd,num.thread=.coresFrac(rc))
-        message("  performing IBD selection...")
+        disp("Performing IBD selection...")
         ibdCoeff <- snpgdsIBDSelection(ibd)
         
         # Are there related samples?
@@ -192,20 +181,23 @@
     }
            
     # Finally, perform a PCA with SNPRelate using IBD filtered samples
-    message("  performing PCA...")
+    disp("Performing PCA...")
     if (.testing)
         pca <- snpgdsPCA(gdsHandle,maf=0.1,autosome.only=FALSE,sample.id=sr,
             snp.id=snpsetIbd)
-    else
+    else {
+        #tmp <- capture.output({
         pca <- snpgdsPCA(gdsHandle,sample.id=sr,snp.id=snpsetIbd,
             num.thread=.coresFrac(rc))
-    
+        #})
+    }
+
     m <- metadata(obj)
     m$pcaOut <- pca
     metadata(obj) <- m
     
     # Close GDS
-    closefn.gds(gdsHandle)
+    snpgdsClose(gdsHandle)
     
     if (!is.null(ir))
         return(obj[,-ir,drop=FALSE])
@@ -258,16 +250,16 @@
     
     x <- assay(obj,1)
     y <- as(x,"numeric")
-    if (any(is.na(y))) # Not imputed, assume 0
-        y[is.na(x)] <- 0
+    if (any(is.na(y))) # Not imputed, quick kNN
+        y <- .internaImputeKnn(y)
     y <- y[snps,,drop=FALSE]
     
     if (method == "grid") {
-        message("  with grid search method")
+        disp("  with grid search method")
         P <- PcaGrid(t(y),k=npc)
     }
     else if (method == "hubert") {
-        message("  with Hubert method")
+        disp("  with Hubert method")
         kmax <- ifelse(npc>10,npc,10)
         P <- PcaHubert(t(y),k=npc,kmax=kmax)
     }
@@ -294,51 +286,98 @@
         return(obj)
     }
     
-    # If found, split the dataset to derive imputation rules and interate
-    iter <- nMissCurr <- 0
-    nMissPrev <- 1
-    while (nrow(nai) > 0 || nMissCurr != nMissPrev) {
-        print(nMissCurr)
-        print(nMissPrev)
-        
-        iter <- iter + 1
-        message("  imputation iteration ",iter)
-        train <- x[,-smIndMiss]
-        missSnps <- sort(unique(nai[,"row"]))
-        #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
-        noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
-        #noMissSnps <- setdiff(rownames(train),missSnps)
-        nMissPrev <- length(missSnps)
-        
-        missing <- train[missSnps,,drop=FALSE]
-        present <- train[noMissSnps,,drop=FALSE]
-        posMiss <- gfeatures(obj)[missSnps,"position"]
-        posPres <- gfeatures(obj)[noMissSnps,"position"]
-        
-        # Define the rules
+    ############################################################################
+    #! Because of a bug in snpStats leading to segmentation fault in imputation
+    #! process, iterative imputation cannot take place... So we do it once and
+    #! then impute the remaining with scrime...
+    ## If found, split the dataset to derive imputation rules and interate
+    #iter <- nMissCurr <- 0
+    #nMissPrev <- 1
+    #while (nrow(nai) > 0 || nMissCurr == nMissPrev) {
+    #    iter <- iter + 1
+    #    message("  imputation iteration ",iter)
+    #    train <- x[,-smIndMiss]
+    #    missSnps <- sort(unique(nai[,"row"]))
+    #    #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
+    #    noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
+    #    #noMissSnps <- setdiff(rownames(train),missSnps)
+    #    nMissPrev <- length(missSnps)
+    #    
+    #    missing <- train[missSnps,,drop=FALSE]
+    #    present <- train[noMissSnps,,drop=FALSE]
+    #    posMiss <- gfeatures(obj)[missSnps,"position"]
+    #    posPres <- gfeatures(obj)[noMissSnps,"position"]
+    #    
+    #    # Define the rules
+    #    rules <- snp.imputation(t(present),t(missing),posPres,posMiss)
+    #    
+    #    # Split the missing value matrix per sample to avoid for  
+    #    # unnecessary replacements
+    #    # CHECK: Potential parallelization
+    #    h <- split(rownames(nai),nai[,"col"])
+    #    for (i in smIndMiss) {
+    #        simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+    #        snpmiss <- h[[as.character(i)]]
+    #        x[snpmiss,i] <- simp[,snpmiss]
+    #    }
+    #    
+    #    # Recheck missing values and continue
+    #    nai <- which(is.na(x),arr.ind=TRUE)
+    #    smIndMiss <- unique(nai[,"col"])
+    #    nMissCurr <- length(unique(nai[,"row"]))
+    #}
+    ############################################################################
+    
+    train <- x[,-smIndMiss]
+    missSnps <- sort(unique(nai[,"row"]))
+    #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
+    noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
+    #noMissSnps <- setdiff(rownames(train),missSnps)
+    nMissPrev <- length(missSnps)
+    
+    missing <- train[missSnps,,drop=FALSE]
+    present <- train[noMissSnps,,drop=FALSE]
+    posMiss <- gfeatures(obj)[missSnps,"position"]
+    posPres <- gfeatures(obj)[noMissSnps,"position"]
+    
+    # Some verbosity
+    disp(length(smIndMiss)," samples have missing genotypes in ",
+        length(missSnps)," SNPs in total.")
+    disp(ncol(train)," samples with ",length(noMissSnps)," SNPs with complee ",
+     "presence will be used to train the impute model.")
+    
+    # Define the rules
+    disp("Creating imputation rules")
+    tmp <- capture.output({
         rules <- snp.imputation(t(present),t(missing),posPres,posMiss)
-        
-        # Split the missing value matrix per sample to avoid for  
-        # unnecessary replacements
-        # CHECK: Potential parallelization
-        h <- split(rownames(nai),nai[,"col"])
-        for (i in smIndMiss) {
-            simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
-            snpmiss <- h[[as.character(i)]]
-            x[snpmiss,i] <- simp[,snpmiss]
-        }
-        
-        # Recheck missing values and continue
-        nai <- which(is.na(x),arr.ind=TRUE)
-        smIndMiss <- unique(nai[,"col"])
-        nMissCurr <- length(unique(nai[,"row"]))
+    })
+    disp(paste(tmp,collapse="\n"))
+    disp(length(rules)," imputation rules sucessfully created! With these ",
+        length(which(can.impute(rules)))," genotypes can be imputed.")
+    
+    # Split the missing value matrix per sample to avoid for  
+    # unnecessary replacements
+    # CHECK: Potential parallelization
+    disp("Imputing...")
+    h <- split(rownames(nai),nai[,"col"])
+    for (i in smIndMiss) {
+        snpmiss <- h[[as.character(i)]]
+        disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
+        disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+        simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+        x[snpmiss,i] <- simp[,snpmiss]
     }
     
     # If NAs remain, scrime
     if (any(is.na(x))) {
+        disp(length(which(is.na(x)))," missing values remaining... Will ",
+            "use genotype kNN imputation.")
         y <- as(x,"numeric")
         y <- .internalImputeKnn(y)
-        assay(obj,1) <- SnpMatrix(y)
+        # We do not want to see the coercion message
+        tmp <- capture.output({
+            assay(obj,1) <- SnpMatrix(y)
+        })
         return(obj)
     }
     
@@ -352,7 +391,8 @@
     
     # Finalize genotypes
     x <- .toIntMat(x)
-    ximp <- knncatimputeLarge(x+1L,nn=5,verbose=TRUE)
+    ximp <- knncatimputeLarge(x+1L,nn=5,
+        verbose=prismaVerbosity() %in% c("normal","full"))
     colnames(ximp) <- colnames(x)
     return(ximp)
 }
@@ -468,3 +508,38 @@
     return(.setArg(defaults,f))
 }
 
+.filterReport <- function(obj) {
+    filtDf <- filters(obj)
+    if (nrow(filtDf) > 0) {
+        message("\nFiltered SNPs:")
+        if ("snpCallRate" %in% rownames(filtDf))
+            message("  SNP call rate             : ",
+                filtDf["snpCallRate","filtered"])
+                
+        if ("maf" %in% rownames(filtDf))
+            message("  Minor Allele Frequency    : ",filtDf["maf","filtered"])
+        
+        if ("hwe" %in% rownames(filtDf))
+            message("  Hardy-Weinberg equilibrium: ",filtDf["hwe","filtered"])
+        
+        message("\nFiltered samples:")
+        if ("sampleCallRate" %in% rownames(filtDf))
+            message("  Sample call rate          : ",
+                filtDf["sampleCallRate","filtered"])
+        
+        if ("heteroHard" %in% rownames(filtDf))
+            message("  Heterozygosity            : ",
+                filtDf["heteroHard","filtered"])
+        
+        if ("inbreed" %in% rownames(filtDf))
+            message("  Inbreed                   : ",
+                filtDf["inbreed","filtered"])
+        
+        if ("IBD" %in% rownames(filtDf))
+            message("  Identity By Descent (IBD) : ",filtDf["IBD","filtered"])
+        
+        if ("pcaOut" %in% rownames(filtDf))
+            message("  Robust PCA                : ",
+                filtDf["pcaOut","filtered"])
+    }
+}

@@ -1,5 +1,5 @@
 partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,length(y)),
-    out=c("index","object"),rc=NULL) {
+    out=c("index","train","ttboth"),rc=NULL) {
     if (!is(obj,"GWASExperiment"))
         stop("obj must be a GWASExperiment object!")
     
@@ -17,16 +17,25 @@ partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,length(y)),
             paste(names(p),collapse=", "))
     
     out <- out[1]
-    .checkTextArgs("out",out,c("index","object"),multiarg=FALSE)
+    .checkTextArgs("out",out,c("index","train","ttboth"),multiarg=FALSE)
     .checkNumArgs("n",as.integer(n),"integer",1L,"gte")
     .checkNumArgs("frac",frac,"numeric",c(0,1),"both")
     .checkNumArgs("ngrp",as.integer(ngrp),"integer",1L,"gte")
     
-    message("Partitioning dataset into ",n," partitions by ",by)
+    disp("Partitioning dataset into ",n," partitions by ",by)
     y <- p[,by]
     split <- createSplit(y,n=n,frac=frac,ngrp=ngrp,rc=rc)
-    if (n == 1 && out == "object")
-        return(obj[,split[[1]],drop=FALSE])
+    if (n == 1) {
+        if (out == "train")
+            return(obj[,split[[1]],drop=FALSE])
+        else if (out == "ttboth")
+            return(list(
+                train=obj[,split[[1]],drop=FALSE],
+                test=obj[,-split[[1]],drop=FALSE]
+            ))
+        else
+            return(split)
+    }
     else
         return(split)
 }
@@ -125,6 +134,27 @@ cmclapply <- function(...,rc) {
         return(mclapply(...,mc.cores=ncores,mc.set.seed=FALSE))
     else
         return(lapply(...))
+}
+
+prismaVerbosity <- function(level=NULL) {
+    if (missing(level) || is.null(level)) {
+        v <- getOption("prisma_verbosity")
+        if (!is.null(v))
+            return(v)
+        else
+            level  <- "normal"
+    }
+    .checkTextArgs("verbosity level",level,c("silent","normal","full"),
+        multiarg=FALSE)
+    options("prisma_verbosity"=level)
+}
+
+disp <- function(...,level=c("normal","full")) {
+    level <- level[1]
+    v <- prismaVerbosity()
+    if (v=="full" && level=="normal" || v=="full" && level=="full"
+        || v=="normal" && level=="normal")
+        message(...)
 }
 
 .coresFrac <- function(rc=NULL) {
@@ -367,7 +397,6 @@ cmclapply <- function(...,rc) {
 .isEmpty <- function(x) {
     return(is.null(x) || is.na(x) || x == "" || length(x) == 0)
 }
-
 
 #~ getAPIBase <- function() {
 #~     base <- getOption("rpgscat_base")

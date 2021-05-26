@@ -32,10 +32,10 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             " do not exist!")
     
     if (backend == "snpStats") {
-        message("Reading PLINK files with snpStats framework")
+        disp("Reading PLINK files with snpStats framework")
         snpObj <- read.plink(input$bed,input$bim,input$fam,
             select.subjects=selection$samples,select.snps=selection$snps)
-        message("Reading PLINK files with SNPRelate framework and storing ",
+        disp("Reading PLINK files with SNPRelate framework and storing ",
             "output to ",gdsfile)
         snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
         # We also need to read a GDS file for LD and IBD filtering
@@ -60,13 +60,13 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
 }
 
 filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
-    verbose=TRUE,rc=NULL) {
+    rc=NULL) {
     filters <- .checkFilters(filters)
     
     # Later input type may be more native, e.g. read from CSV files
     if (is(assay(obj,1),"SnpMatrix"))
-        return(.filterWithSnpStats(obj,filters,imputeMissing,verbose,rc))
+        return(.filterWithSnpStats(obj,filters,imputeMissing,rc))
     else if (is(assay(obj,1),"bigsnp"))
-        return(.filterWithBigSnpr(x,filters,imputeMissing,verbose))
+        return(.filterWithBigSnpr(x,filters,imputeMissing))
 }
 

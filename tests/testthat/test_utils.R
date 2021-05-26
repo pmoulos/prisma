@@ -16,9 +16,13 @@ test_that("partitionGWAS works",{
     expect_true(is(o2,"list"))
     expect_true(all(lengths(o2) == 0.8*(n1+n2)))
     
-    o3 <- partitionGWAS(gwe,by="y",n=1,out="object")
+    o3 <- partitionGWAS(gwe,by="y",n=1,out="train")
     expect_true(is(o3,"GWASExperiment"))
     expect_equal(ncol(o3),0.5*ncol(gwe))
+    
+    o4 <- partitionGWAS(gwe,by="y",n=1,out="ttboth")
+    expect_true(is.list(o4))
+    expect_equal(names(o4),c("train","test"))
     
     # Partition a non-GWAS object - expect error
     expect_error(partitionGWAS(ph,n=10))
@@ -150,14 +154,10 @@ test_that(".isEmpty works",{
     expect_false(.isEmpty(x7))
 }
 
-#~ test_that("Get/Set API base works",{
-#~     # Set API base
-#~     mock <- "https://www.example.com/api"
-#~     setAPIBase(mock)
-#~     expect_true(getAPIBase() == mock)    
-    
-#~     # Get API base
-#~     setAPIBase() # revert first
-#~     base <- getAPIBase()
-#~     expect_true(base == .defaultUrlBase())
-#~ })
+test_that("prismaVerbosity works",{
+    expect_error(prismaVerbosity(1))
+    expect_error(prismaVerbosity("invalid"))
+    expect_silent(prismaVerbosity())
+    expect_silent(prismaVerbosity("silent"))
+    expect_equal(prismaVerbosity(),"silent")
+})

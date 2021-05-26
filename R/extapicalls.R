@@ -21,7 +21,7 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
         stop("efoTrait must be a character vector!")
     
     # Calls
-    message("Scheduling ",length(efoId) + length(efoTrait)," GWAS API calls...")
+    disp("Scheduling ",length(efoId) + length(efoTrait)," GWAS API calls...")
     
     # EFO id calls
     if (!is.null(efoId))
@@ -58,7 +58,7 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
     names(result) <- input
     
     suff <- ifelse(type=="id"," EFO ID(s)","EFO trait(s)")
-    message("  Requesting ",N," GWAS API calls with ",suff,"...")
+    disp("  Requesting ",N," GWAS API calls with ",suff,"...")
     
     complete <- FALSE
     times <- 1
@@ -69,7 +69,7 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
         
         for (id in input) {
             calls <- calls + 1
-            message("    Call ",calls,": ",id)
+            disp("    Call ",calls,": ",id)
             tmp <- .GWASVariantsWorker(input=id,type=type)
             if (tmp$success) # Both API calls successful
                 result[[id]] <- tmp$data
@@ -80,9 +80,9 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
         complete <- !any(failed)
         if (!complete) {
             input <- names(failed)[failed]
-            message("  Failed API calls for ",suff,":")
-            message("    ",paste(input,collapse=", "))
-            message("  Will retry ",retries-times," times...")
+            disp("  Failed API calls for ",suff,":")
+            disp("    ",paste(input,collapse=", "))
+            disp("  Will retry ",retries-times," times...")
         }
         times <- times + 1
     }
@@ -108,8 +108,8 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
     efoVariants <- tryCatch({
         eval(parse(text=exv))
     },error=function(e) {
-        message("Possible connection failure! Marking...")
-        message("Caught error: ",e$message)
+        disp("Possible connection failure! Marking...")
+        disp("Caught error: ",e$message)
         return(toJSON(list(type=type,input=input),auto_unbox=TRUE))
     })
     
@@ -122,8 +122,8 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
             efoAssoc <- tryCatch({
                 eval(parse(text=exa))
             },error=function(e) {
-                message("Possible connection failure! Marking...")
-                message("Caught error: ",e$message)
+                disp("Possible connection failure! Marking...")
+                disp("Caught error: ",e$message)
                 return(toJSON(list(type=type,input=input),auto_unbox=TRUE))
             },finally="")
         
@@ -185,7 +185,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
         .checkPMIDFormat(pgsId)
     
     # Calls
-    message("Scheduling ",length(pgsId) + length(efoId) + length(pubmedId),
+    disp("Scheduling ",length(pgsId) + length(efoId) + length(pubmedId),
         " PGS API calls...")
     
     # PGS id calls
@@ -234,7 +234,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     
     suff <- ifelse(type=="pgs"," PGS ID(s)",ifelse(type=="efo"," EFO ID(s)",
         "PubMed ID(s)"))
-    message("  Requesting ",N," PGS Catalog API calls with ",suff,"...")
+    disp("  Requesting ",N," PGS Catalog API calls with ",suff,"...")
     
     complete <- FALSE
     times <- 1
@@ -245,7 +245,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
         
         for (id in input) {
             calls <- calls + 1
-            message("    Call ",calls,": ",id)
+            disp("    Call ",calls,": ",id)
             tmp <- .PGSScoreWorker(input=id,type=type)
             if (tmp$success) # Both API calls successful
                 result[[id]] <- tmp$data
@@ -256,9 +256,9 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
         complete <- !any(failed)
         if (!complete) {
             input <- names(failed)[failed]
-            message("  Failed API calls for ",suff,":")
-            message("    ",paste(input,collapse=", "))
-            message("  Will retry ",retries-times," times...")
+            disp("  Failed API calls for ",suff,":")
+            disp("    ",paste(input,collapse=", "))
+            disp("  Will retry ",retries-times," times...")
         }
         times <- times + 1
     }
@@ -278,8 +278,8 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     scoreStru <- tryCatch({
         eval(parse(text=exs))
     },error=function(e) {
-        message("Possible connection failure! Marking...")
-        message("Caught error: ",e$message)
+        disp("Possible connection failure! Marking...")
+        disp("Caught error: ",e$message)
         return(toJSON(list(type=type,input=input),auto_unbox=TRUE))
     })
     
@@ -292,8 +292,8 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
             theScores <- tryCatch({
                 .retrieveScoreFile()
             },error=function(e) {
-                message("Possible connection failure! Marking...")
-                message("Caught error: ",e$message)
+                disp("Possible connection failure! Marking...")
+                disp("Caught error: ",e$message)
                 return(toJSON(list(type=type,input=input),auto_unbox=TRUE))
             },finally="")
         
@@ -447,8 +447,8 @@ enrichScoreFile <- function(scoreFile,gb=c("hg19","hg38","nr"),clean=FALSE) {
     res <- snpsById(SNPlocs.Hsapiens.dbSNP151.GRCh38,gp$id,ifnotfound="drop")
     seqlevelsStyle(res) <- "UCSC"
     inf <- tryCatch(inferRefAndAltAlleles(res,genome),error=function(e) {
-        message("Error caught during allele inference: ",e$message)
-        message("Will return default (N) as reference allele")
+        disp("Error caught during allele inference: ",e$message)
+        disp("Will return default (N) as reference allele")
         return(NA)
     },finally="")
     
