@@ -115,7 +115,7 @@ getDefaults <- function(what) {
                 heteroHard=NA,
                 pcaOut=TRUE,
                 pcaRobust="grid",
-                nPC=0,
+                nPC=NA,
                 LD=0.2,
                 IBD=0.1,
                 inbreed=0.1

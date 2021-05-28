@@ -2,7 +2,7 @@
     disp("Performing basic filtering",level="normal")
     objBas <- .filterWithSnpStatsBasic(obj,filters)
     
-    disp("\nPerforming sample IBD filtering and classic PCA")
+    disp("Performing sample IBD filtering and classic PCA")
     objIbd <- .filterWithSnpStatsIbd(objBas,filters,rc)
     
     if (imputeMissing) {
@@ -13,6 +13,12 @@
     disp("\nPerforming robust PCA filtering for automatic outlier detection")
     objPca <- .filterWithSnpStatsRobustPca(objIbd,filters)
     
+    # IF any samples removed due to robust pca, recalculate PCs with LD
+    if (ncol(objPca) < ncol(objIbd)) {
+        disp("\nReperforming LD and PCA analysis after outlier sample removal")
+        objPca <- .pcaWithSnpStatsLd(objPca,filters,rc)
+    }
+
     if (prismaVerbosity() %in% c("normal","full"))
         .filterReport(objPca)
     
@@ -114,8 +120,11 @@
     
     # Read GDS
     disp("Reading GDS file ",m$gdsfile,"...")
-    #gdsHandle <- openfn.gds(m$gdsfile,readonly=FALSE)
-    gdsHandle <- snpgdsOpen(m$gdsfile,readonly=FALSE)
+    # New way 1st, fallback if fail
+    gdsHandle <- tryCatch(snpgdsOpen(m$gdsfile,readonly=FALSE),
+        error=function(e) { openfn.gds(m$gdsfile,readonly=FALSE) },
+        finally="")
+    
     gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
     add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
@@ -124,23 +133,8 @@
     if (!is.na(filters$LD)) {
         disp("Performing LD pruning...\n")
         x <- t(assay(obj,1))
-        if (.testing)
-            snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,maf=0.1,
-                autosome.only=FALSE,sample.id=rownames(x),snp.id=colnames(x))
-        else
-            # Default is start.pos="random" but this requires a seed for reprod
-            snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
-                sample.id=rownames(x),snp.id=colnames(x),start.pos="first")
-        #else {
-        #    # Default is start.pos="random" but this requires a seed for reprod
-        #    tmp <- capture.output({
-        #        snpSub <- snpgdsLDpruning(gdsHandle,ld.threshold=filters$LD,
-        #            sample.id=rownames(x),snp.id=colnames(x),start.pos="first")
-        #    })
-        #    disp(paste(tmp,collapse="\n"))
-        #}
-                
-        snpsetIbd <- unlist(snpSub,use.names=FALSE)
+        snpsetIbd <- .ldPruningWithSnpRelate(gdsHandle,filters$LD,rownames(x),
+            colnames(x),rc,.testing)
         disp("LD pruning finished! ",length(snpsetIbd)," SNPs will be used ",
             "for IBD analysis.")
     }
@@ -182,18 +176,11 @@
            
     # Finally, perform a PCA with SNPRelate using IBD filtered samples
     disp("Performing PCA...")
-    if (.testing)
-        pca <- snpgdsPCA(gdsHandle,maf=0.1,autosome.only=FALSE,sample.id=sr,
-            snp.id=snpsetIbd)
-    else {
-        #tmp <- capture.output({
-        pca <- snpgdsPCA(gdsHandle,sample.id=sr,snp.id=snpsetIbd,
-            num.thread=.coresFrac(rc))
-        #})
-    }
-
+    pco <- .pcaWithSnpRelate(gdsHandle,samples=sr,snps=snpsetIbd,
+        npcs=filters$nPC,rc=rc,.testing=.testing)
+    
     m <- metadata(obj)
-    m$pcaOut <- pca
+    m$pcaOut <- pco
     metadata(obj) <- m
     
     # Close GDS
@@ -212,13 +199,13 @@
     if (!requireNamespace("rrcov"))
         stop("R package rrcov is required for robust PCA!")
     
-    if (!filters$pcaOut)
+    if (!filters$pcaOut || .isEmpty(filters$pcaRobust))
         return(obj)
     
-    method <- filters$pcaRobust
-    npc <- filters$nPC
-    obj <- .robustPcaWithSnpStats(obj,method,npc)
+    pco <- .robustPcaWithSnpStats(obj,method=filters$pcaRobust,npc=filters$nPC)
     m <- metadata(obj)
+    m$pcaRob <- pco
+    metadata(obj) <- m
     jj <- which(!m$pcaRob$flag)
     
     # Update filters
@@ -238,15 +225,81 @@
         return(obj)
 }
 
-.robustPcaWithSnpStats <- function(obj,method=c("grid","hubert"),npc=0) {
+.ldPruningWithSnpRelate <- function(handle,ldCut,samples,snps,rc=NULL,
+    .testing=FALSE) {
+    if (.testing)
+        snpSub <- snpgdsLDpruning(handle,ld.threshold=ldCut,maf=0.1,
+            autosome.only=FALSE,sample.id=samples,snp.id=snps)
+    else
+        # Default is start.pos="random" but this requires a seed for reprod
+        snpSub <- snpgdsLDpruning(handle,ld.threshold=ldCut,sample.id=samples,
+            snp.id=snps,start.pos="first")
+    #else {
+    #    # Default is start.pos="random" but this requires a seed for reprod
+    #    tmp <- capture.output({
+    #        snpSub <- snpgdsLDpruning(handle,ld.threshold=filters$LD,
+    #            sample.id=samples,snp.id=snps,start.pos="first")
+    #    })
+    #    disp(paste(tmp,collapse="\n"))
+    #}
+    return(unlist(snpSub,use.names=FALSE))
+}
+
+.pcaWithSnpStatsLd <- function(obj,filters,rc=NULL,.testing=FALSE) {
     m <- metadata(obj)
-    if ("pcaOut" %in% names(m)) {
-        snps <- m$pcaOut$snp.id
-        if (npc == 0)
-            npc <- ncol(m$pcaOut$eigenvect)
+    
+    # Read GDS
+    disp("Reading GDS file ",m$gdsfile,"...")
+    gdsHandle <- snpgdsOpen(m$gdsfile,readonly=FALSE)
+    gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
+    gdsIds <- sub("-1","",gdsIds)
+    add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
+    
+    # LD pruning
+    if (!is.na(filters$LD)) {
+        disp("Performing LD pruning...\n")
+        x <- t(assay(obj,1))
+        snpsetIbd <- .ldPruningWithSnpRelate(gdsHandle,filters$LD,rownames(x),
+            colnames(x),rc,.testing)
+        disp("LD pruning finished! ",length(snpsetIbd)," SNPs will be used ",
+            "for IBD analysis.")
     }
     else
-        snps <- rownames(obj)
+        snpsetIbd <- colnames(x)
+           
+    # Finally, perform a PCA with SNPRelate using IBD filtered samples
+    disp("Performing PCA...")
+    if (!.isEmpty(filters$pcaRobust))
+        pco <- .robustPcaWithSnpStats(obj,filters$pcaRobust,snps=snpsetIbd,
+            npc=filters$nPC)
+    else
+        pco <- .pcaWithSnpRelate(gdsHandle,samples=rownames(x),snps=snpsetIbd,
+            npcs=filters$nPC,rc=rc,.testing=.testing)
+    
+    m <- metadata(obj)
+    m$pcaCov <- pco
+    metadata(obj) <- m
+    
+    # Close GDS
+    snpgdsClose(gdsHandle)
+    
+    return(obj)
+}
+
+.robustPcaWithSnpStats <- function(obj,method=c("grid","hubert"),snps=NULL,
+    npc=0) {
+    if (.isEmpty(snps)) {
+        m <- metadata(obj)    
+        if ("pcaOut" %in% names(m)) {
+            snps <- m$pcaOut$snp.id
+            if (is.na(npc) || npc == 0)
+                npc <- ncol(m$pcaOut$eigenvect)
+        }
+        else
+            snps <- rownames(obj)
+    }
+    else # Sanity check for no crashing
+        snps <- intersect(snps,rownames(obj))
     
     x <- assay(obj,1)
     y <- as(x,"numeric")
@@ -254,6 +307,8 @@
         y <- .internaImputeKnn(y)
     y <- y[snps,,drop=FALSE]
     
+    if (is.na(npc))
+        npc <- 0
     if (method == "grid") {
         disp("  with grid search method")
         P <- PcaGrid(t(y),k=npc)
@@ -264,10 +319,25 @@
         P <- PcaHubert(t(y),k=npc,kmax=kmax)
     }
     
-    m$pcaRob <- P
-    metadata(obj) <- m
-    
-    return(obj)
+    return(P)
+}
+
+.pcaWithSnpRelate <- function(handle,samples,snps,npcs=NULL,rc=NULL,
+    .testing=FALSE) {
+    if (.testing)
+        pco <- snpgdsPCA(handle,maf=0.1,autosome.only=FALSE,sample.id=samples,
+            snp.id=snps)
+    else {
+        #tmp <- capture.output({
+        if (!.isEmpty(npcs))
+            pco <- snpgdsPCA(handle,sample.id=samples,snp.id=snps,
+                eigen.cnt=npcs,num.thread=.coresFrac(rc))
+        else
+            pco <- snpgdsPCA(handle,sample.id=samples,snp.id=snps,
+                num.thread=.coresFrac(rc))
+        #})
+    }
+    return(pco)
 }
 
 .internalImputeWithSnpStats <- function(obj,rc=NULL) {
@@ -511,7 +581,8 @@
 .filterReport <- function(obj) {
     filtDf <- filters(obj)
     if (nrow(filtDf) > 0) {
-        message("\nFiltered SNPs:")
+        message("\n----- Filtering report: -----")
+        message("Filtered SNPs:")
         if ("snpCallRate" %in% rownames(filtDf))
             message("  SNP call rate             : ",
                 filtDf["snpCallRate","filtered"])
