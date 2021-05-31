@@ -1,4 +1,4 @@
-partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,length(y)),
+partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,ncol(obj)),
     out=c("index","train","ttboth"),rc=NULL) {
     if (!is(obj,"GWASExperiment"))
         stop("obj must be a GWASExperiment object!")

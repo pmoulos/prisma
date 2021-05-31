@@ -1,5 +1,7 @@
 # There will probably be another class for storing retrieved from public APIs
 
+setClassUnion("data.frame_OR_matrix",c("data.frame","matrix"))
+
 setClassUnion("data.frame_OR_DataFrame_OR_NULL",
     c("data.frame","DataFrame","NULL"))
 
@@ -63,6 +65,11 @@ setGeneric("phenotypes<-",function(x,...,value) standardGeneric("phenotypes<-"))
 setGeneric("filters",function(x,...) standardGeneric("filters"))
 
 setGeneric("filters<-",function(x,...,value) standardGeneric("filters<-"))
+
+setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
+
+setGeneric("pcaCovariates<-",
+    function(x,...,value) standardGeneric("pcaCovariates<-"))
 
 setMethod("gfeatures","GWASExperiment",function(x,withDimnames=TRUE) {
     return(rowData(x))
@@ -129,6 +136,21 @@ setReplaceMethod("filters","GWASExperiment",function(x,...,value) {
         return(x)
 })
 
+setMethod("pcaCovariates","GWASExperiment",function(x) {
+    m <- metadata(x)
+    return(m$PCs)
+})
+
+setReplaceMethod("pcaCovariates","GWASExperiment",function(x,...,value) {
+    m <- metadata(x)
+    # Validation of value, e.g. data.frame, must have same number of samples as
+    # the object etc.
+    m$PCs <- value
+    metadata(x) <- m
+    if (validObject(x))
+        return(x)
+})
+
 setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     p <- phenotypes(x,withDimnames=FALSE)
     
@@ -149,6 +171,18 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
         }
         j <- as.vector(j)
         p <- p[j,,drop=FALSE]
+    }
+    
+    # If i,j is not missing, i.e. we are subsetting, LDsnps, pcaCov and PCs are
+    # no longer valid, so must be dropped to avoid accidental usage. We keep
+    # pcaRob for visualization purposes.
+    # There must be an option to recalculate, set with R options. We keep 
+    # filters for now. Whether deleted or not, will be controlled by various
+    # levels of this R option.
+    if (!missing(i) || !missing(j)) {
+        m <- metadata(x)
+        m$LDsnps <- m$pcaCov <- m$PCs <- NULL
+        metadata(x) <- m
     }
 
     out <- callNextMethod()
@@ -177,6 +211,14 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
         j <- as.vector(j)
         p[j,] <- phenotypes(value,withDimname=FALSE)
     }
+    
+    # Similarly as above, if i or j not missing, values have been replaced and
+    # some metadata values are no longer valid.
+    if (!missing(i) || !missing(j)) {
+        m <- metadata(x)
+        m$LDsnps <- m$pcaCov <- m$PCs <- NULL
+        metadata(x) <- m
+    }
 
     out <- callNextMethod()
     BiocGenerics:::replaceSlots(out,phenotypes=p,check=FALSE)
@@ -201,6 +243,12 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
     on.exit(S4Vectors:::disableValidity(oldValidity))
 
     out <- callNextMethod()
+    
+    # Drop most metadata    
+    m <- metadata(out)
+    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
+    metadata(out) <- m
+    
     BiocGenerics:::replaceSlots(out,phenotypes=p,check=FALSE)
 })
 
@@ -221,6 +269,12 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
     on.exit(S4Vectors:::disableValidity(oldValidity))
 
     out <- callNextMethod()
+    
+    # Drop most metadata    
+    m <- metadata(out)
+    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
+    metadata(out) <- m
+    
     BiocGenerics:::replaceSlots(out,phenotypes=rp,check=FALSE)
 })
 
@@ -291,6 +345,17 @@ setValidity2("GWASExperiment",function(obj) {
     if (!.checkFilterInfo(m$filters))
         msg <- c(msg,paste0("The 'filters' member of metadata is not properly ",
             "formatted!"))
+    if (!is.null(m$PCs)) {
+        if (!is(m$PCs,"data.frame_OR_matrix"))
+            msg <- c(msg,paste0("If provided, the 'PCs' member of metadata ",
+                "must be a data.frame or a matrix!"))
+        if (is(m$PCs,"data.frame_OR_matrix")) {
+            if (!all(rownames(m$PCs) %in% colnames(assays(obj)[[1]])))
+                msg <- c(msg,paste0("If provided, the 'PCs' member of ",
+                    "metadata must have the same rownames as the column names ",
+                    "of the GWASExperiment object!"))
+        }
+    }
 
     if (length(msg) > 0)
         return(msg)

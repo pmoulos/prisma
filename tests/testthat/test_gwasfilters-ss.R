@@ -43,7 +43,7 @@ test_that("Basic snpStats filters work",{
     expect_equal(length(which(hetF > filts$inbreed)),64)
 })
 
-test_that("IBD filter and SNPRelate PCA calculation work",{
+test_that("IBD filter and SNPRelate LD calculations work",{
     input <- .gimmeTestFiles()
     gwe <- importGWAS(input,backend="snpStats")
     
@@ -55,10 +55,11 @@ test_that("IBD filter and SNPRelate PCA calculation work",{
     gweFilt <- .filterWithSnpStatsIbd(gwe,filts,.testing=TRUE)
     expect_equal(nrow(gweFilt),20)
     expect_equal(ncol(gweFilt),7)
+    expect_true(is.null(metadata(gweFilt)$LDsnps))
     
-    m <- metadata(gweFilt)
-    expect_true(!is.null(m$pcaOut))
-    expect_true(is(m$pcaOut,"snpgdsPCAClass"))
+    #m <- metadata(gweFilt)
+    #expect_true(!is.null(m$LDsnps))
+    #expect_true(length(m$LDsnps) > 0)
 })
 
 test_that("Robust sample PCA filtering works",{
@@ -70,9 +71,10 @@ test_that("Robust sample PCA filtering works",{
     filts$IBD <- NA
     
     # Test PcaGrid
-    gweFilt1 <- .filterWithSnpStatsRobustPca(gwe,filts)
+    expect_warning(gweFilt1 <- .filterWithSnpStatsRobustPca(gwe,filts))
+    expect_equal(length(metadata(gweFilt1)$pcaRob$flag),120)
     expect_equal(nrow(gweFilt1),20)
-    expect_equal(ncol(gweFilt1),86)
+    expect_equal(ncol(gweFilt1),69)
     
     m <- metadata(gweFilt1)
     expect_true(!is.null(m$pcaRob))
@@ -81,8 +83,9 @@ test_that("Robust sample PCA filtering works",{
     # Test PcaHubert
     filts$pcaRobust <- "hubert"
     gweFilt2 <- .filterWithSnpStatsRobustPca(gwe,filts)
+    expect_equal(length(metadata(gweFilt2)$pcaRob$flag),120)
     expect_equal(nrow(gweFilt2),20)
-    expect_equal(ncol(gweFilt2),93)
+    expect_equal(ncol(gweFilt2),87)
     
     m <- metadata(gweFilt2)
     expect_true(!is.null(m$pcaRob))

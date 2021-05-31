@@ -16,7 +16,7 @@
     # IF any samples removed due to robust pca, recalculate PCs with LD
     if (ncol(objPca) < ncol(objIbd)) {
         disp("\nReperforming LD and PCA analysis after outlier sample removal")
-        objPca <- .pcaWithSnpStatsLd(objPca,filters,rc)
+        objPca <- .wrapPcaWithSnpStatsLd(objPca,filters,rc)
     }
 
     if (prismaVerbosity() %in% c("normal","full"))
@@ -139,7 +139,7 @@
             "for IBD analysis.")
     }
     else
-        snpsetIbd <- colnames(x)
+        snpsetIbd <- rownames(obj)
     
     # IBD analysis
     ir <- NULL
@@ -174,25 +174,18 @@
             filters(obj) <- rbind(currFiltDf,filtDf)
     }
            
-    # Finally, perform a PCA with SNPRelate using IBD filtered samples
-    disp("Performing PCA...")
-    pco <- .pcaWithSnpRelate(gdsHandle,samples=sr,snps=snpsetIbd,
-        npcs=filters$nPC,rc=rc,.testing=.testing)
-    
     m <- metadata(obj)
-    m$pcaOut <- pco
+    m$LDsnps <- snpsetIbd
     metadata(obj) <- m
     
     # Close GDS
-    snpgdsClose(gdsHandle)
+    tryCatch(snpgdsClose(gdsHandle),error=function(e) {closefn.gds(gdsHandle)},
+        finally="")
     
     if (!is.null(ir))
         return(obj[,-ir,drop=FALSE])
     else
         return(obj)
-    
-    #pctab <- data.frame(sampleId=pca$sample.id,PC1=pca$eigenvect[,1],
-    #   PC2=pca$eigenvect[,2],stringsAsFactors=FALSE)
 }
 
 .filterWithSnpStatsRobustPca <- function(obj,filters) {
@@ -202,7 +195,8 @@
     if (!filters$pcaOut || .isEmpty(filters$pcaRobust))
         return(obj)
     
-    pco <- .robustPcaWithSnpStats(obj,method=filters$pcaRobust,npc=filters$nPC)
+    pco <- .robustPcaWithSnpStats(obj,method=filters$pcaRobust,npc=filters$nPC,
+        transpose=TRUE)
     m <- metadata(obj)
     m$pcaRob <- pco
     metadata(obj) <- m
@@ -227,6 +221,12 @@
 
 .ldPruningWithSnpRelate <- function(handle,ldCut,samples,snps,rc=NULL,
     .testing=FALSE) {
+    mustClose <- FALSE
+    if (!is(handle,"gds.class")) {
+        mustClose <- TRUE
+        handle <- snpgdsOpen(handle,readonly=FALSE)
+    }
+    
     if (.testing)
         snpSub <- snpgdsLDpruning(handle,ld.threshold=ldCut,maf=0.1,
             autosome.only=FALSE,sample.id=samples,snp.id=snps)
@@ -242,10 +242,14 @@
     #    })
     #    disp(paste(tmp,collapse="\n"))
     #}
+    
+    if (mustClose)
+        snpgdsClose(handle)
+    
     return(unlist(snpSub,use.names=FALSE))
 }
 
-.pcaWithSnpStatsLd <- function(obj,filters,rc=NULL,.testing=FALSE) {
+.wrapPcaWithSnpStatsLd <- function(obj,filters,rc=NULL,.testing=FALSE) {
     m <- metadata(obj)
     
     # Read GDS
@@ -265,16 +269,18 @@
             "for IBD analysis.")
     }
     else
-        snpsetIbd <- colnames(x)
+        snpsetIbd <- rownames(obj)
            
     # Finally, perform a PCA with SNPRelate using IBD filtered samples
-    disp("Performing PCA...")
+    disp("\nPerforming PCA...")
     if (!.isEmpty(filters$pcaRobust))
         pco <- .robustPcaWithSnpStats(obj,filters$pcaRobust,snps=snpsetIbd,
             npc=filters$nPC)
     else
-        pco <- .pcaWithSnpRelate(gdsHandle,samples=rownames(x),snps=snpsetIbd,
+        pco <- .pcaWithSnpRelate(gdsHandle,samples=colnames(obj),snps=snpsetIbd,
             npcs=filters$nPC,rc=rc,.testing=.testing)
+        #pctab <- data.frame(sampleId=pco$sample.id,PC1=pcp$eigenvect[,1],
+        #   PC2=pcp$eigenvect[,2],stringsAsFactors=FALSE)
     
     m <- metadata(obj)
     m$pcaCov <- pco
@@ -287,13 +293,13 @@
 }
 
 .robustPcaWithSnpStats <- function(obj,method=c("grid","hubert"),snps=NULL,
-    npc=0) {
+    npc=0,transpose=FALSE) {
     if (.isEmpty(snps)) {
         m <- metadata(obj)    
-        if ("pcaOut" %in% names(m)) {
-            snps <- m$pcaOut$snp.id
+        if ("LDsnps" %in% names(m)) {
+            snps <- m$LDsnps
             if (is.na(npc) || npc == 0)
-                npc <- ncol(m$pcaOut$eigenvect)
+                npc <- 32
         }
         else
             snps <- rownames(obj)
@@ -304,19 +310,21 @@
     x <- assay(obj,1)
     y <- as(x,"numeric")
     if (any(is.na(y))) # Not imputed, quick kNN
-        y <- .internaImputeKnn(y)
+        y <- .internalImputeKnn(y)
     y <- y[snps,,drop=FALSE]
     
-    if (is.na(npc))
+    if (.isEmpty(npc))
         npc <- 0
+    if (transpose)
+        y <- t(y)
     if (method == "grid") {
         disp("  with grid search method")
-        P <- PcaGrid(t(y),k=npc)
+        P <- PcaGrid(y,k=npc)
     }
     else if (method == "hubert") {
         disp("  with Hubert method")
         kmax <- ifelse(npc>10,npc,10)
-        P <- PcaHubert(t(y),k=npc,kmax=kmax)
+        P <- PcaHubert(y,k=npc,kmax=kmax)
     }
     
     return(P)
