@@ -44,6 +44,8 @@ test_that("createSplit works",{
     o3 <- createSplit(y,n=5,out="binary")
     expect_true(all(unlist(o3,use.names=FALSE) %in% c(0,1)))
     
+    #TODO: Write o4 to test replacing
+    
     expect_error(createSplit(y,n=10,frac=1.1))
     expect_error(createSplit(y,n=10,object="brick"))
 })
@@ -153,6 +155,21 @@ test_that(".isEmpty works",{
     x7 <- list(a=42)
     expect_false(.isEmpty(x7))
 }
+
+test_that(".validateBinaryForBinomial works",{
+    x1 <- c(rep("A",5),rep("B",5))
+    expect_warning(.validateBinaryForBinomial(x1))
+    
+    x2 <- c(rep(1,5),rep(2,5))
+    expect_warning(.validateBinaryForBinomial(x2))
+    
+    x3 <- c(rep(1,5),rep(2,5),rep(3,5))
+    expect_error(.validateBinaryForBinomial(x3))
+    
+    x4 <- c(rep(0,5),rep(1,5))
+    expect_silent(x <- .validateBinaryForBinomial(x4))
+    expect_identical(x,x4)
+})
 
 test_that("prismaVerbosity works",{
     expect_error(prismaVerbosity(1))

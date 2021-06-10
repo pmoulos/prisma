@@ -128,3 +128,119 @@ twTest <- function(eigv,p=0.05,tol=1e-8) {
         index=d
     ))
 }
+
+# TODO: Plot histogram with overlayed normal cure + Q-Q plot
+normalityCheck <- function(x,pval=0.05,tests=c("sw","ks","jb"),lower=30,
+    forceTest=TRUE,combine=c("fisher","simes","max","min"),nsample=1000) {
+    # upper not implemented
+    if (!requireNamespace("tseries"))
+        stop("R package tseries is required for Jarque-Bera test!")
+    
+    combine <- combine[1]
+    .checkTextArgs("Normality tests",tests,c("sw","ks","jb"),multiarg=TRUE)
+    .checkTextArgs("p-value combination",combine,
+        c("fisher","simes","max","min"),multiarg=TRUE)
+    .checkNumArgs("Lower sample size",lower,"numeric",0,"gt")
+    .checkNumArgs("Resampling iterations",nsample,"numeric",0,"gt")
+    if (!is.logical(forceTest))
+        stop("Testing above upper sample size (forceTest) must be logical!")
+    
+    n <- length(x)
+    p <- s <- numeric(length(tests))
+    names(p) <- names(s) <- tests
+    if (n <= lower) {
+        disp("Sample size ",n," <= ",lower,". Will execute combined ",
+            "normality checks using requested tests.")
+        if ("sw" %in% tests) {
+            res <- shapiro.test(x)
+            p["sw"] <- res$p.value
+            s["sw"] <- res$statistic
+        }
+        if ("ks" %in% tests) {
+            res <- ks.test(x,y="pnorm",mean=mean(x),sd=sd(x))
+            p["ks"] <- res$p.value
+            s["ks"] <- res$statistic
+        }
+        if ("jb" %in% tests) {
+            xx <- x[!is.na(x)]
+            res <- jarque.bera.test(xx)
+            p["jb"] <- res$p.value
+            s["jb"] <- res$statistic
+        }
+        
+        if (all(p < pval)) # Done
+            pp <- max(p)
+        else {
+            if (length(tests) > 1) {
+                switch(combine,
+                    min = {
+                        pp <- combineMinp(p)
+                    },
+                    max = {
+                        pp <- combineMaxp(p)
+                    },
+                    fisher = {
+                        tmp <- fisherMethod(t(as.matrix(p)),p.corr="none",
+                            zeroSub=.Machine$double.xmin)
+                        pp <- tmp$p.value
+                    },
+                    simes = {
+                        pp <- combineSimes(p)
+                    }
+                )
+            }
+            else
+                pp <- p
+        }
+        
+        return(list(
+            statistic=s,
+            pvalues=p,
+            pval=pp,
+            normal=pp>=pval
+        ))
+    }
+    else { # Bootstrap per 50 observations covering all x ranges
+        disp("Sample size ",n," > ",lower,". Will execute multiple ",
+            "normality checks using the Shapiro-Wilk tests in subsamples of ",
+            "size ",lower,".\n  resampling...")
+        ind <- createSplit(y=x,n=nsample,frac=round(50/n,digits=3))
+        res <- lapply(ind,function(i,s) {
+            tmp <- shapiro.test(s[i])
+            return(list(p=tmp$p.value,s=tmp$statistic))
+        },x)
+        ps <- unlist(lapply(res,function(x) return(x$p)),use.names=FALSE)
+        ss <- unlist(lapply(res,function(x) return(x$s)),use.names=FALSE)
+        
+        # Solution with quantiles!
+        # If 90% (or 100*(1-2*pval)%) of p-value distribution is larger than
+        # pval, then we conclude that the distribution is normal and we report
+        # quantile(ps,1-pval) as p-value
+        # Otherwise, we conclude that the distribution is not normal and we
+        # report quantile(ps,pval) as p-value
+        pctCut <- 1 - 2*pval
+        pctAct <- length(which(ps>=pval))/nsample
+        if (pctAct > pctCut)
+            p <- quantile(ps,1-pval)
+        else
+            p <- quantile(ps,pval)
+        
+        return(list(
+            statistic=ss,
+            pvalues=ps,
+            pval=p,
+            normal=p>=pval
+        ))
+    }
+}
+
+rankTransform <- function(x) {
+    x <- x[!is.na(x)]
+    z <- (x-mean(x))/sd(x)
+    out <- rank(z) - 0.5
+    out[is.na(z)] <- NA
+    mP <- 0.5/max(out,na.rm=TRUE)
+    out <- out/(max(out,na.rm=TRUE)+0.5)
+    return(qnorm(out))
+}
+

@@ -1,5 +1,5 @@
 partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,ncol(obj)),
-    out=c("index","train","ttboth"),rc=NULL) {
+    replace=FALSE,out=c("index","train","ttboth"),rc=NULL) {
     if (!is(obj,"GWASExperiment"))
         stop("obj must be a GWASExperiment object!")
     
@@ -21,10 +21,12 @@ partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,ncol(obj)),
     .checkNumArgs("n",as.integer(n),"integer",1L,"gte")
     .checkNumArgs("frac",frac,"numeric",c(0,1),"both")
     .checkNumArgs("ngrp",as.integer(ngrp),"integer",1L,"gte")
+    if (!is.logical(replace))
+        stop("The replace argument must be TRUE or FALSE")
     
     disp("Partitioning dataset into ",n," partitions by ",by)
     y <- p[,by]
-    split <- createSplit(y,n=n,frac=frac,ngrp=ngrp,rc=rc)
+    split <- createSplit(y,n=n,frac=frac,ngrp=ngrp,replace=replace,rc=rc)
     if (n == 1) {
         if (out == "train")
             return(obj[,split[[1]],drop=FALSE])
@@ -40,13 +42,15 @@ partitionGWAS <- function(obj,by,n=1,frac=0.5,ngrp=min(5,ncol(obj)),
         return(split)
 }
 
-createSplit <- function (y,n=1,frac=0.5,ngrp=min(5,length(y)),
+createSplit <- function (y,n=1,frac=0.5,ngrp=min(5,length(y)),replace=FALSE,
     out=c("index","binary"),rc=NULL) {
     out <- out[1]
     .checkTextArgs("out",out,c("index","binary"),multiarg=FALSE)
     .checkNumArgs("n",as.integer(n),"integer",1L,"gte")
     .checkNumArgs("frac",frac,"numeric",c(0,1),"both")
     .checkNumArgs("ngrp",as.integer(ngrp),"integer",1L,"gte")
+    if (!is.logical(replace))
+        stop("The replace argument must be TRUE or FALSE")
     
     if (length(y) < 2) 
         stop("The class to be split must have at least 2 data points!")
@@ -72,13 +76,13 @@ createSplit <- function (y,n=1,frac=0.5,ngrp=min(5,length(y)),
     }
     
     N <- seq_len(n)
-    splits <- cmclapply(N,function(i,x,p) {
+    splits <- cmclapply(N,function(i,x,p,r) {
         tmp <- data.frame(x=x,index=seq_along(x))
         if (nrow(tmp) == 1)
             return(tmp$index)
         else
-            return(sort(sample(tmp$index,size=ceiling(nrow(tmp)*p))))
-    },y,frac,rc=rc)
+            return(sort(sample(tmp$index,size=ceiling(nrow(tmp)*p),replace=r)))
+    },y,frac,replace,rc=rc)
     
     if (out=="binary") {
         splits <- cmclapply(splits,function(x,n) {
@@ -157,13 +161,27 @@ disp <- function(...,level=c("normal","full")) {
         message(...)
 }
 
+.splitFactorForParallel <- function(n,rc) {
+    .checkNumArgs("The number of elements to split",n,"numeric",0,"gt")
+    nc <- .coresFrac(rc)
+    mo <- n%%nc
+    if (mo == 0) {
+        fl <- n/nc
+        return(factor(rep(seq_len(nc),each=fl)))
+    }
+    else {
+        fl <- (n-mo)/nc
+        return(factor(c(rep(seq_len(nc),each=fl),rep(nc,mo))))
+    }
+}
+
 .coresFrac <- function(rc=NULL) {
     if (missing(rc) || is.null(rc))
         return(1)
     else {
         n <- parallel::detectCores()
         if (n > 1)
-            return(ceiling(rc*ncores))
+            return(ceiling(rc*n))
         else 
             return(1)
     }
@@ -173,6 +191,21 @@ disp <- function(...,level=c("normal","full")) {
     x <- round(x,digits=1)
     for (i in seq_len(ncol(x)))
         x[,i] <- as.integer(x[,i])
+    return(x)
+}
+
+.validateBinaryForBinomial <- function(x) {
+    if (length(unique(x)) > 2)
+        stop("The response variable cannot have more than two values when ",
+            "GLM family is 'binomial'!")
+    if (!is.factor(x)) {
+        if (!all(unique(x) %in% c(0,1))) {
+            warning("When GLM family is 'binomial', the response variable ",
+                "must be either 0, 1 or a 2-level factor! Converting to ",
+                "factor...")
+            x <- as.factor(x)
+        }
+    }
     return(x)
 }
 
@@ -346,6 +379,8 @@ disp <- function(...,level=c("normal","full")) {
     )
     
     check <- lapply(lookup[[direction]],function(f) f(argValue))
+    if (argType == "numeric" && check$cls == "integer")
+        argType <- "integer"
     if (check$fail || check$cls != argType)
         stop("\"",argName,"\""," parameter must be a(n) ",argType,
             " value ",check$msg,"!")

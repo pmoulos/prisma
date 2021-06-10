@@ -489,35 +489,6 @@
     return(1-(hetObs/hetExp))
 }
 
-.checkSelection <- function(s) {
-    if (is.null(s))
-        return(s)
-    
-    if (!is.list(s))
-        stop("The selection argument must be a list!")
-    if (!(all(names(s) %in% c("samples","snps"))))
-        stop("The selection argument must be a named list with members ",
-            "'samples' and 'snps'!")
-            
-    problemFound <- vapply(s,function(x) {
-        if (!is.null(x)) {
-            if (is.numeric(x) && all(x>0))
-                return(FALSE)
-            else
-                return(TRUE)
-        }
-        else
-            return(FALSE)
-    },logical(1))
-            
-    if (any(problemFound))
-        stop("All selection list members must be non-negative integers ",
-            "denoting SNP matrix rows\nand/or columns! ",
-            paste(names(s)[problemFound],collapse=", ")," are not...")
-    
-    return(s)
-}
-
 .checkFilters <- function(f) {
     # Allowed and given values
     defaults <- getDefaults("filters")
