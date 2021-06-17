@@ -17,7 +17,7 @@ setClassUnion("data.frame_OR_DataFrame_OR_NULL",
 GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     samples=DataFrame(),phenotypes=DataFrame(),
     metadata=list(genome=NA_character_,backend=NA_character_,
-        filters=setNames(data.frame(matrix(ncol=4,nrow=0)),
+        filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
             c("parameter","name","value","type","filtered"))),...) {
     
     # It MUST have metadata with certain names in the list
@@ -25,7 +25,7 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
         warning("The provided metadata argument is not a list! ",
             "Reinitializing... ")
         metadata <- list(genome=NA_character_,backend=NA_character_,
-            filters=setNames(data.frame(matrix(ncol=4,nrow=0)),
+            filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
             c("parameter","name","value","type","filtered")))
     }
         
@@ -429,6 +429,94 @@ SnpMatrix <- function(snp) {
         && all(names(d) %in% c("parameter","name","value","type","filtered")))
 }
 
+.hasPcaCovariates <- function(x) {
+    if (!is(x,"GWASExperiment"))
+        stop("Input must be an object of class GWASExperiment!")
+    return(!.isEmpty(pcaCovariates(x)))
+}
+
+#setAs("GWASExperiment","gData",function(from) {
+#    if (!requireNamespace("statgenGWAS"))
+#        stop("R package statgenGWAS is required!")
+#    
+#    # Genotypes
+#    geno <- as(t(assay(from,1)),"numeric")
+#    
+#    # Map
+#    map <- as.data.frame(gfeatures(from))
+#    map <- map[,c("chromosome","position")]
+#    names(map) <- c("chr","pos")
+#    
+#    # Phenotypes - drop those which are not numeric for now...
+#    pheno <- phenotypes(from)
+#    chn <- vapply(names(pheno),function(x,p) {
+#        return(is.character(p[[x]]))
+#    },logical(1),pheno)
+#    if (!all(chn)) {
+#        warning("Some phenotypes are not numeric (",
+#            paste0(names(pheno)[which(chn)],collapse=", "),")!\nThese will ",
+#            "not be passed to the resulting gData object.",immediate.=TRUE)
+#        pheno <- pheno[,!chn,drop=FALSE]
+#    }
+#    pheno <- data.frame(genotype=rownames(pheno),pheno)
+#    
+#    return(createGData(geno=geno,map=map,pheno=pheno))
+#})
+
+# Convert GWASExperiment to gData (statgenGWAS)
+GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE) {
+    if (!requireNamespace("statgenGWAS"))
+        stop("R package statgenGWAS is required!")
+    
+    # Phenotypes - drop those which are not numeric for now... and check with
+    # covariates... If not everything satisfied, we do not proceed.
+    pheno <- phenotypes(obj)
+    chn <- vapply(names(pheno),function(x,p) {
+        return(is.character(p[[x]]))
+    },logical(1),pheno)
+    if (any(chn)) {
+        warning("Some phenotypes are not numeric (",
+            paste0(names(pheno)[which(chn)],collapse=", "),")!\nThese will ",
+            "not be passed to the resulting gData object.",immediate.=TRUE)
+        pheno <- pheno[,!chn,drop=FALSE]
+    }
+    
+    if (pcs) { # Include precalculated PCs if any
+        if (.hasPcaCovariates(obj)) {
+            pcov <- pcaCovariates(obj)
+            pheno <- cbind(pheno,pcov)
+            covariates <- c(covariates,colnames(pcov))
+        }
+        else
+            warning("PC covariates reqeusted in the model, but no calculated ",
+                "PC covariates found! Ignoring...",immediate.=TRUE)
+    }
+    
+    covar <- NULL
+    if (!is.null(covariates)) {
+        if (!(all(covariates %in% names(pheno)))) {
+            no <- which(!(covariates %in% names(pheno)))
+            stop("Covariate(s) ",paste0(covariates[no],collapse=", "),
+                " not found in gData phenotypes!\nHave they been dropped ",
+                "because they were not numeric?")
+        }
+        
+        covar <- pheno[,covariates,drop=FALSE]
+        pheno <- pheno[,-match(covariates,names(pheno)),drop=FALSE]
+    }
+    pheno <- data.frame(genotype=rownames(pheno),pheno)
+    
+    
+    # Genotypes
+    geno <- as(t(assay(obj,1)),"numeric")
+    
+    # Map
+    map <- as.data.frame(gfeatures(obj))
+    map <- map[,c("chromosome","position")]
+    names(map) <- c("chr","pos")
+    
+    return(createGData(geno=geno,map=map,pheno=pheno,covar=covar))
+}
 
 #~ .GWASExperiment <- setClass("GWASExperiment",
 #~  contains="SummarizedExperiment",

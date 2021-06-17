@@ -400,3 +400,37 @@ test_that("GWASExperiment rbind works",{
     expect_equal(length(GWASthing),length(GWASthing1) + length(GWASthing2))
     expect_equal(ncol(GWASthing),ncol(GWASthing1))
 })
+
+test_that("GWASExperiment2gData works",{
+    set.seed(42)
+    
+    thing <- .makeThingData()
+    GWASthing <- GWASExperiment(
+        genotypes=thing$snp,
+        features=thing$feature,
+        samples=thing$sample,
+        phenotypes=thing$pheno
+    )
+    GWASthing_ <- GWASExperiment(
+        genotypes=thing$snp,
+        features=thing$feature,
+        samples=thing$sample,
+        phenotypes=thing$pheno[,-c(2,3)]
+    )
+    
+    # All should be ok
+    expect_silent(gd_ <- GWASExperiment2gData(GWASthing_))
+    expect_true(is(gd_,"gData"))
+    # Character phenotypes
+    expect_warning(gd <- GWASExperiment2gData(GWASthing))
+    # Improper covariates
+    expect_error(gd <- GWASExperiment2gData(GWASthing_,
+        c("case_control","contip")))
+    # Should be ok
+    expect_silent(gdp <- GWASExperiment2gData(GWASthing_,c("cont")))
+    
+    expect_true(is(gdp,"gData"))
+    expect_equal(ncol(gdp$pheno[[1]]),2)
+    expect_equal(ncol(gdp$covar),1)
+})
+
