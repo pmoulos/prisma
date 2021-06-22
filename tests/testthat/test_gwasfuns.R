@@ -22,6 +22,22 @@ test_that("gwaStatgen works",{
     # Maybe with a real test dataset or a test "thing"
 })
 
+test_that("gwaSnptest works",{
+    # Maybe with a real test dataset or a test "thing"
+})
+
+test_that(".preparePlinkInputForSnptest works",{
+    # Maybe with a real test dataset or a test "thing"
+})
+
+test_that(".preparePlinkInputForSnptest works",{
+    # Maybe with a real test dataset or a test "thing"
+})
+
+test_that(".initSnptestSampleFirstRow works",{
+    # Maybe with a real test dataset or a test "thing"
+})
+
 test_that(".validateResponseAndCovariates",{
     df <- as.data.frame(matrix(runif(40),10,4))
     names(df) <- c("y","x1","x2","x3")

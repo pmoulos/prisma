@@ -102,7 +102,7 @@ createSample <- function() {
 }
 
 getDefaults <- function(what) {
-    allowed <- c("filters")
+    allowed <- c("filters","gwargs")
     
     if (!(what %in% allowed))
         stop("what must be one of ",paste(allowed,collapse=", "))
@@ -123,6 +123,24 @@ getDefaults <- function(what) {
                 LD=0.2,
                 IBD=0.1,
                 inbreed=0.1
+            ))
+        },
+        gwargs = {
+            return(list(
+                glm=list(
+                    family="gaussian"
+                ),
+                rrblup=list(
+                    pcblup="auto",
+                    npcs=NULL
+                ),
+                statgen=list(
+                    # Nothing for now
+                ),
+                snptest=list(
+                    test="frequentist",
+                    model="additive"
+                )
             ))
         }
     )
@@ -431,6 +449,30 @@ disp <- function(...,level=c("normal","full")) {
 
 .isEmpty <- function(x) {
     return(is.null(x) || is.na(x) || x == "" || length(x) == 0)
+}
+
+.downloadSnptest <- function(ver=c("v2.5.6","v2.5.4","v2.5.2")) {
+    # This downloads the latest version by default... Might not work for older
+    # Linux operating systems
+    ver <- ver[1]
+    base <- "http://www.well.ox.ac.uk/~gav/resources/"
+    if (ver == "v2.5.6")
+        ext = "snptest_v2.5.6_CentOS_Linux7.8-x86_64_dynamic.tgz"
+    else if (ver == "v2.5.4")
+        ext <- "snptest_v2.5.4-beta3_linux_x86_64_static.tgz"
+    else if (ver == "v2.5.2")
+        ext <- "snptest_v2.5.2_linux_x86_64_static.tgz"
+    src <- paste0(base,ext)
+    des <- file.path(system.file(package="prisma"),"tools",ext)
+    download.file(src,des)
+    untar(des,exdir=file.path(system.file(package="prisma"),"tools"))
+    unlink(des)
+}
+
+.randomString <- function(n=1) {
+  a <- do.call(paste0,replicate(5,sample(LETTERS,n,replace=TRUE),FALSE))
+  return(paste0(a,sprintf("%04d",sample(9999,n,replace=TRUE)),sample(LETTERS,n,
+    replace=TRUE)))
 }
 
 #~ getAPIBase <- function() {

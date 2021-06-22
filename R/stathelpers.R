@@ -11,12 +11,13 @@ combineSimes <- function(p,zerofix=NULL) {
 #    return(prod(p^w))
 #}
 #
-#combineHarmonic <- function(p,w,zerofix=NULL) {
-#    if (!requireNamespace("harmonicmeanp"))
-#        stop("R package harmonicmeanp is required!")
-#    p <- .zeroFix(p,zerofix)
-#    return(p.hmp(p,w,L=length(p),multilevel=FALSE))
-#}
+
+combineHarmonic <- function(p,w,zerofix=NULL) {
+    if (!requireNamespace("harmonicmeanp"))
+        stop("R package harmonicmeanp is required!")
+    p <- .zeroFix(p,zerofix)
+    return(p.hmp(p,w,L=length(p),multilevel=FALSE))
+}
 
 combineMinp <- function(p) { 
     return(min(p))
