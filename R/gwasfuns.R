@@ -39,6 +39,10 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
             statgen = {
                 sgRes <- gwaStatgen(obj,response,covariates,pcs,psig,rc)
                 pMatrix[,m] <- sgRes$pValue
+            },
+            snptest = {
+                sgSnp <- gwaSnptest(obj,response,covariates,pcs,psig)
+                pMatrix[,m] <- sgSnp$pvalue
             }
         )
     }
@@ -302,7 +306,11 @@ gwaStatgen <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 
 gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     test=c("frequentist","bayesian"),model=c("additive","dominant","recessive",
-    "general","heterozygote"),rc=NULL) {
+    "general","heterozygote")) {
+    # Tool availability before all else
+    if (!.toolAvailable("snptest"))
+        stop("SNPTEST program not found in the system!")
+    
     test <- test[1]
     .checkTextArgs("SNPTEST testing",test,c("frequentist","bayesian"),
         multiarg=FALSE)
@@ -330,7 +338,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     snptest <- .findSnptest()
     command <- paste0(snptest," -data ",tmplink$plink," ",tmplink$sample,
         " -frequentist ",modelCode[model]," -method score -pheno ",response,
-        " -cov_all -o ",file.path(stwork,"snptest.out"))
+        " -cov_all -o ",file.path(stwork,"snptest.out")
     )
     
     message("Executing: ",command)
@@ -494,8 +502,4 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     }
     
     return(list(res=res,cvs=cvs))
-}
-
-.findSnptest <- function() {
-    
 }
