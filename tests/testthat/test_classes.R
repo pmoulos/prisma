@@ -1,6 +1,7 @@
 # Pseudodata generating function
 .makeThingData <- function(error=c("none","snp_class","feature_size",
-    "feature_name","sample_size","sample_name","pheno_size","pheno_name")) {
+    "feature_name","sample_size","sample_name","pheno_size","pheno_name",
+    "pval_size","pval_name")) {
     if (missing(error))
         error <- "none"
     
@@ -55,12 +56,18 @@
     rownames(snp) <- rownames(fam)
     colnames(snp) <- rownames(map)
     
+    # Pseudo-pvalues
+    pspval <- matrix(runif(200),100,2)
+    rownames(pspval) <- colnames(snp)
+    colnames(pspval) <- c("test1","test2")
+    
     if ("none" %in% error)
         return(list(
             snp=SnpMatrix(t(snp)),
             sample=fam,
             feature=map,
-            pheno=pseudopheno
+            pheno=pseudopheno,
+            pval=pspval
         ))
     else {
         if ("snp_class" %in% error)
@@ -80,12 +87,17 @@
             pseudopheno <- pseudopheno[-sample(nrow(pseudopheno),1),,drop=FALSE]
         if ("pheno_name" %in% error)
             rownames(pseudopheno)[sample(nrow(pseudopheno),1)] <- "bad_name"
+        if ("pval_size" %in% error)
+            pspval <- pspval[-sample(nrow(pspval),1),,drop=FALSE]
+        if ("pval_name" %in% error)
+            rownames(pspval)[sample(nrow(pspval),1)] <- "bad_p_name"
         
         return(list(
             snp=snp,
             sample=fam,
             feature=map,
-            pheno=pseudopheno
+            pheno=pseudopheno,
+            pval=pspval
         ))
     }
 }
@@ -214,6 +226,26 @@ test_that("GWASExperiment validation works - single errors",{
         samples=thing$sample,
         phenotypes=thing$pheno
     ))
+    
+    thing <- .makeThingData(error="pval_size")
+    expect_error(GWASExperiment(
+        genotypes=thing$snp,
+        features=thing$feature,
+        samples=thing$sample,
+        phenotypes=thing$pheno,
+        pvalues=thing$pval
+    ))
+    
+    # Should not throw error as withDimnames=TRUE and assay rownames are always
+    # replacing pvalues rownames
+    thing <- .makeThingData(error="pval_name")
+    expect_silent(GWASExperiment(
+        genotypes=thing$snp,
+        features=thing$feature,
+        samples=thing$sample,
+        phenotypes=thing$pheno,
+        pvalues=thing$pval
+    ))
 })
 
 test_that("GWASExperiment validation works - multiple errors",{
@@ -247,7 +279,8 @@ test_that("GWASExperiment getters work",{
         genotypes=thing$snp,
         features=thing$feature,
         samples=thing$sample,
-        phenotypes=thing$pheno
+        phenotypes=thing$pheno,
+        pvalues=thing$pval
     )
     
     expect_identical(rownames(assays(GWASthing)[[1]]),rownames(thing$snp))
@@ -265,6 +298,10 @@ test_that("GWASExperiment getters work",{
     expect_identical(colnames(phenotypes(GWASthing)),colnames(thing$pheno))
     expect_identical(phenotypes(GWASthing),thing$pheno)
     
+    expect_identical(rownames(pvalues(GWASthing)),rownames(thing$snp))
+    expect_identical(colnames(pvalues(GWASthing)),colnames(thing$pval))
+    expect_identical(pvalues(GWASthing),thing$pval)
+    
     i <- seq_len(10)
     j <- seq_len(5)
     Gslice <- GWASthing[i,j]
@@ -273,6 +310,7 @@ test_that("GWASExperiment getters work",{
     expect_identical(rowData(Gslice),DataFrame(thing$feature[i,,drop=FALSE]))
     expect_identical(colData(Gslice),DataFrame(thing$sample[j,,drop=FALSE]))
     expect_identical(phenotypes(Gslice),thing$pheno[j,,drop=FALSE])
+    expect_identical(pvalues(Gslice),thing$pval[i,,drop=FALSE])
 })
 
 test_that("GWASExperiment setters work",{
@@ -297,31 +335,8 @@ test_that("GWASExperiment setters work",{
     phenotypes(GWASthing) <- thingNew$pheno
     expect_identical(phenotypes(GWASthing),thingNew$pheno)
     
-    genome(GWASthing) <- "hg19"
-    expect_identical(genome(GWASthing),"hg19")
-})
-
-test_that("GWASExperiment setters work",{
-    set.seed(42)
-    thingOld <- .makeThingData()
-    GWASthing <- GWASExperiment(
-        genotypes=thingOld$snp,
-        features=thingOld$feature,
-        samples=thingOld$sample,
-        phenotypes=thingOld$pheno
-    )
-    
-    set.seed(43)
-    thingNew <- .makeThingData()
-    
-    gfeatures(GWASthing) <- thingNew$feature
-    expect_identical(rowData(GWASthing),DataFrame(thingNew$feature))
-    
-    gsamples(GWASthing) <- thingNew$sample
-    expect_identical(colData(GWASthing),DataFrame(thingNew$sample))
-    
-    phenotypes(GWASthing) <- thingNew$pheno
-    expect_identical(phenotypes(GWASthing),thingNew$pheno)
+    pvalues(GWASthing) <- thingNew$pval
+    expect_identical(pvalues(GWASthing),thingNew$pval)
     
     genome(GWASthing) <- "hg19"
     expect_identical(genome(GWASthing),"hg19")
@@ -334,7 +349,8 @@ test_that("GWASExperiment cbind works",{
         genotypes=thing1$snp,
         features=thing1$feature,
         samples=thing1$sample,
-        phenotypes=thing1$pheno
+        phenotypes=thing1$pheno,
+        pvalues=thing1$pval
     )
     
     set.seed(43)
@@ -345,21 +361,24 @@ test_that("GWASExperiment cbind works",{
         genotypes=thing2$snp,
         features=thing1$feature,
         samples=thing2$sample,
-        phenotypes=thing2$pheno
+        phenotypes=thing2$pheno,
+        pvalues=thing2$pval
     )
     GWASthingF <- GWASExperiment(
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing2$sample,
-        phenotypes=thing2$pheno
+        phenotypes=thing2$pheno,
+        pvalues=thing2$pval
     )
     
     expect_identical(rowData(GWASthing1),rowData(GWASthing2))
     expect_false(identical(colData(GWASthing1),colData(GWASthing2)))
     expect_false(identical(phenotypes(GWASthing1),phenotypes(GWASthing2)))
+    expect_false(identical(pvalues(GWASthing1),pvalues(GWASthing2)))
     
     expect_error(GWASthing <- cbind(GWASthing1,GWASthingF))
-    expect_silent(GWASthing <- cbind(GWASthing1,GWASthing2))
+    expect_warning(GWASthing <- cbind(GWASthing1,GWASthing2))
     expect_equal(length(GWASthing),length(GWASthing1))
     expect_equal(ncol(GWASthing),ncol(GWASthing1) + ncol(GWASthing2))
 })
@@ -371,7 +390,8 @@ test_that("GWASExperiment rbind works",{
         genotypes=thing1$snp,
         features=thing1$feature,
         samples=thing1$sample,
-        phenotypes=thing1$pheno
+        phenotypes=thing1$pheno,
+        pvalues=thing1$pval
     )
     
     set.seed(43)
@@ -382,21 +402,24 @@ test_that("GWASExperiment rbind works",{
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing1$sample,
-        phenotypes=thing1$pheno
+        phenotypes=thing1$pheno,
+        pvalues=thing2$pval
     )
     GWASthingF <- GWASExperiment(
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing2$sample,
-        phenotypes=thing2$pheno
+        phenotypes=thing2$pheno,
+        pvalues=thing2$pval
     )
     
     expect_identical(colData(GWASthing1),colData(GWASthing2))
     expect_false(identical(rowData(GWASthing1),rowData(GWASthing2)))
     expect_identical(phenotypes(GWASthing1),phenotypes(GWASthing2))
+    expect_false(identical(pvalues(GWASthing1),pvalues(GWASthing2)))
     
     expect_error(GWASthing <- rbind(GWASthing1,GWASthingF))
-    expect_silent(GWASthing <- rbind(GWASthing1,GWASthing2))
+    expect_warning(GWASthing <- rbind(GWASthing1,GWASthing2))
     expect_equal(length(GWASthing),length(GWASthing1) + length(GWASthing2))
     expect_equal(ncol(GWASthing),ncol(GWASthing1))
 })
@@ -433,4 +456,3 @@ test_that("GWASExperiment2gData works",{
     expect_equal(ncol(gdp$pheno[[1]]),2)
     expect_equal(ncol(gdp$covar),1)
 })
-

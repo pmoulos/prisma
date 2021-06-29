@@ -102,7 +102,7 @@ createSample <- function() {
 }
 
 getDefaults <- function(what) {
-    allowed <- c("filters","gwargs")
+    allowed <- c("filters","gwargs","externalTools")
     
     if (!(what %in% allowed))
         stop("what must be one of ",paste(allowed,collapse=", "))
@@ -146,8 +146,8 @@ getDefaults <- function(what) {
         externalTools = {
             return(list(
                 snptest="v2.5.6",
-                plink="1.90",
-                prsice="2.3.3"
+                plink="v1.90",
+                prsice="v2.3.3"
             ))
         }
     )
@@ -216,21 +216,6 @@ disp <- function(...,level=c("normal","full")) {
     x <- round(x,digits=1)
     for (i in seq_len(ncol(x)))
         x[,i] <- as.integer(x[,i])
-    return(x)
-}
-
-.validateBinaryForBinomial <- function(x) {
-    if (length(unique(x)) > 2)
-        stop("The response variable cannot have more than two values when ",
-            "GLM family is 'binomial'!")
-    if (!is.factor(x)) {
-        if (!all(unique(x) %in% c(0,1))) {
-            warning("When GLM family is 'binomial', the response variable ",
-                "must be either 0, 1 or a 2-level factor! Converting to ",
-                "factor...")
-            x <- as.factor(x)
-        }
-    }
     return(x)
 }
 

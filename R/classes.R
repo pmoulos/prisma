@@ -2,6 +2,8 @@
 
 setClassUnion("data.frame_OR_matrix",c("data.frame","matrix"))
 
+setClassUnion("data.frame_OR_matrix_OR_NULL",c("data.frame","matrix","NULL"))
+
 setClassUnion("data.frame_OR_DataFrame_OR_NULL",
     c("data.frame","DataFrame","NULL"))
 
@@ -9,13 +11,14 @@ setClassUnion("data.frame_OR_DataFrame_OR_NULL",
 .GWASExperiment <- setClass("GWASExperiment",
     contains="SummarizedExperiment",
     slots=c(
-        phenotypes="data.frame_OR_DataFrame_OR_NULL"
+        phenotypes="data.frame_OR_DataFrame_OR_NULL",
+        pvalues="data.frame_OR_matrix_OR_NULL"
     )
 )
 
 # Constructor
 GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
-    samples=DataFrame(),phenotypes=DataFrame(),
+    samples=DataFrame(),phenotypes=DataFrame(),pvalues=NULL,
     metadata=list(genome=NA_character_,backend=NA_character_,
         filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
             c("parameter","name","value","type","filtered"))),...) {
@@ -37,7 +40,7 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     if (!("backend" %in% names(metadata))) {
         warning("Required 'backend' member was not found in metadata list and ",
             "was be added automatically.")
-        m$backend <- NA_character_
+        metadata$backend <- NA_character_
     }
     if (!("filters" %in% names(metadata))) {
         warning("Required 'filters' member was not found in metadata list and ",
@@ -47,7 +50,7 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     
     se <- SummarizedExperiment(assays=genotypes,rowData=features,
         colData=samples,metadata=metadata)
-    return(.GWASExperiment(se,phenotypes=phenotypes))
+    return(.GWASExperiment(se,phenotypes=phenotypes,pvalues=pvalues))
 }
 
 setGeneric("gfeatures",function(x,...) standardGeneric("gfeatures"))
@@ -61,6 +64,10 @@ setGeneric("gsamples<-",function(x,...,value) standardGeneric("gsamples<-"))
 setGeneric("phenotypes",function(x,...) standardGeneric("phenotypes"))
 
 setGeneric("phenotypes<-",function(x,...,value) standardGeneric("phenotypes<-"))
+
+setGeneric("pvalues",function(x,...) standardGeneric("pvalues"))
+
+setGeneric("pvalues<-",function(x,...,value) standardGeneric("pvalues<-"))
 
 setGeneric("filters",function(x,...) standardGeneric("filters"))
 
@@ -104,6 +111,23 @@ setMethod("phenotypes","GWASExperiment",function(x,withDimnames=TRUE) {
 
 setReplaceMethod("phenotypes","GWASExperiment",function(x,...,value) {
     x@phenotypes <- value
+    if (validObject(x))
+        return(x)
+})
+
+setMethod("pvalues","GWASExperiment",function(x,withDimnames=TRUE) {
+    p <- x@pvalues
+    if (!is.null(p)) {
+        if (withDimnames)
+            rownames(p) <- rownames(x)
+        else
+            rownames(p) <- NULL
+    }
+    return(p)
+})
+
+setReplaceMethod("pvalues","GWASExperiment",function(x,...,value) {
+    x@pvalues <- value
     if (validObject(x))
         return(x)
 })
@@ -153,6 +177,7 @@ setReplaceMethod("pcaCovariates","GWASExperiment",function(x,...,value) {
 
 setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     p <- phenotypes(x,withDimnames=FALSE)
+    v <- pvalues(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -161,6 +186,7 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
                 rownames(x),fmt)
         }
         i <- as.vector(i)
+        v <- v[i,,drop=FALSE]
     }
 
     if (!missing(j)) {
@@ -186,12 +212,13 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,check=FALSE)
 })
 
 setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     function(x,i,j,...,value) {
     p <- phenotypes(x,withDimnames=FALSE)
+    v <- pvalues(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -200,6 +227,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
                 rownames(x),fmt)
         }
         i <- as.vector(i)
+        v[i,] <- pvalues(value,withDimnames=FALSE)
     }
 
     if (!missing(j)) {
@@ -209,7 +237,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
                 colnames(x),fmt)
         }
         j <- as.vector(j)
-        p[j,] <- phenotypes(value,withDimname=FALSE)
+        p[j,] <- phenotypes(value,withDimnames=FALSE)
     }
     
     # Similarly as above, if i or j not missing, values have been replaced and
@@ -221,7 +249,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,check=FALSE)
 })
 
 # cbind means adding samples - phenotypes may not be identical
@@ -249,7 +277,12 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
     m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
     metadata(out) <- m
     
-    BiocGenerics:::replaceSlots(out,phenotypes=p,check=FALSE)
+    # pvalues must also be dropped as the population changes
+    if (!is.null(pvalues(ref)))
+        warning("Previous association p-values will be dropped during ",
+            "cbind operation as the population changes!")
+    
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=NULL,check=FALSE)
 })
 
 # rbind means adding SNPs - phenotypes must be identical
@@ -275,7 +308,12 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
     m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
     metadata(out) <- m
     
-    BiocGenerics:::replaceSlots(out,phenotypes=rp,check=FALSE)
+    # pvalues must also be dropped as the population changes
+    if (!is.null(pvalues(ref)))
+        warning("Previous association p-values will be dropped during ",
+            "rbind operation as the number of markers changes!")
+    
+    BiocGenerics:::replaceSlots(out,phenotypes=rp,pvalues=NULL,check=FALSE)
 })
 
 setAs("SummarizedExperiment","GWASExperiment",function(from) {
@@ -334,6 +372,23 @@ setValidity2("GWASExperiment",function(obj) {
         if (!identical(no,nr))
             msg <- c(msg,paste0("When provided, assay colnames and phenotype ",
                 "data rownames must be identical!"))
+    }
+    
+    # If pvalues are given, they must have same #rows as assay rows
+    # and at least one column and must be a matrix-like object
+    v <- pvalues(obj)
+    if (!is.null(v) && nrow(v) > 0) {
+        if (nrow(v) != nrow(assays(obj)[[1]]) || ncol(v) < 1)
+            msg <- c(msg,paste0("When provided, association pvalues must have ",
+                "the same number of rows as the number of markers and at ",
+                "least one test performed (1 column)!"))
+    }
+    no <- rownames(assays(obj)[[1]])
+    nr <- rownames(v)
+    if (!is.null(no) && !is.null(nr)) {
+        if (!identical(no,nr))
+            msg <- c(msg,paste0("When provided, assay rownames and associated ",
+                "p-value rownames must be identical!"))
     }
     
     # It MUST have metadata with certain names in the list
@@ -408,6 +463,9 @@ setMethod("show","GWASExperiment",function(object) {
     
     # phenotypes()
     coolcat("phenotype names(%d): %s\n",names(phenotypes(object)))
+    
+    # pvalues()
+    coolcat("performed tests(%d): %s\n",colnames(pvalues(object)))
 })
 
 # Constructor for SnpMatrix as it's missing from the snpStats package

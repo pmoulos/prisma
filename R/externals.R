@@ -1,19 +1,22 @@
 # This will download in default paths... If another path is desired, use 
 # individual download functions directly
 downloadExternalTools <- function(tools=c("snptest","plink","prsice"),
-    ver=getDefaults("externalTools")) {
-    .checkTextArgs("Tools",ver,c("snptest","plink","prsice"),multiarg=FALSE)
+    ver=getDefaults("externalTools"),path=NULL) {
+    .checkTextArgs("tools",tools,c("snptest","plink","prsice"),multiarg=TRUE)
     
-    downloadSnptest(ver=ver$snptest)
-    downloadPlink(ver=ver$plink)
-    downloadPrsice(ver=ver$prsice)
+    if ("snptest" %in% tools)
+        downloadSnptest(ver=ver$snptest,path=path)
+    if ("plink" %in% tools)
+        downloadPlink(ver=ver$plink,path=path)
+    if ("prsice" %in% tools)
+        downloadPrsice(ver=ver$prsice,path=path)
 }
 
 downloadSnptest <- function(ver=c("v2.5.6","v2.5.4","v2.5.2"),path=NULL) {
     # This downloads the latest version by default... Might not work for older
     # Linux operating systems
     ver <- ver[1]
-    .checkTextArgs("SNPTEST version",ver,c("v2.5.6","v2.5.4","v2.5.2"),
+    .checkTextArgs("SNPTEST version (ver)",ver,c("v2.5.6","v2.5.4","v2.5.2"),
         multiarg=FALSE)
     
     base <- "http://www.well.ox.ac.uk/~gav/resources/"
@@ -48,6 +51,7 @@ downloadSnptest <- function(ver=c("v2.5.6","v2.5.4","v2.5.2"),path=NULL) {
         file.rename(from=file.path(defPath,unext,f),to=file.path(defPath,f))
     unlink(file.path(defPath,unext),recursive=TRUE)
     file.rename(from=file.path(defPath,exec),to=file.path(defPath,"snptest"))
+    Sys.chmod(file.path(defPath,"snptest"),"0755")
     
     # Test whether all properly fetched and installed
     disp("Verifying...")
@@ -58,7 +62,7 @@ downloadSnptest <- function(ver=c("v2.5.6","v2.5.4","v2.5.2"),path=NULL) {
         disp("SNPTEST seems to be working! Updating environment...")
         .EXTERNALS[["snptest"]]$dir <- defPath
         .EXTERNALS[["snptest"]]$exec <- "snptest"
-        .EXTERNALS[["snptest"]]$version <- sver
+        .EXTERNALS[["snptest"]]$version <- .tryNumerize(sver)
     }
     else
         disp("SNPTEST does NOT seem to be working! Please install manually ",
@@ -70,7 +74,7 @@ downloadPlink <- function(ver=c("v1.90"),path=NULL) {
     # This downloads the latest version by default... Might not work for older
     # Linux operating systems
     ver <- ver[1]
-    .checkTextArgs("PLINK version",ver,c("v1.90"),multiarg=FALSE)
+    .checkTextArgs("PLINK version (ver)",ver,c("v1.90"),multiarg=FALSE)
     
     base <- "https://s3.amazonaws.com/plink1-assets/"
     if (ver == "v1.90") {
@@ -101,7 +105,7 @@ downloadPlink <- function(ver=c("v1.90"),path=NULL) {
         disp("PLINK seems to be working! Updating environment...")
         .EXTERNALS[["plink"]]$dir <- defPath
         .EXTERNALS[["plink"]]$exec <- "plink"
-        .EXTERNALS[["plink"]]$version <- sver
+        .EXTERNALS[["plink"]]$version <- .tryNumerize(sver)
     }
     else
         disp("PLINK does NOT seem to be working! Please install manually ",
@@ -113,7 +117,7 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
     # This downloads the latest version by default... Might not work for older
     # Linux operating systems
     ver <- ver[1]
-    .checkTextArgs("PRSice version",ver,c("v2.3.3"),multiarg=FALSE)
+    .checkTextArgs("PRSice version (ver)",ver,c("v2.3.3"),multiarg=FALSE)
     
     base <- "https://github.com/choishingwan/PRSice/releases/download/"
     if (ver == "v2.3.3") {
@@ -145,12 +149,19 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
         disp("PRSice seems to be working! Updating environment...")
         .EXTERNALS[["prsice"]]$dir <- defPath
         .EXTERNALS[["prsice"]]$exec <- "plink"
-        .EXTERNALS[["prsice"]]$version <- sver
+        .EXTERNALS[["prsice"]]$version <- .tryNumerize(sver)
     }
     else
         disp("PRSice does NOT seem to be working! Please install manually ",
             "and make it accessible through the system's path or try another ",
             "version!")
+}
+
+.getToolPath <- function(tool=.EXTERNAL_TOOLS_LIST,version=NULL,error=TRUE) {
+    if (.toolAvailable(tool[1],version,error)) {
+        components <- as.list(.EXTERNALS[[tool]])
+        return(file.path(components$dir,components$exec))
+    }
 }
 
 # Inspired from rmarkdown package
@@ -159,6 +170,7 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
     tool <- tool[1]
     .findTool(tool)
     # Check availability
+    version <- .tryNumerize(version)
     found <- !is.null(.EXTERNALS[[tool]]$dir) && 
         (is.null(version) || .EXTERNALS[[tool]]$version >= version)
     if (error && !found)
@@ -171,20 +183,23 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
 
 .findTool <- function(tool=.EXTERNAL_TOOLS_LIST,cache=TRUE) {
     tool <- tool[1]
+    .checkTextArgs("tool",tool,.EXTERNAL_TOOLS_LIST,multiarg=FALSE)
     if (!is.null(.EXTERNALS[[tool]]$dir) && cache) 
         return(invisible(as.list(.EXTERNALS[[tool]])))
     
-    # Define potential sources
-    # For snptest, if downloaded with downloadSnptest, the executable is renamed
-    # to snptest, otherwise? explicitly look?
-    
-    # Strategy:
+    # Define potential sources, strategy:
     # 1. Search PATH
     # 2. Search predefined locations
     switch(tool,
         snptest = {
             execs <- c("snptest_v2.5.6","snptest_v2.5.4-beta3",
                 "snptest_v2.5.2","snptest")
+        },
+        plink = {
+            execs <- "plink"
+        },
+        prsice = {
+            execs <- "PRSice_linux"
         }
     )
     
@@ -194,30 +209,41 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
         contents <- dir(dirname(.getDefaultToolPath(tool)))
         ii <- grep(tool,contents)
         if (length(ii) > 0) { # Found dir, now check executables
-            snptestDir <- dir(dirname(.getDefaultToolPath(tool)),
+            toolDir <- dir(dirname(.getDefaultToolPath(tool)),
                 full.names=TRUE)[ii]
-            execCands <- match(execs,dir(snptestDir))
+            execCands <- match(execs,dir(toolDir))
             if (all(is.na(execCands))) # Shame!
                 warning("Unable to locate ",tool," executable! Please ",
                     "install manually or check the download",.capFirst(tool),
                     "() function for possible solutions.")
             else { # Finally!
-                .EXTERNALS[[tool]]$dir <- snptestDir
+                .EXTERNALS[[tool]]$dir <- toolDir
                 .EXTERNALS[[tool]]$exec <- 
                     execs[execCands[which(!is.na(execCands))[1]]]
-                .EXTERNALS[[tool]]$version <- NULL
+                .EXTERNALS[[tool]]$version <- 
+                    .tryNumerize(strsplit(toolDir,"-")[[1]][2])
             }
         }
     }
+    else {
+        toolExec <- wh[which(!check)]
+        .EXTERNALS[[tool]]$dir <- dirname(toolExec)
+        .EXTERNALS[[tool]]$exec <- basename(toolExec)
+        .EXTERNALS[[tool]]$version <- NULL
+    }
+    return(invisible(as.list(.EXTERNALS[[tool]])))
 }
 
-.createToolPath <- function(tool,ver,name,path=NULL) {
+.createToolPath <- function(tool,ver=NULL,name,path=NULL) {
     if (!is.null(path) && is.character(path)) {
-        if (!dir.exists(path))
-            dir.create(path,recursive=TRUE)
-        disp(name," will be downloaded and installed in user specified path: ",
-            path,".\nPlease add this to the system PATH.")
-        defPath <- path
+        d <- tool
+        if (!is.null(ver))
+            d <- paste0(d,"-",ver)
+        defPath <- file.path(path,d)
+        if (!dir.exists(defPath))
+            dir.create(defPath,recursive=TRUE)
+        disp("\n",name," will be downloaded and installed in user specified ",
+            "path: ",defPath,"\nPlease add this to the system PATH")
     }
     else {
         defPath <- .getDefaultToolPath(tool,ver)
@@ -259,3 +285,19 @@ downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
     return(file.path(tools::R_user_dir(d)))
 }
 
+.tryNumerize <- function(x) {
+    if (is.null(x))
+        return(NULL)
+    else if (is.numeric(x))
+        return(x)
+    else if (!is.na(suppressWarnings(as.numeric(x))))
+        return(as.numeric(x))
+    else { # Try to strip letters and non-numericals and convert
+        rx <- "[A-Za-z]|[\\\\/\\;\\:\\,\\.\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\_\\-]"
+        x <- gsub(rx,"",x,perl=TRUE)
+        if (!.isEmpty(x)) # Some numerics remain
+            return(as.numeric(x))
+        else # NULL if nothing can be done
+            return(NULL)
+    }
+}
