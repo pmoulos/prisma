@@ -1,10 +1,44 @@
-GWA <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
-    methods=c("glm","rrblup","statgen","snptest"),
+gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
+    methods=c("glm","rrblup","statgen","snptest","lasso"),
     combine=c("fisher","simes","max","min","harmonic","whitlock","pandora"),
     #args=getDefaults("gwargs"),
     family=NULL,usepcblup=c("auto","estim","fixed","none"),npcsblup=NULL,
     snptest=c("frequentist","bayesian"),snpmodel=c("additive","dominant",
     "recessive","general","heterozygote"),rc=NULL,...) {
+    # Object class?
+    if (!is(obj,"GWASExperiment"))
+        stop("obj must be an object of class GWASExperiment!")
+    
+    # Check input variables
+    combine <- combine[1]
+    usepcblup <- usepcblup[1]
+    snptest <- snptest[1]
+    snpmodel <- snpmodel[1]
+    .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
+    if (!is.null(npcsblup))
+        .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
+            "gt")
+    .checkTextArgs("GWAS methods (methods)",methods,c("glm","rrblup","statgen",
+        "snptest","lasso"),multiarg=TRUE)
+    .checkTextArgs("p-value combination",combine,c("fisher","simes","max","min",
+        "harmonic","whitlock","pandora"),multiarg=FALSE)
+    .checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","fixed","none"),
+        multiarg=FALSE)
+    .checkTextArgs("SNPTEST test",snptest,c("frequentist","bayesian"),
+        multiarg=FALSE)
+    .checkTextArgs("SNPTEST model",snpmodel,c("additive","dominant","recessive",
+        "general","heterozygote"),multiarg=FALSE)
+    
+    # Cannot run GWA in an empty object without genotypes/phenotypes
+    .canRunGwa(obj)
+    # rrBLUP does not like binary phenotypes
+    if ("rrblup" %in% methods 
+        && .maybeBinaryForBinomial(phenotypes(obj)[,response])) {
+        warning("The trait ",response," is binary and not supported by ",
+            "rrBLUP which will be removed.\nConsider vanilla ridge regression ",
+            "(glmnet) if not already included.")
+        methods <- methods[methods!="rrblup"]
+    }
     
     # Splits the association analysis per chromosome, ortherwise, some chunks
     map <- gfeatures(obj)
@@ -21,7 +55,7 @@ GWA <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     P <- lapply(names(parts),function(x,prt) {
         disp("\n========== Analyzing chromosome/part ",x)
         o <- prt[[x]]
-        return(gwa(o,response,covariates,pcs,psig,methods,combine,family,
+        return(.gwaWorker(o,response,covariates,pcs,psig,methods,combine,family,
             usepcblup,npcsblup,snptest,snpmodel,rc))
     },parts)
     
@@ -39,35 +73,8 @@ GWA <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 }
 
 # Returns only the p-value matrix. For assigning p-values to object, use GWA
-gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
-    methods=c("glm","rrblup","statgen","snptest"),
-    combine=c("fisher","simes","max","min","harmonic","whitlock","pandora"),
-    #args=getDefaults("gwargs"),
-    family=NULL,usepcblup=c("auto","estim","fixed","none"),npcsblup=NULL,
-    snptest=c("frequentist","bayesian"),snpmodel=c("additive","dominant",
-    "recessive","general","heterozygote"),rc=NULL,...) {
-    if (!is(obj,"GWASExperiment"))
-        stop("obj must be an object of class GWASExperiment!")
-    
-    combine <- combine[1]
-    usepcblup <- usepcblup[1]
-    snptest <- snptest[1]
-    snpmodel <- snpmodel[1]
-    .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
-    if (!is.null(npcsblup))
-        .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
-            "gt")
-    .checkTextArgs("GWAS methods (methods)",methods,c("glm","rrblup","statgen",
-        "snptest"),multiarg=TRUE)
-    .checkTextArgs("p-value combination",combine,c("fisher","simes","max","min",
-        "harmonic","whitlock","pandora"),multiarg=FALSE)
-    .checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","fixed","none"),
-        multiarg=FALSE)
-    .checkTextArgs("SNPTEST test",snptest,c("frequentist","bayesian"),
-        multiarg=FALSE)
-    .checkTextArgs("SNPTEST model",snpmodel,c("additive","dominant","recessive",
-        "general","heterozygote"),multiarg=FALSE)
-    
+.gwaWorker <- function(obj,response,covariates,pcs,psig,methods,combine,
+    family,usepcblup,npcsblup,snptest,snpmodel,rc=NULL,...) {
     # Initialize pvalue matrix
     pMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
     rownames(pMatrix) <- rownames(obj)
@@ -93,6 +100,11 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
                 sgSnp <- gwaSnptest(obj,response,covariates,pcs,psig,snptest,
                     snpmodel)
                 pMatrix[,m] <- sgSnp$pvalue
+            },
+            lasso = {
+                glmRes <- gwaGlm(obj,response,covariates,pcs,family,psig,
+                    penalized=TRUE,rc)
+                pMatrix[,m] <- glmRes[,4]
             }
         )
     }
@@ -142,7 +154,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 }
 
 gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
-    rc=NULL,...) {
+    penalized=FALSE,rc=NULL,...) {
     if (!is(obj,"GWASExperiment"))
         stop("obj must be an object of class GWASExperiment!")
     
@@ -165,17 +177,8 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
         fpredHelper <- "provided"
     }
     else {
-        # If family not provided, we must decide whether to perform logistic
-        # of gaussian regression. One way, tryCatch .validateBinaryForBinomial.
-        # If fail, then gaussian else binomial
-        fam <- NULL
-        fam <- tryCatch({
-            suppressWarnings(.validateBinaryForBinomial(p[,response]))
-            "binomial"
-        },error=function(e) { 
-            return("gaussian")
-        },finally="")
-        family <- ifelse(fam!="gaussian","binomial","gaussian")
+        family <- ifelse(.maybeBinaryForBinomial(p[,response]),"binomial",
+            "gaussian")
         fpredHelper <- "predicted"
     }
     
@@ -196,7 +199,7 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     # We now need to split the SnpMatrix, as glm is quite fast, parallelizng
     # per snp will most probably cause more overhead than chunking and iterating
     # We split according to the number of available cores for analysis.
-    snps <- assay(obj,1)
+    snps <- genotypes(obj)
     splitFactor <- .splitFactorForParallel(nrow(snps),rc)
     # We now need to split the SnpMatrix, as glm is quite fast, parallelizng
     # per snp will most probably cause more overhead than chunking and iterating
@@ -204,34 +207,37 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     #splits <- split(seq_len(nrow(snps)),splitFactor)
     splits <- split(rownames(snps),splitFactor)
     
-    disp("\nPerforming GWAS with GLM over ",length(splits)," chunks")
+    wh <- ifelse(penalized,"lasso","glm")
+    whEx <- ifelse(penalized,"Penalized Regression (LASSO)","GLM")
+    disp("\nPerforming GWAS with ",whEx," over ",length(splits)," chunks")
     disp("Trait(s)    : ",response)
     disp("Covariate(s): ",paste0(covariates,collapse=", "))
     disp("Regression  : ",family," (",fpredHelper,")")
     disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
-    assocList <- cmclapply(splits,function(n,p,r,f,...) {
+    assocList <- cmclapply(splits,function(n,p,r,f,w,...) {
         disp("  testing SNPs from ",n[1]," to ",n[length(n)])
-        batch <- lapply(n,function(s,p,r,f,...) {
+        batch <- lapply(n,function(s,p,r,f,w,...) {
             disp("    testing ",s,level="full")
             dat <- cbind(p,t(as(snps[s,],"numeric")))
-            tmp <- coefficients(.gwaGlmWorker(dat,r,f,...))
+            tmp <- coefficients(.gwaGlmWorker(w,dat,r,f,...))
             rownames(tmp)[nrow(tmp)] <- s
             return(tmp[s,,drop=FALSE])
-        },p,r,f,...)
+        },p,r,f,w,...)
         batch <- do.call("rbind",batch)
         rownames(batch) <- n
         return(batch)
-    },p,response,family,...,rc=rc)
+    },p,response,family,wh,...,rc=rc)
     
     assocResult <- do.call("rbind",assocList)
-    disp("Found ",length(which(assocResult[,4]<psig))," associations ",
+    scol <- ifelse(penalized,5,4)
+    disp("Found ",length(which(assocResult[,scol]<psig))," associations ",
         "(uncorrected p-values).")
     
     return(assocResult)
 }
 
 # ... is other options passed to GLM
-.gwaGlmWorker <- function(dat,res,fam,...) {
+.gwaGlmWorker <- function(wh,dat,res,fam,...) {
     # We assume that dat contains only the deserved covariates
     ii <- which(colnames(dat)==res)
     # Before constructing formula, all the covariates must have proper names
@@ -239,7 +245,10 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     covs <- colnames(dat)[-ii]
     cres <- colnames(dat)[ii]
     f <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
-    return(summary(glm(f,data=dat,family=fam,...)))
+    if (wh=="glm")
+        return(summary(glm(f,data=dat,family=fam,...)))
+    else if (wh=="lasso")
+        return(summary(islasso(f,data=dat,family=fam,...)))
 }
 
 gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
@@ -429,7 +438,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 
 .preparePlinkInputForSnptest <- function(obj,response,covariates,pcs,wspace) {
     # Retrieve PLINK related data
-    geno <- t(assay(obj,1))
+    geno <- t(genotypes(obj))
     fam <- gsamples(obj)
     map <- gfeatures(obj)
     
@@ -521,7 +530,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 }
 
 .prepareGenotypesForBlup <- function(obj) {
-    tmp <- assay(obj,1)
+    tmp <- genotypes(obj)
     geno <- as(tmp,"numeric")
     geno[geno==0] <- -1
     geno[geno==1] <- 0
@@ -581,4 +590,31 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
         }
     }
     return(x)
+}
+
+# 0-1 or 2-level factor
+.isBinaryForBinomial <- function(x) {
+    if (is.factor(x) && length(levels(x)) == 2)
+        return(TRUE)
+    if (all(unique(x) %in% c(0,1)))
+        return(TRUE)
+    return(FALSE)
+}
+
+.maybeBinaryForBinomial <- function(x) {
+    return(tryCatch({
+        suppressWarnings(.validateBinaryForBinomial(p[,response]))
+        TRUE
+    },error=function(e) { 
+        return(FALSE)
+    },finally=""))
+}
+
+.canRunGwa <- function(o) {
+    gv <- all(dim(genotypes(o)) > 0)
+    pv <- !is.null(phenotypes(o)) && all(dim(phenotypes(o)) > 0)
+    if (!gv)
+        stop("Cannot run GWAS with a GWASExperiment without genotypes!")
+    if (!pv)
+        stop("Cannot run GWAS with a GWASExperiment without phenotypes!")
 }

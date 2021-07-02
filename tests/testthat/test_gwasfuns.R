@@ -38,7 +38,7 @@ test_that(".initSnptestSampleFirstRow works",{
     # Maybe with a real test dataset or a test "thing"
 })
 
-test_that(".validateResponseAndCovariates",{
+test_that(".validateResponseAndCovariates works",{
     df <- as.data.frame(matrix(runif(40),10,4))
     names(df) <- c("y","x1","x2","x3")
     
@@ -65,4 +65,18 @@ test_that(".validateResponseAndCovariates",{
     res5 <- 8
     cvs5 <- c("x1","x2")
     expect_error(.validateResponseAndCovariates(df,res5,cvs5))
+})
+
+test_that(".validateBinaryForBinomial works",{
+    set.seed(42)
+    
+    x1 <- runif(10)
+    expect_error(x1 <- .validateBinaryForBinomial(x1))
+    
+    x2 <- sample(c(0,1),10,replace=TRUE)
+    expect_silent(x2 <- .validateBinaryForBinomial(x2))
+    
+    x3 <- sample(c(1,2),10,replace=TRUE)
+    expect_warning(x3 <- .validateBinaryForBinomial(x3))
+    expect_true(is.factor(x3))
 })

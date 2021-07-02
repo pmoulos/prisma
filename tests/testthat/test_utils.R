@@ -110,11 +110,6 @@ test_that(".checkPMIDFormat works",{
     expect_error(.checkPMIDFormat(i4))
 })
 
-# Test suite for .emptyVariantsDf
-test_that(".emptyVariantsDf works",{
-    expect_true(nrow(.emptyVariantsDf()) == 0)
-})
-
 test_that(".checkTextArgs works",{
     expect_silent(.checkTextArgs("test","test","test",FALSE))
     expect_silent(.checkTextArgs("test","test1",c("test1","test2"),TRUE))

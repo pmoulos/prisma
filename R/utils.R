@@ -330,12 +330,6 @@ disp <- function(...,level=c("normal","full")) {
     return(id)
 }
 
-.emptyVariantsDf <- function() {
-    nil <- data.frame(chromosome="1",position=1,variant_id="v",risk_allele="N",
-        risk_frequency=9)
-    return(nil[-1,,drop=FALSE])
-}
-
 .isValidUrl <- function(url) {
     regx <- paste0("((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)",
         "?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)",

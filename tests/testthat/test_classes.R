@@ -283,6 +283,8 @@ test_that("GWASExperiment getters work",{
         pvalues=thing$pval
     )
     
+    expect_identical(assay(GWASthing,1),genotypes(GWASthing))
+    
     expect_identical(rownames(assays(GWASthing)[[1]]),rownames(thing$snp))
     expect_identical(colnames(assays(GWASthing)[[1]]),colnames(thing$snp))
     
@@ -340,6 +342,15 @@ test_that("GWASExperiment setters work",{
     
     genome(GWASthing) <- "hg19"
     expect_identical(genome(GWASthing),"hg19")
+    
+    GWASthingN <- GWASExperiment(
+        genotypes=thingNew$snp,
+        features=thingNew$feature,
+        samples=thingNew$sample,
+        phenotypes=thingNew$pheno
+    )
+    genotypes(GWASthing) <- genotypes(GWASthingN)
+    expect_identical(genotypes(GWASthing),genotypes(GWASthingN))
 })
 
 test_that("GWASExperiment cbind works",{

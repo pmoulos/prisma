@@ -53,6 +53,10 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     return(.GWASExperiment(se,phenotypes=phenotypes,pvalues=pvalues))
 }
 
+setGeneric("genotypes",function(x,...) standardGeneric("genotypes"))
+
+setGeneric("genotypes<-",function(x,...,value) standardGeneric("genotypes<-"))
+
 setGeneric("gfeatures",function(x,...) standardGeneric("gfeatures"))
 
 setGeneric("gfeatures<-",function(x,...,value) standardGeneric("gfeatures<-"))
@@ -77,6 +81,15 @@ setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
 
 setGeneric("pcaCovariates<-",
     function(x,...,value) standardGeneric("pcaCovariates<-"))
+
+setMethod("genotypes","GWASExperiment",function(x,i=1) {
+    return(assay(x,i))
+})
+
+setReplaceMethod("genotypes","GWASExperiment",function(x,i=1,...,value) {
+    assay(x,i) <- value
+    return(x)
+})
 
 setMethod("gfeatures","GWASExperiment",function(x,withDimnames=TRUE) {
     return(rowData(x))
