@@ -73,9 +73,9 @@ setGeneric("pvalues",function(x,...) standardGeneric("pvalues"))
 
 setGeneric("pvalues<-",function(x,...,value) standardGeneric("pvalues<-"))
 
-setGeneric("filters",function(x,...) standardGeneric("filters"))
+setGeneric("filterRecord",function(x,...) standardGeneric("filterRecord"))
 
-setGeneric("filters<-",function(x,...,value) standardGeneric("filters<-"))
+setGeneric("filterRecord<-",function(x,...,value) standardGeneric("filterRecord<-"))
 
 setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
 
@@ -160,12 +160,12 @@ setReplaceMethod("genome","GWASExperiment",function(x,value) {
         return(x)
 })
 
-setMethod("filters","GWASExperiment",function(x) {
+setMethod("filterRecord","GWASExperiment",function(x) {
     m <- metadata(x)
     return(m$filters)
 })
 
-setReplaceMethod("filters","GWASExperiment",function(x,...,value) {
+setReplaceMethod("filterRecord","GWASExperiment",function(x,...,value) {
     m <- metadata(x)
     m$filters <- value
     metadata(x) <- m
@@ -588,63 +588,3 @@ GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE) {
     
     return(createGData(geno=geno,map=map,pheno=pheno,covar=covar))
 }
-
-#~ .GWASExperiment <- setClass("GWASExperiment",
-#~  contains="SummarizedExperiment",
-#~     slots=c(
-#~         genotypes="SnpMatrix",
-#~         fam="data.frame",
-#~         map="data.frame",
-#~         pheno="data.frame",
-#~         backend="character",
-#~         filters="list",
-#~         genome="character_OR_NULL" # From S4Vectors
-#~     ),
-#~     prototype=(
-#~         genotypes=matrix(as.raw(0),0,0),
-#~         fam=data.frame(),
-#~         map=data.frame(),
-#~         pheno=data.frame(),
-#~         backend=NA_character_,
-#~         filters=setNames(data.frame(matrix(ncol=4,nrow=0)),
-#~             c("name","value","type","filtered")),
-#~         genome=NA_character_
-#~     )
-#~ )
-
-#rowToColMat
-# phenotypes is a table with as many rows as the samples and as many columns
-# as the recorded phenotypes
-
-#~ gfeatures <- function(x,y) {
-#~     .checkX(x)
-#~     if (!missing(y)) {
-#~         y <- .checkY(y)
-#~         rowData(x) <- y
-#~         return(x)
-#~     }
-#~     return(rowData(x))
-#~ }
-
-#~ gsamples <- function(x,y) {
-#~     .checkX(x)
-#~     if (!missing(y)) {
-#~         y <- .checkY(y)
-#~         colData(x) <- y
-#~         return(x)
-#~     }
-#~     return(colData(x))
-#~ }
-
-#~ .checkX <- function(x) {
-#~     if (!is(x,"GWASExperiment"))
-#~         stop("x must be a GWASExperiment object!")
-#~ }
-
-#~ .checkY <- function(y) {
-#~     if (!is.data.frame(y) && !is(y,"DataFrame"))
-#~         stop("y must be a data.frame or a DataFrame object!")
-#~     if (is.data.frame(y))
-#~         y <- DataFrame(y)
-#~     return(y)
-#~ }

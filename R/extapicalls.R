@@ -160,7 +160,21 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
         return(list(success=FALSE,data=fromJSON(efoVariants)))
 }
 
-getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
+# validateLoc: in case of duplicates remaining after basic position/id/risk
+# allele deduplication, when TRUE, performs location validation, as in some
+# cases, duplicate rs have different locations (especially when the genome
+# assemble is not reported (nr) and potentially indicating very old genome
+# assemblies (<hg18). The process relies on the package biomaRt and uses it to
+# query the duplicate rs ids and cross-validate the locations retrieved from
+# Ensembl variation databases. SNPs with locations that cannot be validated are
+# dropped and deduplicated. As the process involves calling Ensembl APIs, it may
+# be slow. Therefore, if the intended use of the retrieved PRS is to plugin the
+# SNPs to other GWAS data, validateLoc can be FALSE to speed up the process and
+# reduce failures, as the unique SNP ids are used with local genotypes. In other
+# cases where strict validation is required (e.g. when ORs must be used or
+# reported, then it should be TRUE.
+getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
+    retries=5,validateLoc=FALSE) {
     # Package checking, meaningless to continue
     if (!require(quincunx))
         stop("R package quincunx is required!")
@@ -179,10 +193,19 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
         .checkPGSFormat(pgsId)
     # Same with EFO
     if (!is.null(efoId))
-        .checkEFOFormat(pgsId)
+        .checkEFOFormat(efoId)
     # Same with PMID
     if (!is.null(pubmedId))
-        .checkPMIDFormat(pgsId)
+        .checkPMIDFormat(pubmedId)
+        
+    # Is base a valid local directory?
+    if (!is.null(base) && is.character(base)) {
+        if (!dir.exists(base)) {
+            warning("The provided local path does not exist! Will use the ",
+                "remote path provided by PGS Catalog...",immediate.=TRUE)
+            base <- NULL
+        }
+    }
     
     # Calls
     disp("Scheduling ",length(pgsId) + length(efoId) + length(pubmedId),
@@ -190,45 +213,98 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     
     # PGS id calls
     if (!is.null(pgsId))
-        resultPgs <- .iterPGSScoreAPICall(input=pgsId,type="pgs",
+        resultPgs <- .iterPGSScoreAPICall(input=pgsId,type="pgs",base=base,
             retries=retries)
     else
-        resultPgs <- .emptyVariantsDf("pgs")
+        resultPgs <- list(.emptyVariantsDf("pgs"))
     
     # EFO id calls
     if (!is.null(efoId))
-        resultEfo <- .iterPGSScoreAPICall(input=efoId,type="efo",
+        resultEfo <- .iterPGSScoreAPICall(input=efoId,type="efo",base=base,
             retries=retries)
     else
-        resultEfo <- .emptyVariantsDf("pgs")
+        resultEfo <- list(.emptyVariantsDf("pgs"))
     
     # PMID id calls
     if (!is.null(pubmedId))
-        resultPmid <- .iterPGSScoreAPICall(input=pubmedId,type="pmid",
+        resultPmid <- .iterPGSScoreAPICall(input=pubmedId,type="pmid",base=base,
             retries=retries)
     else
-        resultPmid <- .emptyVariantsDf("pgs")
+        resultPmid <- list(.emptyVariantsDf("pgs"))
     
     # Join the results
     results <- rbind(do.call("rbind",resultPgs),do.call("rbind",resultEfo),
         do.call("rbind",resultPmid))
     
-    # Remove duplicates if any - duplication is relevant... We provide some
-    # potential combination methods of collapsing ORs and weights if the risk
-    # allele is the same, otherwise they are not identical
-    results <- results[!duplicated(results),,drop=FALSE]
-    rownames(results) <- results$variant_id
+    # At this point, we must perform a more educated duplicate removal (if any)
+    rownames(results) <- NULL
+    
+    disp("Dealing with duplicates (if any)")
+    
+    # 0. First remove complete duplicates (chromosome, position, rs if exists,
+    # risk_allele). We do not put OR/effect weight, it's from different
+    # studies!
+    if (any(grepl("^rs",results$variant_id)))
+        criteria <- c("chromosome","position","variant_id","risk_allele")
+    else
+        criteria <- c("chromosome","position","risk_allele")
+    if (any(duplicated(results[,criteria]))) {
+        disp("  removing exact duplicates (location, risk allele, id ",
+            "if available)")
+        results <- results[!duplicated(results[,criteria]),,drop=FALSE]
+    }
+    
+    # 1. If rs ids are available duplicates remain in rs id, ensure the proper 
+    # SNP locations as there are cases with duplicate rs after joining the 
+    # scores and wrong positions. We assume that only if duplicate rs are found,
+    # one is mispositioned so we check only these... If other mispositioned 
+    # exist, no other choice really. But if all scores are accompanied by rs ids
+    # and locations, then no action is taken and we do not know if it's hg38...
+    # All these if validateLoc as we have another external API call.
+    if (validateLoc && any(grepl("^rs",results$variant_id))) {
+        if (any(duplicated(results$variant_id))) {
+            results <- results[order(results$variant_id),]
+            dup <- which(duplicated(results$variant_id))
+            # Not correct as it may catch more rows if an elements is 
+            # tuple-icated, but should survive location check
+            dup <- unique(unlist(lapply(dup,function(i) { return((i-1):i) })))
+            # A function to check only the dupes and return the wrong index so
+            # that we can use the initial dupes to remove offending
+            #disp("Duplicates found in results. Beginning cleaning process...")
+            disp("  validating SNP locations in remaining duplicates")
+            rem <- .checkSnpLocs(results[dup,])
+            if (length(rem) > 0)
+                # This must be removed
+                results <- results[-dup[rem],,drop=FALSE]
+        }
         
+        # 2. If duplicates remain after position check, we check duplicates 
+        # for same risk allele. If the same, collapse by averaging OR/weight
+        # TODO if needed...
+    }
+    
+    # 3. If rs ids are not available, then only dupicated positions can be 
+    # removed, irrespectively of allele order?
+    if (!any(grepl("^rs",results$variant_id))) {
+        if (any(duplicated(results[,c("chromosome","position",
+            "risk_allele")]))) {
+            results <- results[-which(duplicated(results[,c("chromosome",   
+                "position","risk_allele")])),,drop=FALSE]
+        }
+    }
+    
+    #rownames(results) <- results$variant_id
     return(results)
 }
 
-.iterPGSScoreAPICall <- function(input,type=c("pgs","efo","pmid"),retries=5) {
+.iterPGSScoreAPICall <- function(input,type=c("pgs","efo","pmid"),base=NULL,
+    retries=5) {
     type <- type[1]
     N <- length(input)
     result <- vector("list",N)
     names(result) <- input
     
-    suff <- ifelse(type=="pgs"," PGS ID(s)",ifelse(type=="efo"," EFO ID(s)",
+    suff <- ifelse(type=="pgs","PGS ID(s)",ifelse(type=="efo","EFO ID(s)",
         "PubMed ID(s)"))
     disp("  Requesting ",N," PGS Catalog API calls with ",suff,"...")
     
@@ -242,7 +318,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
         for (id in input) {
             calls <- calls + 1
             disp("    Call ",calls,": ",id)
-            tmp <- .PGSScoreWorker(input=id,type=type)
+            tmp <- .PGSScoreWorker(input=id,type=type,base=base)
             if (tmp$success) # Both API calls successful
                 result[[id]] <- tmp$data
             else # Which id failed?
@@ -262,7 +338,34 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     return(result)
 }
 
-.PGSScoreWorker <- function(input=NULL,type=c("pgs","efo","pmid")) {
+# base is either NULL for default scoring file URL retrieved from quincunx API
+# call, or an absolute local path which replaces the
+# "http://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores" part of the API retrieved
+# path, but expects the same EBI FTP folder structure, that is, if the local
+# path is called "/data/resources/PGS", the file structures inside the local
+# path should be:
+#
+# LOCAL_PATH/ 
+#   PGSXXXXXX/
+#     ScoringFiles/PGSXXXXXX.txt.gz
+#     Metadata/PGSXXXXXX_metadata_(extensions)
+#   PGSYYYYYY/
+#     ScoringFiles/PGSYYYYYY.txt.gz
+#     Metadata/PGSYYYYYY_metadata_(extensions)
+#
+# This can be achieved e.g. by
+#
+# mkdir -p LOCAL_PATH && cd LOCAL_PATH
+# wget -m ftp://anonymous:@ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
+#
+# Then base <-  LOCAL_PATH/ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
+# If the lonk path is not desired:
+#
+# cd LOCAL_PATH/ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
+# mv * ../../../../../../
+# cd LOCAL_PATH
+# rm -r ./ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
+.PGSScoreWorker <- function(input=NULL,type=c("pgs","efo","pmid"),base=NULL) {
     input <- input[1] # Protection from accidental pass more ids/traits
     type <- type[1]
     
@@ -282,33 +385,74 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     # Firstly, we need the get_scores call... If failed, we don't proceed to
     # actually fetch the scores from FTP and we mark the whole call as failed
     if (!is(scoreStru,"json")) {
-        if (nrow(scoreStru@scores) == 0) # Nothing found - OK
+        if (nrow(scoreStru@scores) == 0 || (nrow(scoreStru@scores) == 1 
+            && is.na(scoreStru@scores$pgs_id[1]))) # Nothing found - OK
             return(list(success=TRUE,data=.emptyVariantsDf("pgs")))
-        else # Call local score retrieval function
+        else { # Call local score retrieval function
+            # Drop non-supported assemblies, e.g. hg18, NCBI36
+            sfs <- scoreStru@scores$scoring_file
+            pid <- scoreStru@scores$pgs_id
+            asm <- scoreStru@scores$assembly
+            bad <- .checkSuppAsms(tolower(asm))
+            if (!is.null(bad)) {
+                warning("Unsupported human genome assemblies found: ",
+                    paste0(asm[bad],collapse=", "),".\nThe respective PGS ",
+                    "scores (",paste0(pid[bad],collapse=", "),") will be ",
+                    "dropped ",immediate.=TRUE)
+                sfs <- sfs[-bad]
+                pid <- pid[-bad]
+                asm <- asm[-bad]
+                names(sfs) <- names(asm) <- pid
+            }
+            
+            # Correct sfs for local_path base
+            if (!is.null(base)) { # Validation in previous wrapper function
+                sfs <- unlist(lapply(sfs,function(x,b) {
+                    s <- .splitPath(x)
+                    return(file.path(b,s[3],s[2],s[1]))
+                },base))
+                names(sfs) <- pid
+            }
+            
             theScores <- tryCatch({
-                disp("Retrieving and enriching scores file for ",input)
-                .retrieveScoreFile(scoreStru@scores$scoring_file)
+                disp("Retrieving and enriching scores file(s) for ",input)
+                tmpdf <- lapply(sfs,function(x,b) {
+                    #Sys.sleep(5)
+                    m <- ifelse(is.null(b),"remote","local")
+                    disp("  ",m," file ",basename(x))
+                    return(.retrieveScoreFile(x))
+                },base)
+                names(tmpdf) <- pid
+                tmpdf
             },error=function(e) {
                 disp("Possible connection failure! Marking...")
                 disp("Caught error: ",e$message)
                 return(toJSON(list(type=type,input=input),auto_unbox=TRUE))
             },finally="")
+        }
         
         # Now, if enrichScoreFile call failed, again we mark the trial failed
         # otherwise construct the final output
         if (!is(theScores,"json")) {
-            gb <- .assemblyToGv(scoreStru@scores$assembly)
-            pgsScores <- enrichScoreFile(theScores,gb,clean=TRUE)
-            names(mcols(pgsScores))[names(mcols(pgsScores))=="rsID"] <- 
-                "variant_id"
-            names(mcols(pgsScores))[names(mcols(pgsScores))=="effect_allele"] <-
-                "risk_allele"
+            allScores <- lapply(names(theScores),function(n,A,S) {
+                disp("  processing ",n)
+                gb <- .assemblyToGv(tolower(A[n]))
+                pgsScores <- enrichScoreFile(S[[n]],gb,clean=TRUE)
+                names(mcols(pgsScores))[names(mcols(pgsScores))=="rsID"] <- 
+                    "variant_id"
+                names(mcols(pgsScores))[names(mcols(
+                    pgsScores))=="effect_allele"] <- "risk_allele"
+                    
+                # Convert to data frame for compatibility with rest methods and
+                # statistical modeling
+                pgsScores <- as.data.frame(pgsScores)
+                pgsScores <- pgsScores[,names(pgsScores)!="strand"]
+                names(pgsScores)[c(1,2)] <- c("chromosome","position")
+                pgsScores$asm <- gb
+                return(pgsScores)
+            },asm,theScores)
             
-            # Finally, convert to data frame for compatibility with rest methods
-            # and statistical modeling
-            pgsScores <- as.data.frame(pgsScores)
-            pgsScores <- pgsScores[,names(pgsScores)!="strand"]
-            names(pgsScores)[c(1,2)] <- c("chromosome","position")
+            pgsScores <- do.call("rbind",allScores)
             
             # Healthy output
             return(list(
@@ -321,6 +465,73 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
     }
     else # Problem in get_scores
         return(list(success=FALSE,data=fromJSON(scoreStru)))
+}
+
+.checkSnpLocs <- function(df) {
+    if (!requireNamespace("biomaRt"))
+        stop("Bioconductor package biomaRt is required!")
+    
+    # SNP attributes and filters for biomaRt
+    filters <- c("snp_filter","variation_source")
+    attrs <- c("chr_name","chrom_start","refsnp_id")
+    
+    # Init offending indices
+    offend <- numeric(0)
+    
+    # Check assemblies
+    asms <- unique(df$asm)
+    for (a in asms) {
+        disp("    assembly: ",a)
+        
+        subdf <- df[df$asm==a,,drop=FALSE]
+        values <- list(snp_filter=unique(subdf$variant_id),
+            variation_source="dbSNP")
+            
+        if (a %in% c("hg19","hg38")) {
+            host <- ifelse(a=="hg38","www.ensembl.org","grch37.ensembl.org")
+            mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,
+                dataset="hsapiens_snp")
+            snpInfo <- getBM(attributes=attrs,filters=filters,values=values,
+                mart=mart)
+            tmp <- which(!(subdf$position %in% snpInfo$chrom_start))
+            # All wrong?
+            if (length(tmp) != nrow(subdf))
+                offend <- c(offend,tmp)
+        }
+        else { # We must check both assemblies...
+            mart1 <- useMart(biomart="ENSEMBL_MART_SNP",host="www.ensembl.org",
+                dataset="hsapiens_snp")
+            snpInfo1 <- getBM(attributes=attrs,filters=filters,values=values,
+                mart=mart1)
+            tmp1 <- which(!(subdf$position %in% snpInfo1$chrom_start))
+            # If got, then there must be some matches
+            if (length(tmp1) != nrow(subdf))
+                offend <- c(offend,tmp1)
+            
+            mart2 <- useMart(biomart="ENSEMBL_MART_SNP",
+                host="grch37.ensembl.org",dataset="hsapiens_snp")
+            snpInfo2 <- getBM(attributes=attrs,filters=filters,values=values,
+                mart=mart2)
+            tmp2 <- which(!(subdf$position %in% snpInfo2$chrom_start))
+            # If got, then there must be some matches
+            if (length(tmp2) != nrow(subdf))
+                offend <- c(offend,tmp2)
+        }
+    }
+    
+    return(offend)
+
+    #filters=c("snp_filter","variation_source")
+    #values=list(snp_filter="rs6025",variation_source="dbSNP")
+}
+
+
+# Will return only good indexes
+.checkSuppAsms <- function(x) {
+    ch <- grepl("37",x) | grepl("19",x) | grepl("38",x) | grepl("nr",x)
+    if (!all(ch))
+        return(which(!ch))
+    return(NULL)
 }
 
 .assemblyToGv <- function(x=NULL) {
@@ -338,7 +549,7 @@ getPGSVariants <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,retries=5) {
 .retrieveScoreFile <- function(sf) {
     if (.isValidUrl(sf)) {
         dest <- tempfile()
-        download.file(url=sf,destfile=dest)
+        download.file(url=sf,destfile=dest,method="libcurl")
     }
     else { # Could be local file
         if (is.character(sf) && file.exists(sf))
@@ -356,12 +567,13 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     # Template fill all the possible columns
     if (is.null(sf$rsID) && is.null(sf$chr_name))
         stop("Both rsID and chromosomal location are missing! Are you sure ",
-            basename(scoreFile)," is a valid PGS score file?")
+            "the provided input represents a valid PGS score?")
     if (is.null(sf$effect_allele))
         stop("Score effect allele is missing! Are you sure ",
-            basename(scoreFile)," is a valid PGS score file?")
+            "the provided input represents a valid PGS score file?")
     
     if (is.null(sf$rsID)) { # Try and retrieve rs IDs
+        disp("    trying to assign dbSNP (rs) ids",level="full")
         rownames(sf) <- paste0(sf$chr_name,"_",sf$chr_position,"_",
             sf$reference_allele,"_",sf$effect_allele)
         sf$id <- rownames(sf) # Assign names anyway
@@ -373,6 +585,10 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
             if (clean)
                 sf <- sf[grep("^rs",sf$id,perl=TRUE)]
         }
+        else
+            disp("    unable to assign dbSNP (rs) ids: unspecified genome ", 
+                "assembly",level="full")
+        sf$rsID <- sf$id
     }
     else
         sf$id <- sf$rsID
@@ -380,6 +596,8 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     # If this is valid, then sf is not a GPos yet and has only SNP ids
     if (!is(sf,"GPos") && is.null(sf$chr_name)) {
         # Files are a mess, there may be total duplicate lines
+        disp("    removing duplicates and trying to assign genomic position",
+            level="full")
         sf <- sf[!duplicated(sf),,drop=FALSE]
         rownames(sf) <- sf$id <- sf$rsID
         # We assign hg38 locations when possible
@@ -399,8 +617,10 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         # sf <- .tryAssignLocusName(sf,gb)
         sf$locus_name <- rep(NA,length(sf))
     
-    if (is.null(sf$reference_allele))
+    if (is.null(sf$reference_allele)) {
+        disp("    trying to infer reference allele",level="full")
         sf <- .tryInferRefAllele(sf,gb)
+    }
 
     if (is.null(sf$effect_weight) && !is.null(sf$OR))
         sf$effect_weight <- log(sf$OR)
@@ -413,7 +633,12 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         sf$effect_weight <- rep(1,nrow(sf))
     }
     
-    return(sf)
+    # Harmonize the column names of the GPos object and remove the "id" helper
+    # column
+    mcols(sf) <- mcols(sf)[,c("rsID","effect_allele","reference_allele",
+        "locus_name","effect_weight","OR")]
+    
+    return(unname(sf))
     #return(as(sf,"DataFrame"))
     
     # We also need some - PLINK to GPos thing...
@@ -450,7 +675,9 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     
     genome <- BSgenome::getBSgenome(gv)
     
-    res <- snpsById(SNPlocs.Hsapiens.dbSNP151.GRCh38,gp$id,ifnotfound="drop")
+    res <- snpsById(
+        SNPlocs.Hsapiens.dbSNP151.GRCh38::SNPlocs.Hsapiens.dbSNP151.GRCh38,
+        gp$id,ifnotfound="drop")
     seqlevelsStyle(res) <- "UCSC"
     inf <- tryCatch(inferRefAndAltAlleles(res,genome),error=function(e) {
         disp("Error caught during allele inference: ",e$message)
@@ -475,11 +702,13 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         stop("Bioconductor package SNPlocs.Hsapiens.dbSNP151.GRCh38 is ",
             "required!")
     
-    res <- snpsById(SNPlocs.Hsapiens.dbSNP151.GRCh38,df$id,ifnotfound="drop")
+    res <- snpsById(
+        SNPlocs.Hsapiens.dbSNP151.GRCh38::SNPlocs.Hsapiens.dbSNP151.GRCh38,
+        df$id,ifnotfound="drop")
     
     # Initialize
-    df$chr_name <- rep("Z",nrow(tmp))
-    df$chr_position <- rep(1,nrow(tmp))
+    df$chr_name <- rep("Z",nrow(df))
+    df$chr_position <- rep(1,nrow(df))
     # Assign found
     df[res$RefSNP_id,"chr_name"] <- as.character(seqnames(res))
     df[res$RefSNP_id,"chr_position"] <- start(res)
@@ -506,7 +735,8 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         gpl <- gp
     
     # Now query dbSNP base on genomic positions
-    res <- snpsByOverlaps(SNPlocs.Hsapiens.dbSNP151.GRCh38,gpl)
+    res <- snpsByOverlaps(
+        SNPlocs.Hsapiens.dbSNP151.GRCh38::SNPlocs.Hsapiens.dbSNP151.GRCh38,gpl)
     
     # Assign what is found...
     io <- paste0(seqnames(gpl),"_",start(gpl))
@@ -587,17 +817,25 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     return(nil[-1,,drop=FALSE])
 }
 
-#~ .prepareScores <- function(scores,gb=c("hg19","hg38")) {
-#~     # Accept DataFrame object
-#~     # Depending on its contents
-#~     # .retrieveSNPLocation
-#~     # .retrieveSNPrs
-#~     # Add some metacolumn to indicate inverse allele (some thinking)
-#~     # Return a GPos object with as much metadata as possible from GWAS or PGS
+rsLocsFromEnsembl <- function(rs,gv=c("hg19","hg38"),canonical=TRUE) {
+    gv <- gv[1]
+    if (!requireNamespace("biomaRt"))
+        stop("Bioconductor package biomaRt is required!")
     
-#~     if (!is(scores,"DataFrame"))
-#~         stop("Input must be a DataFrame object!")
+    # SNP attributes and filters for biomaRt
+    filters <- c("snp_filter","variation_source")
+    attrs <- c("chr_name","chrom_start","refsnp_id")
+    values <- list(snp_filter=unique(rs),variation_source="dbSNP")
     
-#~     # Check if we need to retrieve locations
-#~     if (scores$tmp$chr_name)
-#~ }
+    host <- ifelse(gv=="hg38","www.ensembl.org","grch37.ensembl.org")
+    mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,dataset="hsapiens_snp")
+    snpInfo <- getBM(attributes=attrs,filters=filters,values=values,mart=mart)
+    
+    # Keep only canonical chromosomes?
+    if (canonical) {
+        chrsExp <- paste0("^(",paste0(c(as.character(seq_len(22)),"X","Y"),
+            collapse="|"),")$")
+        return(snpInfo[grep(chrsExp,snpInfo$chr_name),,drop=FALSE])
+    }
+    return(snpInfo)
+}

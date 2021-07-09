@@ -118,7 +118,7 @@ getDefaults <- function(what) {
                 heteroFac=3,
                 heteroHard=NA,
                 pcaOut=TRUE,
-                pcaRobust="grid",
+                pcaRobust="hubert",
                 nPC=NA,
                 LD=0.2,
                 IBD=0.1,
@@ -446,6 +446,13 @@ disp <- function(...,level=c("normal","full")) {
 .capFirst <- function(x) {
   z <- strsplit(x," ")[[1]]
   return(paste(toupper(substring(z,1,1)),substring(z,2),sep="",collapse=" "))
+}
+
+.splitPath <- function(x) {
+    if (dirname(x) == x) 
+        return(x) 
+    else 
+        return(c(basename(x),.splitPath(dirname(x))))
 }
 
 #~ getAPIBase <- function() {

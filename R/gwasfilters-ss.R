@@ -89,11 +89,11 @@
             length(filteredHeteroInd),length(filteredInbreedInd)),
         row.names=fpar
     )
-    currFiltDf <- filters(obj)
+    currFiltDf <- filterRecord(obj)
     if (nrow(currFiltDf) == 0)
-        filters(obj) <- filtDf
+        filterRecord(obj) <- filtDf
     else
-        filters(obj) <- rbind(currFiltDf,filtDf)
+        filterRecord(obj) <- rbind(currFiltDf,filtDf)
     
     # Finally
     snpInd <- Reduce("union",list(filteredSnpCallInd,filteredMafInd,
@@ -167,11 +167,11 @@
         # Update filters
         filtDf <- data.frame(parameter="IBD",name="IBD",value=filters$IBD,
             type="Sample",filtered=length(ir),row.names="IBD")
-        currFiltDf <- filters(obj)
+        currFiltDf <- filterRecord(obj)
         if (nrow(currFiltDf) == 0)
-            filters(obj) <- filtDf
+            filterRecord(obj) <- filtDf
         else
-            filters(obj) <- rbind(currFiltDf,filtDf)
+            filterRecord(obj) <- rbind(currFiltDf,filtDf)
     }
            
     m <- metadata(obj)
@@ -206,11 +206,11 @@
     filtDf <- data.frame(parameter="pcaOut",name="Robust PCA",
         value=filters$pcaRobust,type="Sample",filtered=length(jj),
         row.names="pcaOut")
-    currFiltDf <- filters(obj)
+    currFiltDf <- filterRecord(obj)
     if (nrow(currFiltDf) == 0)
-        filters(obj) <- filtDf
+        filterRecord(obj) <- filtDf
     else
-        filters(obj) <- rbind(currFiltDf,filtDf)
+        filterRecord(obj) <- rbind(currFiltDf,filtDf)
     
     # Return possibly filtered object
     if (length(jj) > 0)
@@ -279,8 +279,6 @@
     else
         pco <- .pcaWithSnpRelate(gdsHandle,samples=colnames(obj),snps=snpsetIbd,
             npcs=filters$nPC,rc=rc,.testing=.testing)
-        #pctab <- data.frame(sampleId=pco$sample.id,PC1=pcp$eigenvect[,1],
-        #   PC2=pcp$eigenvect[,2],stringsAsFactors=FALSE)
     
     m <- metadata(obj)
     m$pcaCov <- pco
@@ -347,8 +345,30 @@
     }
     return(pco)
 }
-
+    
 .internalImputeWithSnpStats <- function(obj,rc=NULL) {
+    # Imputation per chromosome
+    map <- gfeatures(obj)
+    if ("chromosome" %in% names(map))
+        parts <- split(obj,map$chromosome)
+    else {
+        splitFactor <- .splitFactorForParallel(nrow(obj),rc)
+        parts <- split(obj,splitFactor)
+    }
+    
+    disp("\nStarting imputation analysis in ",length(parts)," chunks")
+    O <- lapply(names(parts),function(x,prt,rc) {
+        disp("\n========== Imputing chromosome/part ",x)
+        o <- prt[[x]]
+        return(.internalImputeWithSnpStatsWorker(o,rc))
+        disp("========================================")
+    },parts,rc)
+    
+    disp("\nImputation finished, re-merging the output")
+    return(do.call("rbind",O))
+}
+
+.internalImputeWithSnpStatsWorker <- function(obj,rc=NULL) {
     x <- assay(obj,1)
     if (!any(is.na(x)))
         return(obj)
@@ -358,6 +378,7 @@
     smIndMiss <- unique(nai[,"col"])
     
     if (length(smIndMiss) == ncol(x)) { # Then only scrime
+        disp("No samples with non-missing values found... Using only scrime")
         y <- as(x,"numeric")
         y <- .internalImputeKnn(y)
         assay(obj,1) <- SnpMatrix(y)
@@ -421,7 +442,7 @@
     # Some verbosity
     disp(length(smIndMiss)," samples have missing genotypes in ",
         length(missSnps)," SNPs in total.")
-    disp(ncol(train)," samples with ",length(noMissSnps)," SNPs with complee ",
+    disp(ncol(train)," samples with ",length(noMissSnps)," SNPs with complete ",
      "presence will be used to train the impute model.")
     
     # Define the rules
@@ -430,22 +451,26 @@
         rules <- snp.imputation(t(present),t(missing),posPres,posMiss)
     })
     disp(paste(tmp,collapse="\n"))
-    disp(length(rules)," imputation rules sucessfully created! With these ",
-        length(which(can.impute(rules)))," genotypes can be imputed.")
-    
-    # Split the missing value matrix per sample to avoid for  
-    # unnecessary replacements
-    # CHECK: Potential parallelization
-    disp("Imputing...")
-    h <- split(rownames(nai),nai[,"col"])
-    for (i in smIndMiss) {
-        snpmiss <- h[[as.character(i)]]
-        disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
-        disp("    ",paste(snpmiss,collapse="\n    "),level="full")
-        simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
-        x[snpmiss,i] <- simp[,snpmiss]
+    if (!any(can.impute(rules)))
+        disp(length(rules)," imputation rules created but no SNP can be ",
+            "imputed... Will skip and use kNN...")
+    else {
+        disp(length(rules)," imputation rules sucessfully created! With these ",
+            length(which(can.impute(rules)))," genotypes can be imputed.")
+        # Split the missing value matrix per sample to avoid unnecessary
+        # replacements
+        # CHECK: Potential parallelization
+        disp("Imputing...")
+        h <- split(rownames(nai),nai[,"col"])
+        for (i in smIndMiss) {
+            snpmiss <- h[[as.character(i)]]
+            disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
+            disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+            simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+            x[snpmiss,i] <- simp[,snpmiss]
+        }
     }
-    
+
     # If NAs remain, scrime
     if (any(is.na(x))) {
         disp(length(which(is.na(x)))," missing values remaining... Will ",
@@ -469,8 +494,19 @@
     
     # Finalize genotypes
     x <- .toIntMat(x)
-    ximp <- knncatimputeLarge(x+1L,nn=5,
-        verbose=prismaVerbosity() %in% c("normal","full"))
+    #ximp <- knncatimputeLarge(x+1L,nn=5,
+    #   verbose=prismaVerbosity() %in% c("normal","full"))
+    # Still someting may go wrong, if yes, resort to mean
+    ximp <- tryCatch({
+        knncatimputeLarge(x+1L,nn=5,
+            verbose=prismaVerbosity() %in% c("normal","full"))
+    },error=function(e) {
+        disp("Caught error during kNN imputation: ",e$message)
+        disp("Imputing with simple average genotype...")
+        ival <- round(mean(x,na.rm=TRUE))
+        x[is.na(x)] <- ival
+        return(x)
+    })
     colnames(ximp) <- colnames(x)
     return(ximp)
 }
@@ -558,7 +594,7 @@
 }
 
 .filterReport <- function(obj) {
-    filtDf <- filters(obj)
+    filtDf <- filterRecord(obj)
     if (nrow(filtDf) > 0) {
         message("\n----- Filtering report: -----")
         message("Filtered SNPs:")
