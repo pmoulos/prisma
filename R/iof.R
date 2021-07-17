@@ -81,6 +81,20 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
         return(.filterWithBigSnpr(x,filters,imputeMissing))
 }
 
+imputeGWAS <- function(obj,mode=c("single","split"),rc=NULL) {
+    mode <- mode[1]
+    .checkTextArgs("Imputation mode (mode)",mode,c("single","split"),
+        multiarg=FALSE)
+    
+    m <- metadata(obj)
+    if (m$backend == "snpStats") {
+        disp("\nImputing missing values with snpStats rules and scrime kNN")
+        return(.internalImputeWithSnpStats(obj,rc=rc))
+    }
+    else
+        return(obj) # For now
+}
+
 .checkSelection <- function(s) {
     if (is.null(s))
         return(s)
