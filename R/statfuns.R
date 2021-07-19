@@ -3,6 +3,7 @@ calcPcaCovar <- function(obj,ld=0.2,method=c("auto","snprel","grid","hubert"),
     if (!is(obj,"GWASExperiment"))
         stop("obj must be an object of class GWASExperiment!")
     
+    method <- tolower(method[1])
     .checkTextArgs("PCA method",method,c("auto","snprel","grid","hubert"),
         multiarg=FALSE)
     .checkNumArgs("Number of PCs npc",npc,"numeric",0,"gte")
@@ -64,6 +65,7 @@ calcPcaCovar <- function(obj,ld=0.2,method=c("auto","snprel","grid","hubert"),
             rownames(thePcs) <- as.character(pco$sample.id)
             colnames(thePcs) <- paste0("PC",ei)
         }
+        disp("    selected ",length(ei)," PCs")
     }
     else {
         disp("  with hard-cutoff at ",npc," PCs")

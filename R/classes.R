@@ -295,7 +295,8 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
         warning("Previous association p-values will be dropped during ",
             "cbind operation as the population changes!")
     
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=NULL,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
+        check=FALSE)
 })
 
 # rbind means adding SNPs - phenotypes must be identical
@@ -326,7 +327,8 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
         warning("Previous association p-values will be dropped during ",
             "rbind operation as the number of markers changes!")
     
-    BiocGenerics:::replaceSlots(out,phenotypes=rp,pvalues=NULL,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
+        check=FALSE)
 })
 
 setAs("SummarizedExperiment","GWASExperiment",function(from) {

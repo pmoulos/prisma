@@ -162,8 +162,11 @@
                 snp.id=snpsetIbd,num.thread=.coresFrac(rc),maf=0.1,
                 autosome.only=FALSE)
         else
-            ibd <- snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
-                snp.id=snpsetIbd,num.thread=.coresFrac(rc))
+            ibd <- tryCatch({
+                snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
+                    snp.id=snpsetIbd,num.thread=.coresFrac(rc))
+            },)
+        
         disp("Performing IBD selection...")
         ibdCoeff <- snpgdsIBDSelection(ibd)
         
@@ -243,16 +246,23 @@
             autosome.only=FALSE,sample.id=samples,snp.id=snps)
     else
         # Default is start.pos="random" but this requires a seed for reprod
-        snpSub <- snpgdsLDpruning(handle,ld.threshold=ldCut,sample.id=samples,
-            snp.id=snps,start.pos="first")
-    #else {
-    #    # Default is start.pos="random" but this requires a seed for reprod
-    #    tmp <- capture.output({
-    #        snpSub <- snpgdsLDpruning(handle,ld.threshold=filters$LD,
-    #            sample.id=samples,snp.id=snps,start.pos="first")
-    #    })
-    #    disp(paste(tmp,collapse="\n"))
-    #}
+        snpSub <- tryCatch({
+            snpgdsLDpruning(handle,ld.threshold=ldCut,sample.id=samples,
+                snp.id=snps,start.pos="first")
+            #tmp <- capture.output({
+            #   snpSub <- snpgdsLDpruning(handle,ld.threshold=filters$LD,
+            #   sample.id=samples,snp.id=snps,start.pos="first")
+            #})
+            #disp(paste(tmp,collapse="\n"))
+        },error=function(e) {
+            disp("Caught error ",e$message)
+            disp("Closing GDS file connection")
+            snpgdsClose(handle)
+        },interrupt=function(i) {
+            disp("Caught keyboard interruption!")
+            disp("Closing GDS file connection")
+            snpgdsClose(handle)
+        },finally="")
     
     if (mustClose)
         snpgdsClose(handle)
@@ -277,7 +287,7 @@
         snpsetIbd <- .ldPruningWithSnpRelate(gdsHandle,filters$LD,rownames(x),
             colnames(x),rc,.testing)
         disp("LD pruning finished! ",length(snpsetIbd)," SNPs will be used ",
-            "for IBD analysis.")
+            "for PCA.")
     }
     else
         snpsetIbd <- rownames(obj)
@@ -345,14 +355,24 @@
         pco <- snpgdsPCA(handle,maf=0.1,autosome.only=FALSE,sample.id=samples,
             snp.id=snps)
     else {
-        #tmp <- capture.output({
-        if (!.isEmpty(npcs))
-            pco <- snpgdsPCA(handle,sample.id=samples,snp.id=snps,
-                eigen.cnt=npcs,num.thread=.coresFrac(rc))
-        else
-            pco <- snpgdsPCA(handle,sample.id=samples,snp.id=snps,
-                num.thread=.coresFrac(rc))
-        #})
+        pco <- tryCatch({
+            #tmp <- capture.output({
+            if (!.isEmpty(npcs))
+                snpgdsPCA(handle,sample.id=samples,snp.id=snps,
+                    eigen.cnt=npcs,num.thread=.coresFrac(rc))
+            else
+                pco <- snpgdsPCA(handle,sample.id=samples,snp.id=snps,
+                    num.thread=.coresFrac(rc))
+            #})
+        },error=function(e) {
+            disp("Caught error ",e$message)
+            disp("Closing GDS file connection")
+            snpgdsClose(handle)
+        },interrupt=function(i) {
+            disp("Caught keyboard interruption!")
+            disp("Closing GDS file connection")
+            snpgdsClose(handle)
+        },finally="")
     }
     return(pco)
 }

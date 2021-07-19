@@ -188,7 +188,10 @@ disp <- function(...,level=c("normal","full")) {
 
 .splitFactorForParallel <- function(n,rc) {
     .checkNumArgs("The number of elements to split",n,"numeric",0,"gt")
-    nc <- .coresFrac(rc)
+    if (rc>0 && rc<=1) # Cores fraction,else chunks
+        nc <- .coresFrac(rc)
+    else
+        nc <- rc
     mo <- n%%nc
     if (mo == 0) {
         fl <- n/nc
@@ -210,13 +213,6 @@ disp <- function(...,level=c("normal","full")) {
         else 
             return(1)
     }
-}
-
-.toIntMat <- function(x) {
-    x <- round(x,digits=1)
-    for (i in seq_len(ncol(x)))
-        x[,i] <- as.integer(x[,i])
-    return(x)
 }
 
 .checkEFOFormat <- function(id) {
