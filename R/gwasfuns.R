@@ -4,7 +4,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     #args=getDefaults("gwargs"),
     family=NULL,usepcblup=c("auto","estim","fixed","none"),npcsblup=NULL,
     snptest=c("frequentist","bayesian"),snpmodel=c("additive","dominant",
-    "recessive","general","heterozygote"),rc=NULL,...) {
+    "recessive","general","heterozygote"),size=1,rc=NULL,...) {
     # Object class?
     if (!is(obj,"GWASExperiment"))
         stop("obj must be an object of class GWASExperiment!")
@@ -15,6 +15,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     snptest <- snptest[1]
     snpmodel <- snpmodel[1]
     .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
+    .checkNumArgs("SNPs to bucket test (size)",size, "numeric",0,"gt")
     if (!is.null(npcsblup))
         .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
             "gt")
@@ -56,7 +57,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
         disp("\n========== Analyzing chromosome/part ",x)
         o <- prt[[x]]
         return(.gwaWorker(o,response,covariates,pcs,psig,methods,combine,family,
-            usepcblup,npcsblup,snptest,snpmodel,rc))
+            usepcblup,npcsblup,snptest,snpmodel,size,rc))
     },parts)
     
     disp("\nFinished, the following putative associations were found per part:")
@@ -74,7 +75,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 
 # Returns only the p-value matrix. For assigning p-values to object, use GWA
 .gwaWorker <- function(obj,response,covariates,pcs,psig,methods,combine,
-    family,usepcblup,npcsblup,snptest,snpmodel,rc=NULL,...) {
+    family,usepcblup,npcsblup,snptest,snpmodel,size,rc=NULL,...) {
     # Initialize pvalue matrix
     pMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
     rownames(pMatrix) <- rownames(obj)
@@ -155,11 +156,12 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 }
 
 gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
-    penalized=FALSE,rc=NULL,...) {
+    penalized=FALSE,size=1,rc=NULL,...) {
     if (!is(obj,"GWASExperiment"))
         stop("obj must be an object of class GWASExperiment!")
     
-    .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
+    .checkNumArgs("Association p-value (psig)",psig,"numeric",c(0,1),"both")
+    .checkNumArgs("SNPs to bucket test (size)",size, "numeric",0,"gt")
     
     # Construct the glm data frame, check if response and covariate names are
     # valid
@@ -190,7 +192,7 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     if (pcs) { # Include robust PCs in the model
         if (.hasPcaCovariates(obj)) {
             pcov <- pcaCovariates(obj)
-            p <- cbind(p,pcov[,1:5])
+            p <- cbind(p,pcov)
         }
         else
             warning("PC covariates requested in the model, but not calculated ",
@@ -215,52 +217,26 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     disp("Covariate(s): ",paste0(covariates,collapse=", "))
     disp("Regression  : ",family," (",fpredHelper,")")
     disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
-    
-    assocList <- cmclapply(splits,function(n,p,r,f,w,...) {
-        disp("  testing SNPs from ",n[1]," to ",n[length(n)])
-        batch <- lapply(n,function(s,p,r,f,w,...) {
-            disp("    testing ",s,level="full")
-            dat <- cbind(p,t(as(snps[s,],"numeric")))
-            tmp <- coefficients(.gwaGlmWorker(w,dat,r,f,...))
-            rownames(tmp)[nrow(tmp)] <- s
-            return(tmp[s,,drop=FALSE])
-        },p,r,f,w,...)
-        batch <- do.call("rbind",batch)
-        rownames(batch) <- n
-        return(batch)
-    },p,response,family,wh,...,rc=rc)
-    
-    #if (wh == "glm")
-    #    assocList <- cmclapply(splits,function(n,p,r,f,...) {
-    #        disp("  testing SNPs from ",n[1]," to ",n[length(n)])
-    #        batch <- lapply(n,function(s,p,r,f,...) {
-    #            disp("    testing ",s,level="full")
-    #            dat <- cbind(p,t(as(snps[s,],"numeric")))
-    #            tmp <- coefficients(.gwaGlmWorker("glm",dat,r,f,...))
-    #            rownames(tmp)[nrow(tmp)] <- s
-    #            return(tmp[s,,drop=FALSE])
-    #        },p,r,f,...)
-    #        batch <- do.call("rbind",batch)
-    #        rownames(batch) <- n
-    #        return(batch)
-    #    },p,response,family,...,rc=rc)
-    #else if (wh == "lasso")
-    #    assocList <- cmclapply(splits,function(n,p,r,f,...) {
-    #        disp("  testing SNPs from ",n[1]," to ",n[length(n)])
-    #        # Further split per chunks of 100 - we should enforce ordering
-    #        sf <- .splitFactorForParallel(length(n),floor(length(n)/100))
-    #        inSplits <- split(n,sf)
-    #        batch <- lapply(inSplits,function(s,p,r,f,...) {
-    #            disp("    ",paste(s,collapse="\n    "),level="full")
-    #            dat <- cbind(p,t(as(snps[s,],"numeric")))
-    #            tmp <- coefficients(.gwaGlmWorker("lasso",dat,r,f,...))
-    #            rownames(tmp)[(nrow(tmp)-100):nrow(tmp)] <- s
-    #            return(tmp[s,,drop=FALSE])
-    #        },p,r,f,...)
-    #        batch <- do.call("rbind",batch)
-    #        rownames(batch) <- n
-    #        return(batch)
-    #    },p,response,family,...,rc=rc)
+        
+    if (size == 1)
+        assocList <- cmclapply(splits,function(n,p,r,f,w,snps,...) {
+            disp("  testing SNPs from ",n[1]," to ",n[length(n)])
+            batch <- lapply(n,.glmTestSingleSNP,p,r,f,w,snps,...)
+            batch <- do.call("rbind",batch)
+            rownames(batch) <- n
+            return(batch)
+        },p,response,family,wh,snps,...,rc=rc)
+    else
+        assocList <- cmclapply(splits,function(n,p,r,f,w,m,snps,...) {
+            disp("  testing SNPs from ",n[1]," to ",n[length(n)])
+            # Further split per chunks of m - we should enforce ordering
+            sf <- .splitFactorForParallel(length(n),floor(length(n)/m))
+            inSplits <- split(n,sf)
+            batch <- lapply(inSplits,.glmTestMultiSNP,p,r,f,w,snps,...)
+            batch <- do.call("rbind",batch)
+            rownames(batch) <- n
+            return(batch)
+        },p,response,family,wh,size,snps,...,rc=rc)
      
     assocResult <- do.call("rbind",assocList)
     scol <- ifelse(penalized,5,4)
@@ -268,6 +244,32 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
         "(uncorrected p-values).")
     
     return(assocResult)
+}
+
+.glmTestSingleSNP <- function(s,p,r,f,w,snps,...) {
+    disp("    testing ",s,level="full")
+    dat <- cbind(p,t(as(snps[s,],"numeric")))
+    tmp <- coefficients(.gwaGlmWorker(w,dat,r,f,...))
+    rownames(tmp)[nrow(tmp)] <- s
+    return(tmp[s,,drop=FALSE])
+}
+
+.glmTestMultiSNP <- function(s,p,r,f,w,snps,...) {
+    disp("    ",paste(s,collapse="\n    "),level="full")
+    dat <- cbind(p,t(as(snps[s,],"numeric")))
+    tmp <- coefficients(.gwaGlmWorker(w,dat,r,f,...))
+    if (w=="glm") { # Deal with non-pruning collinearity
+        ret <- matrix(NA,length(s),4)
+        colnames(ret) <- colnames(tmp)
+        rownames(ret) <- s
+        com <- intersect(rownames(tmp),s)
+        ret[com,] <- tmp[com,]
+        return(ret)
+    }
+    else {
+        rownames(tmp)[(nrow(tmp)-length(s)+1):nrow(tmp)] <- s
+        return(tmp[s,,drop=FALSE])
+    }
 }
 
 # ... is other options passed to GLM
@@ -279,10 +281,20 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     covs <- colnames(dat)[-ii]
     cres <- colnames(dat)[ii]
     f <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    disp("Formula is: ",level="full")
+    disp(show(f),level="full")
     if (wh=="glm")
         return(summary(glm(f,data=dat,family=fam,...)))
-    else if (wh=="lasso")
-        return(summary(islasso(f,data=dat,family=fam,...)))
+    else if (wh=="lasso") {
+        ret <- tryCatch({
+            summary(islasso(f,data=dat,family=fam,...))
+        },error=function(e) {
+            disp("Caught error: ",e$message)
+            disp("Removing penalizing factor (lambda=0)")
+            return(summary(islasso(f,data=dat,family=fam,unpenalized=covs,lambda=1,...)))
+        },finally="")
+        return(ret)
+    }
 }
 
 gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
@@ -299,11 +311,12 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
         .checkNumArgs("Number of PCs (npcs)",npcs,"numeric",0,"gte")
     }
     else {
-        if (usepc == "fixed")
+        if (usepc == "fixed") {
             warning("The number of PCs to use must be provided when ",
                 "usepc = 'fixed'! Switching to usepc = 'estim'...",
                 immediate.=TRUE)
-        usepc <- "estim"
+            usepc <- "estim"
+        }
     }
     
     # Preprocess phenotypes, similarly to gwaGlm
@@ -327,6 +340,7 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
     if (usepc == "estim")
         later <- TRUE
     if (usepc == "fixed")
+        later <- FALSE
         # Silence, will use provided npcs which have been checked before
     if (usepc == "none")
         npcs <- 0
