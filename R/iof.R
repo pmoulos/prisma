@@ -25,7 +25,7 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         if (is.character(phenos) && !file.exists(phenos))
             stop("When character, the phenotypes argument (pheno) must be an ",
                 "existing file!")
-        if (file.exists(phenos))
+        if (is.character(phenos) && !file.exists(phenos))
             phenos <- read.delim(phenos)
     }
     
@@ -124,10 +124,10 @@ imputeGWAS <- function(obj,mode=c("single","split"),rc=NULL) {
     return(s)
 }
 
-writePlink <- function(obj,outBase,salvage=FALSE) {
+writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE) {
     if (!is(obj,"GWASExperiment"))
         stop("The input object (obj) must be a GWASExperiment object!")
-    if (missing(outBase))
+    if (is.null(outBase))
         stop("A path and filename base for the resulting PLINK files must be ",
             "provided!")
     
@@ -161,21 +161,48 @@ writePlink <- function(obj,outBase,salvage=FALSE) {
     }
     
     # Filter out those with remaining NA chromosome, position (controls?)
-    na <- which(is.na(map$chromosome))
+    na <- is.na(map$chromosome)
+    
+    # Finally, attach the desired phenotype (if provided, otherwise default)
+    ph <- phenotypes(obj)
+    if (is.null(ph) || is.null(pheno))
+        phenoVec <- fam$affected
+    else {
+        if (is.numeric(pheno)) {
+            if (pheno > ncol(ph)) {
+                warning("The main phenotype index ",pheno," is larger than ",
+                    "the object's available phenotypes! Exporting default...")
+                phenoVec <- fam$affected
+            }
+            else {
+                pheno <- colnames(ph)[pheno]
+                phenoVec <- ph[,pheno]
+            }
+        }
+        else if (is.character(pheno)) {
+            if (!(pheno %in% colnames(ph))) {
+                warning("The main phenotype ",pheno," was not found in the ",
+                    "object's phenotypes! Exporting default...")
+                phenoVec <- fam$affected
+            }
+            else
+                phenoVec <- ph[,pheno]
+        }
+    }
 
     # Write the PLINK files that we will work with!
     write.plink(
         file.base=outBase,
-        snps=gen[,-na],
+        snps=gen[,!na],
         pedigree=fam$pedigree,
         id=rownames(fam),
         father=fam$father,
         mother=fam$mother,
         sex=fam$sex,
-        phenotype=fam$affected,
-        chromosome=map$chromosome[-na],
-        position=map$position[-na],
-        allele.1=map$allele.1[-na],
-        allele.2=map$allele.2[-na]
+        phenotype=phenoVec,
+        chromosome=map$chromosome[!na],
+        position=map$position[!na],
+        allele.1=map$allele.1[!na],
+        allele.2=map$allele.2[!na]
     )
 }

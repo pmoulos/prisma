@@ -12,13 +12,14 @@ setClassUnion("data.frame_OR_DataFrame_OR_NULL",
     contains="SummarizedExperiment",
     slots=c(
         phenotypes="data.frame_OR_DataFrame_OR_NULL",
-        pvalues="data.frame_OR_matrix_OR_NULL"
+        pvalues="data.frame_OR_matrix_OR_NULL",
+        effects="data.frame_OR_matrix_OR_NULL"
     )
 )
 
 # Constructor
 GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
-    samples=DataFrame(),phenotypes=DataFrame(),pvalues=NULL,
+    samples=DataFrame(),phenotypes=DataFrame(),pvalues=NULL,effects=NULL,
     metadata=list(genome=NA_character_,backend=NA_character_,
         filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
             c("parameter","name","value","type","filtered"))),...) {
@@ -50,7 +51,8 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     
     se <- SummarizedExperiment(assays=genotypes,rowData=features,
         colData=samples,metadata=metadata)
-    return(.GWASExperiment(se,phenotypes=phenotypes,pvalues=pvalues))
+    return(.GWASExperiment(se,phenotypes=phenotypes,pvalues=pvalues,
+        effects=effects))
 }
 
 setGeneric("genotypes",function(x,...) standardGeneric("genotypes"))
@@ -72,6 +74,10 @@ setGeneric("phenotypes<-",function(x,...,value) standardGeneric("phenotypes<-"))
 setGeneric("pvalues",function(x,...) standardGeneric("pvalues"))
 
 setGeneric("pvalues<-",function(x,...,value) standardGeneric("pvalues<-"))
+
+setGeneric("effects",function(x,...) standardGeneric("effects"))
+
+setGeneric("effects<-",function(x,...,value) standardGeneric("effects<-"))
 
 setGeneric("filterRecord",function(x,...) standardGeneric("filterRecord"))
 
@@ -145,6 +151,23 @@ setReplaceMethod("pvalues","GWASExperiment",function(x,...,value) {
         return(x)
 })
 
+setMethod("effects","GWASExperiment",function(x,withDimnames=TRUE) {
+    e <- x@effects
+    if (!is.null(e)) {
+        if (withDimnames)
+            rownames(e) <- rownames(x)
+        else
+            rownames(e) <- NULL
+    }
+    return(e)
+})
+
+setReplaceMethod("effects","GWASExperiment",function(x,...,value) {
+    x@effects <- value
+    if (validObject(x))
+        return(x)
+})
+
 setMethod("genome","GWASExperiment",function(x) {
     m <- metadata(x)
     return(m$genome)
@@ -191,6 +214,7 @@ setReplaceMethod("pcaCovariates","GWASExperiment",function(x,...,value) {
 setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     p <- phenotypes(x,withDimnames=FALSE)
     v <- pvalues(x,withDimnames=FALSE)
+    e <- effects(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -200,6 +224,7 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
         }
         i <- as.vector(i)
         v <- v[i,,drop=FALSE]
+        e <- e[i,,drop=FALSE]
     }
 
     if (!missing(j)) {
@@ -225,13 +250,15 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+        check=FALSE)
 })
 
 setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     function(x,i,j,...,value) {
     p <- phenotypes(x,withDimnames=FALSE)
     v <- pvalues(x,withDimnames=FALSE)
+    e <- effects(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -241,6 +268,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
         }
         i <- as.vector(i)
         v[i,] <- pvalues(value,withDimnames=FALSE)
+        e[i,] <- effects(value,withDimnames=FALSE)
     }
 
     if (!missing(j)) {
@@ -262,7 +290,8 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,check=FALSE)
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+        check=FALSE)
 })
 
 # cbind means adding samples - phenotypes may not be identical
@@ -292,11 +321,11 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
     
     # pvalues must also be dropped as the population changes
     if (!is.null(pvalues(ref)))
-        warning("Previous association p-values will be dropped during ",
+        warning("Previous association tests will be dropped during ",
             "cbind operation as the population changes!")
     
     BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
-        check=FALSE)
+        effects=NULL,check=FALSE)
 })
 
 # rbind means adding SNPs - phenotypes must be identical
@@ -324,11 +353,11 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
     
     # pvalues must also be dropped as the population changes
     if (!is.null(pvalues(ref)))
-        warning("Previous association p-values will be dropped during ",
+        warning("Previous association tests will be dropped during ",
             "rbind operation as the number of markers changes!")
     
     BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
-        check=FALSE)
+        effects=NULL,check=FALSE)
 })
 
 setAs("SummarizedExperiment","GWASExperiment",function(from) {
@@ -404,6 +433,23 @@ setValidity2("GWASExperiment",function(obj) {
         if (!identical(no,nr))
             msg <- c(msg,paste0("When provided, assay rownames and associated ",
                 "p-value rownames must be identical!"))
+    }
+    
+    # If effects are given, they must have same #rows as assay rows
+    # and at least one column and must be a matrix-like object
+    e <- effects(obj)
+    if (!is.null(e) && nrow(e) > 0) {
+        if (nrow(e) != nrow(assays(obj)[[1]]) || ncol(e) < 1)
+            msg <- c(msg,paste0("When provided, association effects must have ",
+                "the same number of rows as the number of markers and at ",
+                "least one test performed (1 column)!"))
+    }
+    no <- rownames(assays(obj)[[1]])
+    nr <- rownames(e)
+    if (!is.null(no) && !is.null(nr)) {
+        if (!identical(no,nr))
+            msg <- c(msg,paste0("When provided, assay rownames and associated ",
+                "effect rownames must be identical!"))
     }
     
     # It MUST have metadata with certain names in the list

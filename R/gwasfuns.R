@@ -2,12 +2,13 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     methods=c("glm","rrblup","statgen","snptest","lasso"),
     combine=c("fisher","simes","max","min","harmonic","whitlock","pandora"),
     #args=getDefaults("gwargs"),
-    family=NULL,usepcblup=c("auto","estim","fixed","none"),npcsblup=NULL,
-    snptest=c("frequentist","bayesian"),snpmodel=c("additive","dominant",
-    "recessive","general","heterozygote"),size=1,rc=NULL,...) {
-    # Object class?
-    if (!is(obj,"GWASExperiment"))
-        stop("obj must be an object of class GWASExperiment!")
+    family=NULL,usepcblup=c("auto","estim","rrint","fixed","none"),
+    npcsblup=NULL,snptest=c("frequentist","bayesian"),
+    snpmodel=c("additive","dominant","recessive","general","heterozygote"),
+    size=1,rc=NULL,...) {
+    # Cannot run GWA in an empty object without genotypes/phenotypes or if the
+    # object is not of class GWASExperiment
+    .canRunGwa(obj)
     
     # Check input variables
     combine <- combine[1]
@@ -18,20 +19,18 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     .checkNumArgs("SNPs to bucket test (size)",size, "numeric",0,"gt")
     if (!is.null(npcsblup))
         .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
-            "gt")
+            "gte")
     .checkTextArgs("GWAS methods (methods)",methods,c("glm","rrblup","statgen",
         "snptest","lasso"),multiarg=TRUE)
     .checkTextArgs("p-value combination",combine,c("fisher","simes","max","min",
         "harmonic","whitlock","pandora"),multiarg=FALSE)
-    .checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","fixed","none"),
-        multiarg=FALSE)
+    .checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","rrint","fixed",
+        "none"),multiarg=FALSE)
     .checkTextArgs("SNPTEST test",snptest,c("frequentist","bayesian"),
         multiarg=FALSE)
     .checkTextArgs("SNPTEST model",snpmodel,c("additive","dominant","recessive",
         "general","heterozygote"),multiarg=FALSE)
     
-    # Cannot run GWA in an empty object without genotypes/phenotypes
-    .canRunGwa(obj)
     # rrBLUP does not like binary phenotypes
     if ("rrblup" %in% methods 
         && .maybeBinaryForBinomial(phenotypes(obj)[,response])) {
@@ -62,14 +61,18 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     
     disp("\nFinished, the following putative associations were found per part:")
     lapply(names(P),function(x,s,pop) {
-        disp("  ",length(which(pop[[x]] < psig))," associations found in part",
-            x," out of ",length(pop[[x]]," markers"))
+        disp("  ",length(which(pop[[x]][,ncol(pop[[x]])] < s))," associations ", 
+            "found in part",x," out of ",length(pop[[x]]," markers"))
     },psig,P)
-    passoc <- do.call("rbind",P)
+    
+    tmp <- do.call("rbind",P)
+    eassoc <- tmp[,seq_along(methods)]
+    passoc <- tmp[,(length(methods)+1):ncol(tmp)]
     disp("Overall, found ",length(which(passoc[,ncol(passoc)]<psig)),
         " associations with (uncorrected) combined p-values).")
     
     pvalues(obj) <- passoc
+    effects(obj) <- eassoc
     return(obj)
 }
 
@@ -77,39 +80,50 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 .gwaWorker <- function(obj,response,covariates,pcs,psig,methods,combine,
     family,usepcblup,npcsblup,snptest,snpmodel,size,rc=NULL,...) {
     # Initialize pvalue matrix
-    pMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
-    rownames(pMatrix) <- rownames(obj)
-    colnames(pMatrix) <- methods
+    pMatrix <- eMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
+    rownames(pMatrix) <- rownames(eMatrix) <- rownames(obj)
+    colnames(pMatrix) <- colnames(eMatrix) <- methods
     
     # Run GWAS
     for (m in methods) {
         switch(m,
             glm = {
                 glmRes <- gwaGlm(obj,response,covariates,pcs,family,psig,
-                    penalized=FALSE,rc)
+                    penalized=FALSE,size,rc)
                 pMatrix[,m] <- glmRes[,4]
+                eMatrix[,m] <- glmRes[,1]
             },
             rrblup = {
                 rrbRes <- gwaBlup(obj,response,covariates,usepc=usepcblup,
                     npcs=npcsblup,psig=psig,rc=rc)
                 pMatrix[,m] <- rrbRes$pvalue
+                eMatrix[,m] <- rrbRes$effect
             },
             statgen = {
                 sgRes <- gwaStatgen(obj,response,covariates,pcs,psig,rc)
                 pMatrix[,m] <- sgRes$pValue
+                eMatrix[,m] <- sgRes$effect
             },
             snptest = {
                 sgSnp <- gwaSnptest(obj,response,covariates,pcs,psig,snptest,
                     snpmodel)
                 pMatrix[,m] <- sgSnp$pvalue
+                eMatrix[,m] <- sgSnp$effect
             },
             lasso = {
-                glmRes <- gwaGlm(obj,response,covariates,pcs,family,psig,
+                lsRes <- gwaGlm(obj,response,covariates,pcs,family,psig,size,
                     penalized=TRUE,rc)
-                pMatrix[,m] <- glmRes[,4]
+                pMatrix[,m] <- lsRes[,4]
+                eMatrix[,m] <- lsRes[,1]
             }
         )
     }
+    
+    # NA fix, pvalue 1, effect 0
+    if (any(is.na(pMatrix)))
+        pMatrix[is.na(pMatrix)] <- 1
+    if (any(is.na(eMatrix)))
+        eMatrix[is.na(eMatrix)] <- 0
     
     # Combine p-values
     if (length(methods) > 1) {
@@ -152,14 +166,14 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
         colnames(pMatrix)[ncol(pMatrix)] <- combine
     }
     
-    return(pMatrix)
+    # Since this function is not used directly, easier to cbind effects and
+    # p-values for later result display
+    return(cbind(eMatrix,pMatrix))
 }
 
 gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     penalized=FALSE,size=1,rc=NULL,...) {
-    if (!is(obj,"GWASExperiment"))
-        stop("obj must be an object of class GWASExperiment!")
-    
+    .canRunGwa(obj)
     .checkNumArgs("Association p-value (psig)",psig,"numeric",c(0,1),"both")
     .checkNumArgs("SNPs to bucket test (size)",size, "numeric",0,"gt")
     
@@ -297,23 +311,21 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     }
 }
 
-gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
-    "none"),npcs=NULL,psig=0.05,rc=NULL) {
-    if (!is(obj,"GWASExperiment"))
-        stop("obj must be an object of class GWASExperiment!")
-        
+gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim",
+    "rrint","fixed","none"),npcs=NULL,psig=0.05,rc=NULL) {
+    .canRunGwa(obj)
     .checkNumArgs("Association p-value (psig)",psig,"numeric",c(0,1),"both")
     usepc <- usepc[1]    
-    .checkTextArgs("Use PCA (usepc)",usepc,c("auto","estim","fixed","none"),
-        multiarg=FALSE)
+    .checkTextArgs("Use PCA (usepc)",usepc,c("auto","estim","rrint","fixed",
+        "none"),multiarg=FALSE)
     if (!is.null(npcs)) {
         npcs <- npcs[1]
         .checkNumArgs("Number of PCs (npcs)",npcs,"numeric",0,"gte")
     }
     else {
-        if (usepc == "fixed") {
+        if (usepc %in% c("fixed","rrint")) {
             warning("The number of PCs to use must be provided when ",
-                "usepc = 'fixed'! Switching to usepc = 'estim'...",
+                "usepc is 'fixed' or 'rrint'! Switching to usepc = 'estim'...",
                 immediate.=TRUE)
             usepc <- "estim"
         }
@@ -327,23 +339,41 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
     p <- p[,c(response,covariates)]
     
     later <- FALSE
-    if (usepc == "auto") {
-        # If pcaCovariates exist, use as many PCs as in there (e.g. from TW)
-        # otherwise, let rrBLUP estimate
-        if (.hasPcaCovariates(obj)) {
-            pcov <- pcaCovariates(obj)
-            npcs <- ncol(pcov)
+    switch(usepc,
+        auto = {
+            # If pcaCovariates exist, use as many PCs as in there (e.g. from 
+            # TW) otherwise, let rrBLUP estimate
+            if (.hasPcaCovariates(obj)) {
+                pcov <- pcaCovariates(obj)
+                #npcs <- ncol(pcov)
+                p <- cbind(p,pcov)
+                covariates <- c(covariates,colnames(pcov))
+                npcs <- 0
+            }
+            else
+                usepc <- "estim"
+        },
+        estim = {
+            later <- TRUE
+        },
+        rrint = {
+            # Nothing, uses npcs without auto estimation
+        },
+        fixed = {
+            if (.hasPcaCovariates(obj)) {
+                pcov <- pcaCovariates(obj)
+                p <- cbind(p,pcov)
+                covariates <- c(covariates,colnames(pcov))
+                npcs <- 0
+            }
+            else
+                stop("When usepc = 'fixed', PCA must be performed prior to ",
+                    "rrBLUP GWAS, e.g. with calcPcaCovar().")
+        },
+        none = {
+            npcs <- 0
         }
-        else
-            usepc <- "estim"
-    }
-    if (usepc == "estim")
-        later <- TRUE
-    if (usepc == "fixed")
-        later <- FALSE
-        # Silence, will use provided npcs which have been checked before
-    if (usepc == "none")
-        npcs <- 0
+    )
     
     # Add rownames at first column so as to be compatible with rrBLUP::GWAS
     pheno <- cbind(rownames(p),p)
@@ -372,9 +402,11 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
         rrb <- GWAS(pheno,geno,fixed=covariates,K=NULL,
             min.MAF=.Machine$double.eps,n.PC=npcs,n.core=.coresFrac(rc),
             P3D=TRUE,plot=FALSE)
+        est <- mixed.solve(pheno[,response],Z=t(geno[,4:ncol(geno)]))
     })
     
-    rrb$pvalue <- 10^-rrb[,ncol(rrb)]
+    rrb$effect <- est$u
+    rrb$pvalue <- 10^-rrb[,ncol(rrb)-1]
     disp("Found ",length(which(rrb$pvalue<psig))," associations ",
         "(uncorrected p-values).")
     
@@ -383,9 +415,7 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim","fixed",
 
 gwaStatgen <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     rc=NULL) {
-    if (!is(obj,"GWASExperiment"))
-        stop("obj must be an object of class GWASExperiment!")
-        
+    .canRunGwa(obj)
     .checkNumArgs("Association p-value (psig)",psig,"numeric",c(0,1),"both")
     
     # Preprocess phenotypes, similarly to gwaGlm
@@ -430,6 +460,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     # Tool availability before all else
     if (!.toolAvailable("snptest"))
         stop("SNPTEST program not found in the system!")
+    .canRunGwa(obj)
     
     test <- test[1]
     .checkTextArgs("SNPTEST testing (test)",test,c("frequentist","bayesian"),
@@ -659,6 +690,10 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 }
 
 .canRunGwa <- function(o) {
+    # Object class?
+    if (!is(o,"GWASExperiment"))
+        stop("GWAS input must be an object of class GWASExperiment!")
+        
     gv <- all(dim(genotypes(o)) > 0)
     pv <- !is.null(phenotypes(o)) && all(dim(phenotypes(o)) > 0)
     if (!gv)
