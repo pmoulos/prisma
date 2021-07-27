@@ -283,7 +283,7 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
         # TODO if needed...
     }
     
-    # 3. If rs ids are not available, then only dupicated positions can be 
+    # 3. If rs ids are not available, then only duplicated positions can be 
     # removed, irrespectively of allele order?
     if (!any(grepl("^rs",results$variant_id))) {
         if (any(duplicated(results[,c("chromosome","position",

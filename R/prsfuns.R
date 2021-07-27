@@ -1,12 +1,28 @@
-lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,lsWspace=NULL,
-    anc=c("EUR","ASN","AFR")) {
+#! Add betas accessor to GWASExperiment (maybe after PRSice)
+
+# More arguments to come, like PRS formula like in PRSice etc.
+PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
+    # Some validation here
+    
+    X <- t(as(genotypes(obj),"numeric"))
+    prs <- X[,snps$variant_id] %*% snps[snps$variant_id,"effect_weight"]
+}
+
+lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
+    lsWspace=NULL,anc=c("EUR","ASN","AFR"),valid=c("auto","stack","split")) {
     # Can run PRS? Has necessary fields?
     .canRunPrs(obj,response)
     # Workspace valid?
     lsWspace <- .validateWorkspacePath(lsWspace,"lassosum")
     # Ancestry for LD blocks based on 1000G provided by lassosum
     anc <- toupper(anc[1])
+    valid <- valid[1]
     .checkTextArgs("Ancestry (anc)",anc,c("EUR","ASN","AFR"),multiarg=FALSE)
+    .checkTextArgs("Validation type (valid)",valid,c("auto","stack","split"),
+        multiarg=FALSE)
+    
+    if (valid == "auto")
+        valid <- ifelse(ncol(obj) >= 1000,"split","stack")
     
     # If all ok, prepare the run
     prepList <- .prepareLassosumRun(obj,response,lsWspace,anc)
@@ -18,6 +34,12 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,lsWspace=NULL,
     covariates <- chResCov$cvs
     pheno <- p[,c("FID","IID",response)]
     covar <- p[,c("FID","IID",covariates)]
+    # Make sure FID and IID matches, otherwise cannot be properly handled by
+    # snpStats::write.plint
+    if (!identical(pheno[,"FID"],pheno[,"IID"])) {
+        pheno[,"IID"] <- pheno[,"FID"]
+        covar[,"IID"] <- covar[,"FID"]
+    }
     if (pcs) { # Include robust PCs in the model
         if (.hasPcaCovariates(obj)) {
             pcov <- pcaCovariates(obj)
@@ -32,7 +54,13 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,lsWspace=NULL,
     ss <- prepList$ss
     cor <- p2cor(p=ss$pvalue,n=ncol(obj),sign=ss$effect)
     
+    # We need to attach marker ids to ss for later extraction
+    marks <- rownames(ss)
+    names(marks) <- paste0(ss$chromosome,"_",ss$position,"_",ss$allele.1,"_",
+        ss$allele.2)
+    
     # Run the lassosum pipeline
+    disp("Running lassosum PRS algorithm")
     cwd <- getwd()
     setwd(lsWspace)
     out <- lassosum.pipeline(
@@ -45,12 +73,53 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,lsWspace=NULL,
         test.bfile=prepList$bfile,
         LDblocks=paste0(anc,".",prepList$gb)
     )
+    # Adjust the output - actual location of temporary PLINK file
+    out$test.bfile <- file.path(lsWspace,prepList$bfile)
+    # Marker names
+    tmp <- out$sumstats
+    rownames(tmp) <- paste0(tmp$chr,"_",tmp$pos,"_",tmp$A1,"_",tmp$A2)
+    rownames(tmp) <- marks[rownames(tmp)]
+    out$sumstats <- tmp
     setwd(cwd)
+
+    # PRS? If sample size is >1000 then splitvalidate else validate
+    disp("Running lassosum validation and PRS calculation")
+    if (valid == "stack")
+        val <- lassosum::validate(out,pheno=pheno,covar=covar,plot=FALSE)
+    else if (valid == "split")
+        val <- lassosum::splitvalidate(out,pheno=pheno,covar=covar,plot=FALSE)
     
-    # PRS?
-    targetRes <- validate(out,pheno=pheno,covar=covar)
-    # Get the maximum R2
-    r2 <- max(target.res$validation.table$value)^2
+    disp("Done! R^2 is: ",max(targetRes$validation.table$value)^2)
+    return(.extractLassosumPrsComponents(out,val,genome(obj)))
+    # or
+    # betas(obj) <- .extractLassosumPrsComponents(out,val,genome(obj),full=T)
+    # return(obj)
+}
+
+.extractLassosumPrsComponents <- function(out,val,gb) {
+    # Construct initial data frame (we have matched marker names with locations)
+    df <- out$sumstats[,c("chr","pos","A1","A2")]
+    colnames(df) <- c("chromosome","position","risk_allele","reference_allele")
+    df$variant_id <- rownames(df)
+    
+    # Assuming that betas are aligned with sumstats (they are)
+    nonZero <- val$best.beta!=0
+    df <- df[nonZero,,drop=FALSE]
+    # Until we get an answer from lassosum authors, we reverse betas so as to be
+    # concordant with the classical X %*% betas PRS definition
+    df$effect_weight <- -val$best.beta[nonZero]
+    # and conversion to odds ratios
+    df$OR <- exp(df$effect_weight)
+    df$locus_name <- rep(NA,nrow(df))
+    
+    # Final alignment with the external API fetch outcomes from PGS catalog
+    df <- df[,c("chromosome","position","variant_id","risk_allele",
+        "reference_allele","locus_name","effect_weight","OR")]
+    if (is.null(gb))
+        gb <- "nr"
+    df$asm <- rep(gb,nrow(df))
+    
+    return(df)
 }
 
 .prepareLassosumRun <- function(obj,pheno,wspace,anc) {
