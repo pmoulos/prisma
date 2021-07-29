@@ -8,27 +8,30 @@ PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
     prs <- X[,snps$variant_id] %*% snps[snps$variant_id,"effect_weight"]
 }
 
-lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
-    lsWspace=NULL,anc=c("EUR","ASN","AFR"),valid=c("auto","stack","split")) {
+lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
+    wspace=NULL,anc=c("eur","asn","afr"),valid=c("auto","stack","split")) {
     # Can run PRS? Has necessary fields?
-    .canRunPrs(obj,response)
+    .canRunPrs(base,response)
+    .canRunPrs(target,response,isBase=FALSE)
+    
     # Workspace valid?
-    lsWspace <- .validateWorkspacePath(lsWspace,"lassosum")
+    wspace <- .validateWorkspacePath(wspace,"lassosum")
+    
     # Ancestry for LD blocks based on 1000G provided by lassosum
-    anc <- toupper(anc[1])
+    anc <- anc[1]
     valid <- valid[1]
-    .checkTextArgs("Ancestry (anc)",anc,c("EUR","ASN","AFR"),multiarg=FALSE)
+    .checkTextArgs("Ancestry (anc)",anc,c("eur","asn","afr"),multiarg=FALSE)
     .checkTextArgs("Validation type (valid)",valid,c("auto","stack","split"),
         multiarg=FALSE)
     
     if (valid == "auto")
-        valid <- ifelse(ncol(obj) >= 1000,"split","stack")
+        valid <- ifelse(ncol(base) >= 1000,"split","stack")
     
     # If all ok, prepare the run
-    prepList <- .prepareLassosumRun(obj,response,lsWspace,anc)
+    prepList <- .prepareLassosumRun(base,target,response,wspace,toupper(anc))
     
     # Prepare the phenotypes for later prediction/validation
-    p <- phenotypes(obj)
+    p <- phenotypes(base)
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
@@ -41,18 +44,30 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
         covar[,"IID"] <- covar[,"FID"]
     }
     if (pcs) { # Include robust PCs in the model
-        if (.hasPcaCovariates(obj)) {
-            pcov <- pcaCovariates(obj)
+        if (.hasPcaCovariates(target)) {
+            pcov <- pcaCovariates(target)
             covar <- cbind(covar,pcov)
         }
-        else
-            warning("PC covariates requested in the model, but not calculated ",
-                "PC covariates found! Ignoring...",immediate.=TRUE)
+        else {
+            disp("PC covariates requested in the model, but not calculated ",
+                "PC covariates found in therget!\nWill try to guess from the ",
+                "provided base...")
+            if (.hasPcaCovariates(base)) {
+                f <- .guessPcaParamsFromObject(base)
+                target <- .wrapPcaWithSnpStatsLd(target,f,rc)
+                pcov <- pcaCovariates(target)
+                covar <- cbind(covar,pcov)
+            }
+            else
+                 warning("PC covariates requested in the model, but not ",
+                    "calculated in target or base objects! Ignoring...",
+                    immediate.=TRUE)
+        }
     }
     
     # Transform the P-values into correlation
     ss <- prepList$ss
-    cor <- p2cor(p=ss$pvalue,n=ncol(obj),sign=ss$effect)
+    cor <- p2cor(p=ss$pvalue,n=ncol(base),sign=ss$effect)
     
     # We need to attach marker ids to ss for later extraction
     marks <- rownames(ss)
@@ -62,19 +77,19 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
     # Run the lassosum pipeline
     disp("Running lassosum PRS algorithm")
     cwd <- getwd()
-    setwd(lsWspace)
+    setwd(wspace)
     out <- lassosum.pipeline(
         cor=cor,
         chr=ss$chromosome,
         pos=ss$position,
         A1=ss$allele.1,
         A2=ss$allele.2,
-        ref.bfile=prepList$bfile,
-        test.bfile=prepList$bfile,
-        LDblocks=paste0(anc,".",prepList$gb)
+        ref.bfile=prepList$base,
+        test.bfile=prepList$target,
+        LDblocks=paste0(toupper(anc),".",prepList$gb)
     )
     # Adjust the output - actual location of temporary PLINK file
-    out$test.bfile <- file.path(lsWspace,prepList$bfile)
+    out$test.bfile <- file.path(wspace,prepList$target)
     # Marker names
     tmp <- out$sumstats
     rownames(tmp) <- paste0(tmp$chr,"_",tmp$pos,"_",tmp$A1,"_",tmp$A2)
@@ -89,11 +104,140 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
     else if (valid == "split")
         val <- lassosum::splitvalidate(out,pheno=pheno,covar=covar,plot=FALSE)
     
-    disp("Done! R^2 is: ",max(targetRes$validation.table$value)^2)
-    return(.extractLassosumPrsComponents(out,val,genome(obj)))
+    disp("Done! R^2 is: ",max(val$validation.table$value)^2)
+    return(.extractLassosumPrsComponents(out,val,genome(base)))
     # or
-    # betas(obj) <- .extractLassosumPrsComponents(out,val,genome(obj),full=T)
-    # return(obj)
+    # betas(base) <- .extractLassosumPrsComponents(out,val,genome(base),full=T)
+    # return(base)
+}
+
+# --no-clump, --extract to be used in ensembl snps
+# Probably more arguments related to output will be added
+# A mode arg will be added, controlling new PRS or with provided SNPs that will
+# be extracted from the obj along with the parameters above
+prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
+    wspace=NULL,clump_kb=250,clump_r2=0.1,clump_p=1,score=c("avg","sum",
+    "std","con-std"),perm=10000,seed=42,rc=NULL) {
+    # Can run PRS? Has necessary fields?
+    .canRunPrs(base,response)
+    .canRunPrs(target,response,isBase=FALSE)
+    
+    # Check further parameters
+    score <- tolower(score[1])
+    .checkNumArgs("Clumping distance (clump_kb)",clump_kb,"numeric",0,"gt")
+    .checkNumArgs("Clumping R2 (clump_r2)",clump_r2,"numeric",c(0,1),"botheq")
+    .checkNumArgs("Clumping p-value (clump_p)",clump_p,"numeric",c(0,1),"both")
+    .checkNumArgs("Number of permutations (perm)",perm,"numeric",0,"gte")
+    .checkTextArgs("PRS scoring scheme (score)",score,c("avg","sum",
+        "std","con-std"),multiarg=FALSE)
+    
+    # Workspace valid?
+    wspace <- .validateWorkspacePath(wspace,"prsice")
+    
+    # Prepare the phenotypes for later prediction/validation
+    p <- phenotypes(target)
+    chResCov <- .validateResponseAndCovariates(p,response,covariates)
+    response <- chResCov$res
+    covariates <- chResCov$cvs
+    pheno <- p[,c("FID","IID",response)]
+    covar <- p[,c("FID","IID",covariates)]
+    # Make sure FID and IID matches, otherwise cannot be properly handled by
+    # snpStats::write.plint
+    if (!identical(pheno[,"FID"],pheno[,"IID"])) {
+        pheno[,"IID"] <- pheno[,"FID"]
+        covar[,"IID"] <- covar[,"FID"]
+    }
+    if (pcs) { # Include robust PCs in the model
+        if (.hasPcaCovariates(target)) {
+            pcov <- pcaCovariates(target)
+            covar <- cbind(covar,pcov)
+        }
+        else {
+            disp("PC covariates requested in the model, but not calculated ",
+                "PC covariates found in therget!\nWill try to guess from the ",
+                "provided base...")
+            if (.hasPcaCovariates(base)) {
+                f <- .guessPcaParamsFromObject(base)
+                target <- .wrapPcaWithSnpStatsLd(target,f,rc)
+                pcov <- pcaCovariates(target)
+                covar <- cbind(covar,pcov)
+            }
+            else
+                 warning("PC covariates requested in the model, but not ",
+                    "calculated in target or base objects! Ignoring...",
+                    immediate.=TRUE)
+        }
+    }
+    
+    # If all ok, prepare the run
+    prepList <- .preparePrsiceRun(base,target,pheno,covar,wspace)
+    
+    # Run the PRSice pipeline
+    disp("Running PRSice PRS algorithm")
+    prsice <- .getToolPath("prsice")
+    prsiceScript <- file.path(dirname(prsice),"PRSice.R")
+    binaryTarget <- ifelse(.maybeBinaryForBinomial(pheno[,response]),"T","F")
+    threads <- .coresFrac(rc)
+    command <- paste(
+        paste0("Rscript ",prsiceScript," \\"),
+        paste0("  --prsice ",prsice," \\"),
+        paste0("  --base ",prepList$base," \\"),
+        "  --beta \\",
+        paste0("  --binary-target ",binaryTarget," \\"),
+        paste0("  --pheno ",prepList$pheno," \\"),
+        paste0("  --target ",prepList$target," \\"),
+        paste0("  --cov ",prepList$covar," \\"),
+        paste0("  --clump-kb ",clump_kb," \\"),
+        paste0("  --clump-r2 ",clump_r2," \\"),
+        paste0("  --clump-p ",clump_p," \\"),
+        paste0("  --score ",score," \\"),
+        paste0("  --seed ",seed," \\"),
+        paste0("  --out ",prepList$out,"\\"),
+        "  --print-snp",
+        sep="\n"
+    )
+    
+    if (threads > 1) {
+        addThreads <- paste0("  --thread ",threads)
+        command <- paste0(command," \\\n",addThreads)
+    }
+    if (perm > 0) {
+        addPerm <- paste0("  --perm ",perm)
+        command <- paste0(command," \\\n",addPerm)
+    }
+    ## Not working - future work: create LD from 1000 genomes
+    #if (ncol(base) < 500) {
+    #   addLd <- " --ld ",prepList$ldb
+    #   command <- paste0(command,"\\\n",addLd)
+    #}
+    
+    message("Executing: ",command)
+    cwd <- getwd()
+    setwd(wspace)
+    #out <- tryCatch(system(command,ignore.stdout=TRUE,ignore.stderr=TRUE),
+    out <- tryCatch(system(command),
+        error=function(e) {
+        message("Caught error: ",e$message)
+        return(1L)
+    },finally="")
+    setwd(cwd)
+    
+    if (out == 1L) {
+        message("PRSice run failed! Will return empty result...")
+        return(.emptyVariantsDf("pgs"))
+    }
+    
+    # Read the summary file so as to extract p-value threshold and R2
+    sumFile <- file.path(wspace,paste0("prsice_out_",prepList$runid,".summary"))
+    sumData <- read.delim(sumFile)
+    
+    disp("Done!")
+    disp("Adjusted PRSice R^2 is: ",sumData$PRS.R2)
+    disp("Full model R^2 is: ",sumData$Full.R2)
+    disp("Null model R^2 is: ",sumData$Null.R2)
+    
+    return(.extractPrsicePrsComponents(base,prepList$runid,sumData$Threshold,
+        wspace))
 }
 
 .extractLassosumPrsComponents <- function(out,val,gb) {
@@ -122,16 +266,46 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
     return(df)
 }
 
-.prepareLassosumRun <- function(obj,pheno,wspace,anc) {
+.extractPrsicePrsComponents <- function(obj,runid,pcut,wspace) {
+    # Read in detailed SNP output
+    snpFile <- file.path(wspace,paste0("prsice_out_",runid,".snp"))
+    snpData <- read.delim(snpFile)
+    snps <- as.character(snpData$SNP[snpData$P<=pcut])
+    
+    # Construct the output
+    obj <- obj[snps,]
+    df <- as.data.frame(gfeatures(obj))
+    # Basic info
+    out <- df[,c("chromosome","position","snp.name","allele.1","allele.2")]
+    # Attach effects
+    e <- effects(obj)
+    pri <- .getGwaLinArgPrior()
+    if (any(pri %in% colnames(e)))
+        out$effect_weight <- e[,pri[which(pri %in% colnames(e))[1]]]
+    out$OR <- exp(out$effect_weight)
+    out$locus_name <- rep(NA,nrow(out))
+    
+    # Final alignment with the external API fetch outcomes from PGS catalog
+    out <- out[,c("chromosome","position","variant_id","risk_allele",
+        "reference_allele","locus_name","effect_weight","OR")]
+    gb <- genome(obj)
+    if (is.null(gb))
+        gb <- "nr"
+    out$asm <- rep(gb,nrow(out))
+    
+    return(out)
+}
+
+.prepareLassosumRun <- function(base,target,pheno,wspace,anc) {
     disp("Preparing lassosum run at workspace directory: ",wspace)
     
     # Prepare the sum stat
     disp("  preparing summary statistics...")
-    statsCoords <- gfeatures(obj)
+    statsCoords <- gfeatures(base)
     statsCoords <- as.data.frame(statsCoords[,c("chromosome","position",
         "allele.1","allele.2")])
-    p <- pvalues(obj)[,ncol(pvalues(obj))]
-    e <- effects(obj)
+    p <- pvalues(base)[,ncol(pvalues(base))]
+    e <- effects(base)
     
     # Until we find a better way of summarizing effects across methods,
     # prioritize effect selection according to algorithm popularity
@@ -141,20 +315,92 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
     sumStat <- data.frame(statsCoords,effect=oe,pvalue=p)
 
     # Prepare PLINK files
-    disp("  preparing PLINK temporary files...")
-    bfileBase <- paste0("plink_lassosum_",.randomString())
-    writePlink(obj,pheno,outBase=file.path(wspace,bfileBase))
+    runId <- .randomString()
+    disp("  preparing PLINK temporary files for reference...")
+    bfileBase <- paste0("plink_lassosum_base_",runId)
+    writePlink(base,pheno,outBase=file.path(wspace,bfileBase))
+    disp("  preparing PLINK temporary files for target...")
+    if (identical(colnames(base),colnames(target)))
+        bfileTarget <- bfileBase
+    else {
+        bfileTarget <- paste0("plink_lassosum_target_",runId)
+        writePlink(target,pheno,outBase=file.path(wspace,bfileTarget))
+    }
     
     # Copy LD block files to workspace directory
     disp("  copying linkage disequilibrium block files...")
     ldHome <- system.file("data",package="lassosum")
-    gb <- ifelse(is.null(genome(obj)),"hg19",genome(obj))
+    gb <- ifelse(is.null(genome(base)),"hg19",genome(base))
     fromLd <- file.path(ldHome,paste0("Berisa.",anc,".",gb,".bed"))
     toLd <- file.path(wspace,paste0("Berisa.",anc,".",gb,".bed"))
     file.copy(from=fromLd,to=toLd,overwrite=TRUE)
     
     disp("Preparation done!")
-    return(list(ss=sumStat,bfile=bfileBase,ldb=toLd,gb=gb))
+    return(list(ss=sumStat,base=bfileBase,target=bfileTarget,ldb=toLd,gb=gb))
+}
+
+.preparePrsiceRun <- function(base,target,pheno,covars,wspace) {
+    disp("Preparing PRSice run at workspace directory: ",wspace)
+    
+    # Prepare the sum stat
+    disp("  preparing summary statistics for the base file...")
+    statsInfo <- gfeatures(base)
+    statsInfo <- as.data.frame(statsInfo[,c("chromosome","position",
+        "snp.name","allele.1","allele.2")])
+    p <- pvalues(base)[,ncol(pvalues(base))]
+    e <- effects(base)
+    
+    # Until we find a better way of summarizing effects across methods,
+    # prioritize effect selection according to algorithm popularity
+    pri <- .getGwaLinArgPrior()
+    if (any(pri %in% colnames(e)))
+        oe <- e[,pri[which(pri %in% colnames(e))[1]]]
+    sumStat <- data.frame(statsInfo,BETA=oe,P=p)
+    # PRSice needs(?) MAF and INFO, we fake them as input data are supposed to 
+    # be already filtered
+    nr <- nrow(sumStat)
+    sumStat$MAF <- rep(0.5,nr)
+    sumStat$INFO <- rep(1,nr)
+    # Also sample size, since it's included in their examples
+    sumStat$N <- rep(ncol(base),nr)
+    # Let's give the default expected names by PRSice
+    colnames(sumStat)[seq_len(5)] <- c("CHR","BP","SNP","A1","A2")
+    
+    # Random run id
+    runId <- .randomString()
+    
+    # A file must be written - whitespace separator, not tab!
+    baseFile <- file.path(wspace,paste0("base_",runId))
+    write.table(sumStat,file=baseFile,quote=FALSE,row.names=FALSE)
+    
+    # Prepare the covariates - a file must be written with space delimited
+    disp("  preparing the covariates file...")
+    covarFile <- file.path(wspace,paste0("covar_",runId))
+    write.table(covars,file=covarFile,quote=FALSE,row.names=FALSE)
+    
+    # Prepare the phenotype - a file must be written with space delimited
+    disp("  preparing the phenotype file...")
+    phenoFile <- file.path(wspace,paste0("pheno_",runId))
+    write.table(pheno,file=phenoFile,quote=FALSE,row.names=FALSE)
+
+    # Prepare PLINK files
+    disp("  preparing PLINK temporary files - target...")
+    resp <- names(pheno)[3]
+    targetBase <- file.path(wspace,paste0("plink_prsice_",runId))
+    writePlink(target,resp,outBase=targetBase)
+    
+    ## Let's see what will happen with lassosum LD blocks...
+    #anc <- "EUR" # Hardcode for now
+    #disp("  copying linkage disequilibrium block files...")
+    #ldHome <- system.file("data",package="lassosum")
+    gb <- ifelse(is.null(genome(base)),"hg19",genome(base))
+    #fromLd <- file.path(ldHome,paste0("Berisa.",anc,".",gb,".bed"))
+    #toLd <- file.path(wspace,paste0("Berisa.",anc,".",gb,".bed"))
+    #file.copy(from=fromLd,to=toLd,overwrite=TRUE)
+    
+    disp("Preparation done!")
+    return(list(base=baseFile,target=targetBase,pheno=phenoFile,covar=covarFile,
+        ldb=NULL,out=paste0("prsice_out_",runId),runid=runId,gb=gb))
 }
 
 .validateWorkspacePath <- function(path,tool="tool") {
@@ -182,7 +428,7 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
         }
     }
     else {
-        path <- file.path(tempdir(),paste0("lassosum_",.randomString()))
+        path <- file.path(tempdir(),paste0(tool,"_",.randomString()))
         dir.create(path,recursive=TRUE)
     }
     
@@ -191,19 +437,18 @@ lassosumPRS <- function(obj,response,covariates=NULL,pcs=FALSE,
     return(path)
 }
 
-
 .getGwaLinArgPrior <- function() {
     return(c("snptest","statgen","glm","rrblup"))
 }
 
-.canRunPrs <- function(o,p) {
+.canRunPrs <- function(o,p,isBase=FALSE) {
     # Object class?
     if (!is(o,"GWASExperiment"))
         stop("PRS input must be an object of class GWASExperiment!")
     # Has an association test been performed?
-    if (is.null(pvalues(o)) || is.null(effects(o)))
+    if (isBase && (is.null(pvalues(o)) || is.null(effects(o))))
         stop("At least one association test must be performed prior to ",
-            "building PRS with lassosum!")
+            "building PRS!")
     # The given phenotype exists?
     ph <- phenotypes(o)
     if (is.null(ph))

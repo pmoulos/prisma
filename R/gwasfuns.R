@@ -487,6 +487,17 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
     
     snptest <- .getToolPath("snptest")
+    #command <- paste(
+    #   paste0(snptest," \\"),
+    #   paste0(snptest," \\"),
+    #   paste0("  -data ",tmplink$plink," ",tmplink$sample," \\"),
+    #   paste0("  -frequentist ",modelCode[model]," \\"),
+    #   "  -method score \\",
+    #   paste0("  -pheno ",response," \\"),
+    #   "  -cov_all \\",
+    #   paste0("  -o ",file.path(stwork,"snptest.out")),
+    #   sep="\n"
+    #)
     command <- paste0(snptest," -data ",tmplink$plink," ",tmplink$sample,
         " -frequentist ",modelCode[model]," -method score -pheno ",response,
         " -cov_all -o ",file.path(stwork,"snptest.out")
@@ -682,7 +693,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 
 .maybeBinaryForBinomial <- function(x) {
     return(tryCatch({
-        suppressWarnings(.validateBinaryForBinomial(p[,response]))
+        suppressWarnings(.validateBinaryForBinomial(x))
         TRUE
     },error=function(e) { 
         return(FALSE)

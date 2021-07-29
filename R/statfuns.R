@@ -16,20 +16,10 @@ calcPcaCovar <- function(obj,ld=0.2,method=c("auto","snprel","grid","hubert"),
     switch(method,{
         auto = 
             # Check if pcaCov exists in obj
-            m <- metadata(obj)
             # 1. Redo LD pruning with SNPRelate
             # 2. Robust PCA with the LD-pruned SNPs
-            # We can use the .wrapPcaWithSnpStatsLd combined function               
-            if ("pcaCov" %in% names(m)) {
-                if (is(m$pcaCov,"PcaGrid"))
-                    pseudof <- list(LD=ld,pcaRobust="grid")
-                else if (is(m$pcaCov,"PcaGrid"))
-                    pseudof <- list(LD=ld,pcaRobust="hubert")
-                else
-                    pseudof <- list(LD=ld)
-            }
-            else
-                pseudof <- list(LD=ld,pcaRobust="grid")
+            # We can use the .wrapPcaWithSnpStatsLd combined function
+            pseudof <- .guessPcaParamsFromObject(obj,ld)
             obj <- .wrapPcaWithSnpStatsLd(obj,pseudof,rc)
         },
         snprel = {
@@ -89,6 +79,19 @@ calcPcaCovar <- function(obj,ld=0.2,method=c("auto","snprel","grid","hubert"),
     
     pcaCovariates(obj) <- thePcs
     return(obj)
+}
+
+.guessPcaParamsFromObject <- function(obj,ld=0.2) {
+    m <- metadata(obj)
+    if ("pcaCov" %in% names(m)) {
+        if (is(m$pcaCov,"PcaGrid"))
+            pseudof <- list(LD=ld,pcaRobust="grid")
+        else if (is(m$pcaCov,"PcaGrid"))
+            pseudof <- list(LD=ld,pcaRobust="hubert")
+        else
+            pseudof <- list(LD=ld)
+    }
+    return(pseudof)
 }
 
 twTest <- function(eigv,p=0.05,tol=1e-8) {

@@ -13,14 +13,15 @@ setClassUnion("data.frame_OR_DataFrame_OR_NULL",
     slots=c(
         phenotypes="data.frame_OR_DataFrame_OR_NULL",
         pvalues="data.frame_OR_matrix_OR_NULL",
-        effects="data.frame_OR_matrix_OR_NULL"
+        effects="data.frame_OR_matrix_OR_NULL",
+        prsnps="data.frame_OR_matrix_OR_NULL"
     )
 )
 
 # Constructor
 GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     samples=DataFrame(),phenotypes=DataFrame(),pvalues=NULL,effects=NULL,
-    metadata=list(genome=NA_character_,backend=NA_character_,
+    prsnps=NULL,metadata=list(genome=NA_character_,backend=NA_character_,
         filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
             c("parameter","name","value","type","filtered"))),...) {
     
@@ -52,7 +53,7 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     se <- SummarizedExperiment(assays=genotypes,rowData=features,
         colData=samples,metadata=metadata)
     return(.GWASExperiment(se,phenotypes=phenotypes,pvalues=pvalues,
-        effects=effects))
+        effects=effects,prsnps=prsnps))
 }
 
 setGeneric("genotypes",function(x,...) standardGeneric("genotypes"))
@@ -78,6 +79,10 @@ setGeneric("pvalues<-",function(x,...,value) standardGeneric("pvalues<-"))
 setGeneric("effects",function(x,...) standardGeneric("effects"))
 
 setGeneric("effects<-",function(x,...,value) standardGeneric("effects<-"))
+
+setGeneric("prsnps",function(x,...) standardGeneric("prsnps"))
+
+setGeneric("prsnps<-",function(x,...,value) standardGeneric("prsnps<-"))
 
 setGeneric("filterRecord",function(x,...) standardGeneric("filterRecord"))
 
@@ -168,6 +173,23 @@ setReplaceMethod("effects","GWASExperiment",function(x,...,value) {
         return(x)
 })
 
+setMethod("prsnps","GWASExperiment",function(x,withDimnames=TRUE) {
+    s <- x@prsnps
+    if (!is.null(s)) {
+        if (withDimnames)
+            rownames(s) <- rownames(x)
+        else
+            rownames(s) <- NULL
+    }
+    return(s)
+})
+
+setReplaceMethod("prsnps","GWASExperiment",function(x,...,value) {
+    x@prsnps <- value
+    if (validObject(x))
+        return(x)
+})
+
 setMethod("genome","GWASExperiment",function(x) {
     m <- metadata(x)
     return(m$genome)
@@ -215,6 +237,7 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     p <- phenotypes(x,withDimnames=FALSE)
     v <- pvalues(x,withDimnames=FALSE)
     e <- effects(x,withDimnames=FALSE)
+    s <- prsnps(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -225,6 +248,7 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
         i <- as.vector(i)
         v <- v[i,,drop=FALSE]
         e <- e[i,,drop=FALSE]
+        s <- s[i,,drop=FALSE]
     }
 
     if (!missing(j)) {
@@ -250,7 +274,7 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsnps=s,
         check=FALSE)
 })
 
@@ -259,6 +283,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     p <- phenotypes(x,withDimnames=FALSE)
     v <- pvalues(x,withDimnames=FALSE)
     e <- effects(x,withDimnames=FALSE)
+    s <- prsnps(x,withDimnames=FALSE)
     
     if (!missing(i)) {
         if (is.character(i)) {
@@ -269,6 +294,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
         i <- as.vector(i)
         v[i,] <- pvalues(value,withDimnames=FALSE)
         e[i,] <- effects(value,withDimnames=FALSE)
+        s[i,] <- prsnps(value,withDimnames=FALSE)
     }
 
     if (!missing(j)) {
@@ -290,7 +316,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsnps=s,
         check=FALSE)
 })
 
@@ -325,7 +351,7 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
             "cbind operation as the population changes!")
     
     BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
-        effects=NULL,check=FALSE)
+        effects=NULL,prsnps=NULL,check=FALSE)
 })
 
 # rbind means adding SNPs - phenotypes must be identical
@@ -357,7 +383,7 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
             "rbind operation as the number of markers changes!")
     
     BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
-        effects=NULL,check=FALSE)
+        effects=NULL,prsnps=NULL,check=FALSE)
 })
 
 setAs("SummarizedExperiment","GWASExperiment",function(from) {
@@ -368,14 +394,13 @@ setAs("SummarizedExperiment","GWASExperiment",function(from) {
             c("name","value","type","filtered")),metadata(from)))
 })
 
-setValidity2("GWASExperiment",function(obj) {
-    msg <- NULL
-    
-    # assays must be a transposed SnpMatrix
+.checkGenotypesClass <- function(obj,msg) {
     if (!is(assays(obj)[[1]],"SnpMatrix") && !is(assays(obj)[[1]],"bigSNP"))
         msg <- c(msg,"The assays must be either SnpMatrix of bigSNP class!")
-    
-    # rowData must have the same #rows as rows of assays and same rownames
+    return(msg)
+}
+
+.checkFeaturesValidity <- function(obj,msg) {
     if (nrow(assays(obj)[[1]]) != nrow(rowData(obj)))
         msg <- c(msg,paste0("Supporting feature (row) data must have the same ",
             "number of rows as the rows of assay data!"))
@@ -386,9 +411,10 @@ setValidity2("GWASExperiment",function(obj) {
             msg <- c(msg,paste0("When provided, assay and feature data must ",
                 "have identical rownames!"))
     }
-    
-    # colData must have the same #rows as columns of assays and colnames of
-    # assays must be identical to rownames of colData
+    return(msg)
+}
+
+.checkSamplesValidity <- function(obj,msg) {
     if (ncol(assays(obj)[[1]]) != nrow(colData(obj)))
         msg <- c(msg,paste0("Supporting sample (column) data must have the ",
             "same number of rows as the columns of assay data!"))
@@ -399,10 +425,10 @@ setValidity2("GWASExperiment",function(obj) {
             msg <- c(msg,paste0("When provided, assay colnames and sample ",
                 "rownames must be identical!"))
     }
-    
-    # If phenotypes are given, they must have same #rows as assay columns
-    # and at least one column and colnames of assays must be identical to 
-    # rownames of colData
+    return(msg)
+}
+
+.checkPhenotypesValidity <- function(obj,msg) {
     p <- phenotypes(obj)
     if (!is.null(p) && nrow(p) > 0) {
         if (nrow(p) != ncol(assays(obj)[[1]]) || nrow(p) < 1)
@@ -417,9 +443,10 @@ setValidity2("GWASExperiment",function(obj) {
             msg <- c(msg,paste0("When provided, assay colnames and phenotype ",
                 "data rownames must be identical!"))
     }
-    
-    # If pvalues are given, they must have same #rows as assay rows
-    # and at least one column and must be a matrix-like object
+    return(msg)
+}
+
+.checkPvaluesValidity <- function(obj,msg) {
     v <- pvalues(obj)
     if (!is.null(v) && nrow(v) > 0) {
         if (nrow(v) != nrow(assays(obj)[[1]]) || ncol(v) < 1)
@@ -434,9 +461,10 @@ setValidity2("GWASExperiment",function(obj) {
             msg <- c(msg,paste0("When provided, assay rownames and associated ",
                 "p-value rownames must be identical!"))
     }
-    
-    # If effects are given, they must have same #rows as assay rows
-    # and at least one column and must be a matrix-like object
+    return(msg)
+}
+
+.checkEffectsValidity <- function(obj,msg) {
     e <- effects(obj)
     if (!is.null(e) && nrow(e) > 0) {
         if (nrow(e) != nrow(assays(obj)[[1]]) || ncol(e) < 1)
@@ -451,8 +479,31 @@ setValidity2("GWASExperiment",function(obj) {
             msg <- c(msg,paste0("When provided, assay rownames and associated ",
                 "effect rownames must be identical!"))
     }
-    
-    # It MUST have metadata with certain names in the list
+    return(msg)
+}
+
+.checkPrsnpsValidity <- function(obj,msg) {
+    s <- prsnps(obj)
+    if (!is.logical(s))
+        msg <- c(msg,paste0("When provided, SNPs in a PRS must be a matrix of ",
+                "logical values (TRUE/FALSE)!"))
+    if (!is.null(s) && nrow(s) > 0) {
+        if (nrow(s) != nrow(assays(obj)[[1]]) || ncol(s) < 1)
+            msg <- c(msg,paste0("When provided, SNPs in a PRS must have the ",
+                "same number of rows as the number of markers and at least ",
+                "one PRS algorithm associated (1 column)!"))
+    }
+    no <- rownames(assays(obj)[[1]])
+    nr <- rownames(s)
+    if (!is.null(no) && !is.null(nr)) {
+        if (!identical(no,nr))
+            msg <- c(msg,paste0("When provided, assay rownames and associated ",
+                "polygenic score SNP rownames must be identical!"))
+    }
+    return(msg)
+}
+
+.checkMetadataValidity <- function(obj,msg) {
     m <- metadata(obj)
     if (!is.character(m$genome))
         msg < c(msg,"The 'genome' member of metadata must be a character!")
@@ -472,7 +523,42 @@ setValidity2("GWASExperiment",function(obj) {
                     "of the GWASExperiment object!"))
         }
     }
+    return(msg)
+}
 
+setValidity2("GWASExperiment",function(obj) {
+    msg <- NULL
+    
+    # assays must be a transposed SnpMatrix or bigSNP
+    msg <- .checkGenotypesClass(obj,msg)
+    
+    # rowData must have the same #rows as rows of assays and same rownames
+    msg <- .checkFeaturesValidity(obj,msg)
+    
+    # colData must have the same #rows as columns of assays and colnames of
+    # assays must be identical to rownames of colData
+    msg <- .checkSamplesValidity(obj,msg)
+    
+    # If phenotypes are given, they must have same #rows as assay columns
+    # and at least one column and colnames of assays must be identical to 
+    # rownames of colData
+    msg <- .checkPhenotypesValidity(obj,msg)
+    
+    # If pvalues are given, they must have same #rows as assay rows
+    # and at least one column and must be a matrix-like object
+    msg <- .checkPvaluesValidity(obj,msg)
+    
+    # If effects are given, they must have same #rows as assay rows
+    # and at least one column and must be a matrix-like object
+    msg <- .checkEffectsValidity(obj,msg)
+    
+    # If prsnps are given, they must have same #rows as assay rows
+    # and at least one column and must be a matrix-like object of logicals
+    msg <- .checkPrsnpsValidity(obj,msg)
+    
+    # It MUST have metadata with certain names in the list
+    msg <- .checkMetadataValidity(obj,msg)
+    
     if (length(msg) > 0)
         return(msg)
     else
@@ -527,6 +613,9 @@ setMethod("show","GWASExperiment",function(object) {
     
     # pvalues()
     coolcat("performed tests(%d): %s\n",colnames(pvalues(object)))
+    
+    # prsnps()
+    coolcat("associated PRS(%d): %s\n",colnames(prsnps(object)))
 })
 
 # Constructor for SnpMatrix as it's missing from the snpStats package
