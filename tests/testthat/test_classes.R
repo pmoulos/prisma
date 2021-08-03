@@ -467,3 +467,15 @@ test_that("GWASExperiment2gData works",{
     expect_equal(ncol(gdp$pheno[[1]]),2)
     expect_equal(ncol(gdp$covar),1)
 })
+
+test_that("listGwa works",{
+    # Stub
+})
+
+test_that("listPrs works",{
+    # Stub
+})
+
+test_that(".listAction works",{
+    # Stub
+})

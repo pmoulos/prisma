@@ -4,8 +4,69 @@
 PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
     # Some validation here
     
+    if (is(obj,"GWASExperiment"))
+    
     X <- t(as(genotypes(obj),"numeric"))
     prs <- X[,snps$variant_id] %*% snps[snps$variant_id,"effect_weight"]
+}
+
+.prs <- function(g,e,s) {
+    switch(s,
+        avg = {
+            return((g %*% e)/length(e))
+        },
+        sum = {
+            return(g %*% e)
+        },
+        std = {
+            p <- g %*% e
+            return((p - mean(p))/sd(p))
+        }
+    )
+}
+
+runPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
+    methods=c("lassosum","prsice"),lassosumOpts=getDefaults("lassosum"),
+    prsiceOpts=getDefaults("prsice"),wspace=NULL,rc=NULL) {
+    # Validate arguments
+    .checkTextArgs("PRS algorithm(s) (methods)",methods,c("lassosum","prsice"),
+        multiarg=TRUE)
+    lassosumOpts <- .checkPrsArgs(lassosumOpts,"lassosum")
+    prsiceOpts <- .checkPrsArgs(prsiceOpts,"prsice")
+    
+    prsResults <- vector("list",length(methods))
+    names(prsResults) <- methods
+    disp("\nStarting PRS analysis with ",paste0(methods,
+        collapse=", "))
+    for (m in methods) {
+        disp("\n========== Running PRS analysis with ",m)
+        switch(m,
+            lassosum = {
+                prsResults[[m]] <- lassosumPRS(base,target,response,covariates,
+                    pcs,wspace,lassosumOpts$anc,lassosumOpts$valid)
+            },
+            prsice = {
+                runtype <- "calculate"
+                prsResults[[m]] <- prsicePRS(base,target,response,covariates,
+                    pcs,runtype,wspace,prsiceOpts$clump_kb,prsiceOpts$clump_r2,
+                    prsiceOpts$clump_p,prsiceOpts$score,prsiceOpts$perm,
+                    prsiceOpts$seed,rc)
+            }
+        )
+    }
+    disp("\nRunning PRS algorithms finished! Processing the results...")
+    
+    theBetas <- matrix(0,nrow(target),length(methods))
+    rownames(theBetas) <- rownames(target)
+    colnames(theBetas) <- methods
+    for (m in methods)
+        theBetas[prsResults[[m]]$variant_id,m] <- prsResults[[m]]$effect_weight
+    
+    npcs <- ifelse(pcs && .hasPcaCovariates(base),ncol(pcaCovariates(base)),0)
+    prsbetas(target,response,covariates,npcs) <- theBetas
+    
+    disp("Done!")
+    return(target)
 }
 
 lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
@@ -14,7 +75,7 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     .canRunPrs(base,response)
     .canRunPrs(target,response,isBase=FALSE)
     
-    # Workspace valid?
+     # Workspace valid?
     wspace <- .validateWorkspacePath(wspace,"lassosum")
     
     # Ancestry for LD blocks based on 1000G provided by lassosum
@@ -27,11 +88,8 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     if (valid == "auto")
         valid <- ifelse(ncol(base) >= 1000,"split","stack")
     
-    # If all ok, prepare the run
-    prepList <- .prepareLassosumRun(base,target,response,wspace,toupper(anc))
-    
     # Prepare the phenotypes for later prediction/validation
-    p <- phenotypes(base)
+    p <- phenotypes(target)
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
@@ -47,23 +105,34 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         if (.hasPcaCovariates(target)) {
             pcov <- pcaCovariates(target)
             covar <- cbind(covar,pcov)
+            npcs <- ncol(pcov)
         }
         else {
-            disp("PC covariates requested in the model, but not calculated ",
-                "PC covariates found in therget!\nWill try to guess from the ",
+            disp("PC covariates requested in the model, but no calculated PC ",
+                "covariates found in the target!\nWill try to guess from the ",
                 "provided base...")
             if (.hasPcaCovariates(base)) {
                 f <- .guessPcaParamsFromObject(base)
-                target <- .wrapPcaWithSnpStatsLd(target,f,rc)
+                target <- calcPcaCovar(target,f$LD,rc=rc)
                 pcov <- pcaCovariates(target)
                 covar <- cbind(covar,pcov)
+                npcs <- ncol(pcov)
             }
-            else
-                 warning("PC covariates requested in the model, but not ",
-                    "calculated in target or base objects! Ignoring...",
-                    immediate.=TRUE)
+            else {
+                 #warning("PC covariates requested in the model, but not ",
+                 #   "calculated in target or base objects! Ignoring...",
+                 #   immediate.=TRUE)
+                 #npcs <- 0
+                 stop("PC covariates requested in the model, but not ",
+                    "calculated in target or base objects!\nInput objects are ",
+                    "probably broken!")
+             }
         }
     }
+    
+    # If all ok, prepare the run
+    prepList <- .prepareLassosumRun(base,target,response,covariates,npcs,wspace,
+        toupper(anc))
     
     # Transform the P-values into correlation
     ss <- prepList$ss
@@ -84,7 +153,8 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         pos=ss$position,
         A1=ss$allele.1,
         A2=ss$allele.2,
-        ref.bfile=prepList$base,
+        #ref.bfile=prepList$base,
+        ref.bfile=prepList$target,
         test.bfile=prepList$target,
         LDblocks=paste0(toupper(anc),".",prepList$gb)
     )
@@ -106,9 +176,6 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     
     disp("Done! R^2 is: ",max(val$validation.table$value)^2)
     return(.extractLassosumPrsComponents(out,val,genome(base)))
-    # or
-    # betas(base) <- .extractLassosumPrsComponents(out,val,genome(base),full=T)
-    # return(base)
 }
 
 # --no-clump, --extract to be used in ensembl snps
@@ -116,20 +183,26 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
 # A mode arg will be added, controlling new PRS or with provided SNPs that will
 # be extracted from the obj along with the parameters above
 prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
-    wspace=NULL,clump_kb=250,clump_r2=0.1,clump_p=1,score=c("avg","sum",
-    "std","con-std"),perm=10000,seed=42,rc=NULL) {
+    mode=c("calculate","apply"),wspace=NULL,clump_kb=250,clump_r2=0.1,clump_p=1,
+    score=c("avg","sum","std","con-std"),perm=10000,seed=42,rc=NULL) {
     # Can run PRS? Has necessary fields?
     .canRunPrs(base,response)
     .canRunPrs(target,response,isBase=FALSE)
     
     # Check further parameters
     score <- tolower(score[1])
+    mode <- tolower(mode[1])
     .checkNumArgs("Clumping distance (clump_kb)",clump_kb,"numeric",0,"gt")
     .checkNumArgs("Clumping R2 (clump_r2)",clump_r2,"numeric",c(0,1),"botheq")
     .checkNumArgs("Clumping p-value (clump_p)",clump_p,"numeric",c(0,1),"both")
     .checkNumArgs("Number of permutations (perm)",perm,"numeric",0,"gte")
+    .checkNumArgs("Number of permutations (perm)",perm,"numeric",0,"gte")
     .checkTextArgs("PRS scoring scheme (score)",score,c("avg","sum",
         "std","con-std"),multiarg=FALSE)
+    .checkTextArgs("PRSice run mode (mode)",mode,c("calculate","apply"),
+        multiarg=FALSE)
+    if (!is.numeric(seed))
+        stop("The PRSice permutation seed must be a number!")
     
     # Workspace valid?
     wspace <- .validateWorkspacePath(wspace,"prsice")
@@ -151,57 +224,88 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         if (.hasPcaCovariates(target)) {
             pcov <- pcaCovariates(target)
             covar <- cbind(covar,pcov)
+            npcs <- ncol(pcov)
         }
         else {
             disp("PC covariates requested in the model, but not calculated ",
-                "PC covariates found in therget!\nWill try to guess from the ",
-                "provided base...")
+                "PC covariates found in the target!\nWill try to guess from ",
+                "the provided base...")
             if (.hasPcaCovariates(base)) {
                 f <- .guessPcaParamsFromObject(base)
-                target <- .wrapPcaWithSnpStatsLd(target,f,rc)
+                #target <- .wrapPcaWithSnpStatsLd(target,f,rc)
+                target <- calcPcaCovar(target,f$LD,rc=rc)
                 pcov <- pcaCovariates(target)
                 covar <- cbind(covar,pcov)
+                npcs <- ncol(pcov)
             }
-            else
-                 warning("PC covariates requested in the model, but not ",
-                    "calculated in target or base objects! Ignoring...",
-                    immediate.=TRUE)
+            else {
+                #warning("PC covariates requested in the model, but not ",
+                #    "calculated in target or base objects! Ignoring...",
+                #    immediate.=TRUE)
+                #npcs <- 0
+                stop("PC covariates requested in the model, but not ",
+                    "calculated in target or base objects!\nInput objects are ",
+                    "probably broken!")
+            }
         }
     }
     
     # If all ok, prepare the run
-    prepList <- .preparePrsiceRun(base,target,pheno,covar,wspace)
+    prepList <- .preparePrsiceRun(base,target,pheno,covar,response,covariates,
+        npcs,wspace)
     
     # Run the PRSice pipeline
-    disp("Running PRSice PRS algorithm")
+    disp("Running PRSice PRS algorithm in ",mode," mode")
     prsice <- .getToolPath("prsice")
     prsiceScript <- file.path(dirname(prsice),"PRSice.R")
     binaryTarget <- ifelse(.maybeBinaryForBinomial(pheno[,response]),"T","F")
     threads <- .coresFrac(rc)
-    command <- paste(
-        paste0("Rscript ",prsiceScript," \\"),
-        paste0("  --prsice ",prsice," \\"),
-        paste0("  --base ",prepList$base," \\"),
-        "  --beta \\",
-        paste0("  --binary-target ",binaryTarget," \\"),
-        paste0("  --pheno ",prepList$pheno," \\"),
-        paste0("  --target ",prepList$target," \\"),
-        paste0("  --cov ",prepList$covar," \\"),
-        paste0("  --clump-kb ",clump_kb," \\"),
-        paste0("  --clump-r2 ",clump_r2," \\"),
-        paste0("  --clump-p ",clump_p," \\"),
-        paste0("  --score ",score," \\"),
-        paste0("  --seed ",seed," \\"),
-        paste0("  --out ",prepList$out,"\\"),
-        "  --print-snp",
-        sep="\n"
-    )
+    
+    if (mode == "calculate")
+        command <- paste(
+            paste0("Rscript ",prsiceScript," \\"),
+            paste0("  --prsice ",prsice," \\"),
+            paste0("  --base ",prepList$base," \\"),
+            "  --beta \\",
+            paste0("  --binary-target ",binaryTarget," \\"),
+            paste0("  --pheno ",prepList$pheno," \\"),
+            paste0("  --target ",prepList$target," \\"),
+            paste0("  --cov ",prepList$covar," \\"),
+            paste0("  --clump-kb ",clump_kb," \\"),
+            paste0("  --clump-r2 ",clump_r2," \\"),
+            paste0("  --clump-p ",clump_p," \\"),
+            paste0("  --score ",score," \\"),
+            paste0("  --seed ",seed," \\"),
+            paste0("  --out ",prepList$out,"\\"),
+            "  --print-snp",
+            sep="\n"
+        )
+    else if (mode == "apply") {
+        command <- paste(
+            paste0("Rscript ",prsiceScript," \\"),
+            paste0("  --prsice ",prsice," \\"),
+            paste0("  --base ",prepList$base," \\"),
+            "  --beta \\",
+            paste0("  --binary-target ",binaryTarget," \\"),
+            paste0("  --pheno ",prepList$pheno," \\"),
+            paste0("  --target ",prepList$target," \\"),
+            paste0("  --cov ",prepList$covar," \\"),
+            paste0("  --no-clump \\"),
+            paste0("  --score ",score," \\"),
+            paste0("  --seed ",seed," \\"),
+            paste0("  --out ",prepList$out,"\\"),
+            "  --print-snp \\",
+            "  --bar-levels 1 \\",
+            "  --fastscore",
+            sep="\n"
+        )
+    }
     
     if (threads > 1) {
         addThreads <- paste0("  --thread ",threads)
         command <- paste0(command," \\\n",addThreads)
     }
-    if (perm > 0) {
+    if (perm > 0 && mode == "calculate") {
         addPerm <- paste0("  --perm ",perm)
         command <- paste0(command," \\\n",addPerm)
     }
@@ -237,7 +341,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     disp("Null model R^2 is: ",sumData$Null.R2)
     
     return(.extractPrsicePrsComponents(base,prepList$runid,sumData$Threshold,
-        wspace))
+        response,covariates,npcs,wspace))
 }
 
 .extractLassosumPrsComponents <- function(out,val,gb) {
@@ -266,7 +370,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     return(df)
 }
 
-.extractPrsicePrsComponents <- function(obj,runid,pcut,wspace) {
+.extractPrsicePrsComponents <- function(obj,runid,pcut,res,cvs,npcs,wspace) {
     # Read in detailed SNP output
     snpFile <- file.path(wspace,paste0("prsice_out_",runid,".snp"))
     snpData <- read.delim(snpFile)
@@ -278,7 +382,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     # Basic info
     out <- df[,c("chromosome","position","snp.name","allele.1","allele.2")]
     # Attach effects
-    e <- effects(obj)
+    e <- effects(obj,res,cvs,npcs)
     pri <- .getGwaLinArgPrior()
     if (any(pri %in% colnames(e)))
         out$effect_weight <- e[,pri[which(pri %in% colnames(e))[1]]]
@@ -286,6 +390,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     out$locus_name <- rep(NA,nrow(out))
     
     # Final alignment with the external API fetch outcomes from PGS catalog
+    names(out)[c(3,4,5)] <- c("variant_id","risk_allele","reference_allele")
     out <- out[,c("chromosome","position","variant_id","risk_allele",
         "reference_allele","locus_name","effect_weight","OR")]
     gb <- genome(obj)
@@ -296,7 +401,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     return(out)
 }
 
-.prepareLassosumRun <- function(base,target,pheno,wspace,anc) {
+.prepareLassosumRun <- function(base,target,pheno,cvs,npcs,wspace,anc) {
     disp("Preparing lassosum run at workspace directory: ",wspace)
     
     # Prepare the sum stat
@@ -304,8 +409,9 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     statsCoords <- gfeatures(base)
     statsCoords <- as.data.frame(statsCoords[,c("chromosome","position",
         "allele.1","allele.2")])
-    p <- pvalues(base)[,ncol(pvalues(base))]
-    e <- effects(base)
+    preP <- pvalues(base,pheno,cvs,npcs)
+    p <- preP[,ncol(preP)]
+    e <- effects(base,pheno,cvs,npcs)
     
     # Until we find a better way of summarizing effects across methods,
     # prioritize effect selection according to algorithm popularity
@@ -316,16 +422,18 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
 
     # Prepare PLINK files
     runId <- .randomString()
-    disp("  preparing PLINK temporary files for reference...")
-    bfileBase <- paste0("plink_lassosum_base_",runId)
-    writePlink(base,pheno,outBase=file.path(wspace,bfileBase))
+    #disp("  preparing PLINK temporary files for reference...")
+    #bfileBase <- paste0("plink_lassosum_base_",runId)
+    #writePlink(base,pheno,outBase=file.path(wspace,bfileBase))
     disp("  preparing PLINK temporary files for target...")
-    if (identical(colnames(base),colnames(target)))
-        bfileTarget <- bfileBase
-    else {
-        bfileTarget <- paste0("plink_lassosum_target_",runId)
-        writePlink(target,pheno,outBase=file.path(wspace,bfileTarget))
-    }
+    #if (identical(colnames(base),colnames(target)))
+    #    bfileTarget <- bfileBase
+    #else {
+    #    bfileTarget <- paste0("plink_lassosum_target_",runId)
+    #    writePlink(target,pheno,outBase=file.path(wspace,bfileTarget))
+    #}
+    bfileTarget <- paste0("plink_lassosum_target_",runId)
+    writePlink(target,pheno,outBase=file.path(wspace,bfileTarget))
     
     # Copy LD block files to workspace directory
     disp("  copying linkage disequilibrium block files...")
@@ -336,10 +444,11 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     file.copy(from=fromLd,to=toLd,overwrite=TRUE)
     
     disp("Preparation done!")
-    return(list(ss=sumStat,base=bfileBase,target=bfileTarget,ldb=toLd,gb=gb))
+    #return(list(ss=sumStat,base=bfileBase,target=bfileTarget,ldb=toLd,gb=gb))\
+    return(list(ss=sumStat,base=bfileTarget,target=bfileTarget,ldb=toLd,gb=gb))
 }
 
-.preparePrsiceRun <- function(base,target,pheno,covars,wspace) {
+.preparePrsiceRun <- function(base,target,pheno,covars,res,cvs,npcs,wspace) {
     disp("Preparing PRSice run at workspace directory: ",wspace)
     
     # Prepare the sum stat
@@ -347,8 +456,9 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     statsInfo <- gfeatures(base)
     statsInfo <- as.data.frame(statsInfo[,c("chromosome","position",
         "snp.name","allele.1","allele.2")])
-    p <- pvalues(base)[,ncol(pvalues(base))]
-    e <- effects(base)
+    preP <- pvalues(base,res,cvs,npcs)
+    p <- preP[,ncol(preP)]
+    e <- effects(base,res,cvs,npcs)
     
     # Until we find a better way of summarizing effects across methods,
     # prioritize effect selection according to algorithm popularity
@@ -429,7 +539,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     }
     else {
         path <- file.path(tempdir(),paste0(tool,"_",.randomString()))
-        dir.create(path,recursive=TRUE)
+        dir.create(path,recursive=TRUE,showWarnings=FALSE)
     }
     
     # Finally
@@ -466,4 +576,64 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
                     ")!")
         }
     }
+}
+
+.checkPrsArgs <- function(args,prs=c("lassosum","prsice")) {
+    prs <- prs[1]
+    
+    # Allowed and given values
+    defaults <- getDefaults(prs)
+    allowed <- names(defaults)
+    given <- names(args)
+    
+    # Check if illegal filter names have been provided
+    check <- given %in% allowed
+    if (!any(check))
+        stop("No valid ",prs," parameter name found!")
+    if (!all(check)) {
+        warning("The following ",prs," parameters names are invalid and will ",
+            "be ignored:\n",paste(given[!check],collapse=", "))
+        args <- args[given[check]]
+    }
+    
+    # Proceed with per algorithm check, will stop here if something wrong
+    switch(prs,
+        lassosum = {
+            .checkLassosumArgs(args)
+        },
+        prsice = {
+            .checkPrsiceArgs(args)
+        }
+    )
+    
+    # If all OK
+    return(.setArg(defaults,args))
+}
+
+.checkLassosumArgs <- function(a) {
+    if (!.isEmpty(a$anc))
+        .checkTextArgs("Ancestry (anc)",a$anc,c("eur","asn","afr"),
+            multiarg=FALSE)
+    if (!.isEmpty(a$valid))
+        .checkTextArgs("Validation type (valid)",a$valid,c("auto","stack",
+            "split"),multiarg=FALSE)
+}
+
+.checkPrsiceArgs <- function(a) {
+    if (!.isEmpty(a$clump_kb))
+        .checkNumArgs("Clumping distance (clump_kb)",a$clump_kb,"numeric",0,
+            "gt")
+    if (!.isEmpty(a$clump_r2))
+        .checkNumArgs("Clumping R2 (clump_r2)",a$clump_r2,"numeric",c(0,1),
+            "botheq")
+    if (!.isEmpty(a$clump_p))
+        .checkNumArgs("Clumping p-value (clump_p)",a$clump_p,"numeric",c(0,1),
+            "both")
+    if (!.isEmpty(a$perm))
+        .checkNumArgs("Number of permutations (perm)",a$perm,"numeric",0,"gte")
+    if (!.isEmpty(a$score))
+        .checkTextArgs("PRS scoring scheme (score)",a$score,c("avg","sum","std",
+            "con-std"),multiarg=FALSE)
+    if (!.isEmpty(a$seed) && !is.numeric(a$seed))
+        stop("The PRSice permutation seed must be a number!")
 }

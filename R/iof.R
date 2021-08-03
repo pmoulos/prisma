@@ -71,12 +71,13 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
 }
 
 filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
-    rc=NULL) {
+    imputeMode=c("single","split"),rc=NULL) {
     filters <- .checkFilters(filters)
+    imputeMode <- imputeMode[1]
     
     # Later input type may be more native, e.g. read from CSV files
     if (is(assay(obj,1),"SnpMatrix"))
-        return(.filterWithSnpStats(obj,filters,imputeMissing,rc))
+        return(.filterWithSnpStats(obj,filters,imputeMissing,imputeMode,rc))
     else if (is(assay(obj,1),"bigsnp"))
         return(.filterWithBigSnpr(x,filters,imputeMissing))
 }
@@ -89,7 +90,7 @@ imputeGWAS <- function(obj,mode=c("single","split"),rc=NULL) {
     m <- metadata(obj)
     if (m$backend == "snpStats") {
         disp("\nImputing missing values with snpStats rules and scrime kNN")
-        return(.internalImputeWithSnpStats(obj,rc=rc))
+        return(.internalImputeWithSnpStats(obj,mode,rc=rc))
     }
     else
         return(obj) # For now

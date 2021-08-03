@@ -102,7 +102,8 @@ createSample <- function() {
 }
 
 getDefaults <- function(what) {
-    allowed <- c("filters","gwargs","externalTools")
+    allowed <- c("filters","glm","rrblup","statgen","snptest","externalTools",
+        "lassosum","prsice")
     
     if (!(what %in% allowed))
         stop("what must be one of ",paste(allowed,collapse=", "))
@@ -125,22 +126,24 @@ getDefaults <- function(what) {
                 inbreed=0.1
             ))
         },
-        gwargs = {
+        glm = {
             return(list(
-                glm=list(
-                    family="gaussian"
-                ),
-                rrblup=list(
-                    pcblup="auto",
-                    npcs=NULL
-                ),
-                statgen=list(
-                    # Nothing for now
-                ),
-                snptest=list(
-                    test="frequentist",
-                    model="additive"
-                )
+                family="gaussian"
+            ))
+        },
+        rrblup = {
+            return(list(
+                pcblup="auto",
+                npcs=NULL
+            ))
+        },
+        statgen = {
+            # Nothing for now
+        },
+        snptest = {
+            return(list(
+                test="frequentist",
+                model="additive"
             ))
         },
         externalTools = {
@@ -148,6 +151,22 @@ getDefaults <- function(what) {
                 snptest="v2.5.6",
                 plink="v1.90",
                 prsice="v2.3.3"
+            ))
+        },
+        lassosum = {
+            return(list(
+                anc="eur",
+                valid="auto"
+            ))
+        },
+        prsice = {
+            return(list(
+                clump_kb=250,
+                clump_r2=0.1,
+                clump_p=1,
+                score="avg",
+                perm=10000,
+                seed=42
             ))
         }
     )
@@ -449,6 +468,10 @@ disp <- function(...,level=c("normal","full")) {
         return(x) 
     else 
         return(c(basename(x),.splitPath(dirname(x))))
+}
+
+.whatIsMyName <- function(x) {
+    return(deparse(substitute(x)))
 }
 
 #~ getAPIBase <- function() {

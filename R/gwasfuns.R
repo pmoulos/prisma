@@ -66,13 +66,23 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     },psig,P)
     
     tmp <- do.call("rbind",P)
-    eassoc <- tmp[,seq_along(methods)]
-    passoc <- tmp[,(length(methods)+1):ncol(tmp)]
+    eassoc <- tmp[,seq_along(methods),drop=FALSE]
+    passoc <- tmp[,(length(methods)+1):ncol(tmp),drop=FALSE]
     disp("Overall, found ",length(which(passoc[,ncol(passoc)]<psig)),
         " associations with (uncorrected) combined p-values).")
     
-    pvalues(obj) <- passoc
-    effects(obj) <- eassoc
+    # Covariates will be sorted prior to storing, if previously exist, replace
+    #assign("passoc",passoc,envir=.GlobalEnv)
+    #assign("eassoc",eassoc,envir=.GlobalEnv)
+    npcs <- ifelse(pcs && .hasPcaCovariates(obj),ncol(pcaCovariates(obj)),0)
+    pvalues(obj,response,covariates,npcs) <- passoc
+    effects(obj,response,covariates,npcs) <- eassoc
+    #testIndex <- .constructTestIndex(response,covariates,npcs)
+    #pvalues(obj)[[testIndex]] <- passoc
+    #effects(obj)[[testIndex]] <- eassoc
+    #effects(obj) <- eassoc
+    #pvalues(obj) <- passoc
+    #effects(obj) <- eassoc
     return(obj)
 }
 
@@ -711,4 +721,71 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
         stop("Cannot run GWAS with a GWASExperiment without genotypes!")
     if (!pv)
         stop("Cannot run GWAS with a GWASExperiment without phenotypes!")
+}
+
+
+.checkGwaArgs <- function(args,test=c("glm","rrblup","statgen","snptest")) {
+    test <- test[1]
+    
+    # Allowed and given values
+    defaults <- getDefaults(test)
+    allowed <- names(defaults)
+    given <- names(args)
+    
+    # Check if illegal filter names have been provided
+    check <- given %in% allowed
+    if (!any(check))
+        stop("No valid ",test," parameter name found!")
+    if (!all(check)) {
+        warning("The following ",test," parameters names are invalid and will ",
+            "be ignored:\n",paste(given[!check],collapse=", "))
+        args <- args[given[check]]
+    }
+    
+    # Proceed with per algorithm check, will stop here if something wrong
+    switch(test,
+        glm = {
+            .checkGlmArgs(args)
+        },
+        rrblup = {
+            .checkRrblupArgs(args)
+        },
+        statgen = {
+            .checkStatgenArgs(args)
+        },
+        snptest = {
+            .checkSnptestArgs(args)
+        }
+    )
+    
+    # If all OK
+    return(.setArg(defaults,args))
+}
+
+.checkGlmArgs <- function(a) {
+    if (!.isEmpty(a$family))
+        .checkTextArgs("Regression family (family)",a$family,c("gaussian",
+            "binomial","poisson"),multiarg=FALSE)
+}
+
+.checkRrblupArgs <- function(a) {
+    if (!.isEmpty(a$pcblup))
+        .checkTextArgs("PCs for rrBLUP (pcblup)",a$pcblup,c("auto","estim",
+            "rrint","fixed","none"),multiarg=FALSE)
+    if (!.isEmpty(a$npcs))
+        .checkNumArgs("Number of PCs for rrBLUP (npcs)",a$npcs,"numeric",0,
+            "gt")
+}
+
+.checkStatgenArgs <- function(a) {
+}
+
+.checkSnptestArgs <- function(a) {
+    if (!.isEmpty(a$snptest))
+        .checkTextArgs("Test class for SNPTEST (snptest)",a$snptest,
+            c("frequentist","bayesian"),multiarg=FALSE)
+    if (!.isEmpty(a$snpmodel))
+        .checkTextArgs("Genotype model for SNPTEST (snpmodel)",a$snpmodel,
+            c("additive","dominant","recessive","general","heterozygote"),
+            multiarg=FALSE)
 }

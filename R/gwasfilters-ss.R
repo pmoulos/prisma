@@ -2,10 +2,11 @@
     imputeMode=c("single","split"),rc=NULL) {
     imputeMode <- imputeMode[1]
     
-    disp("Performing basic filtering",level="normal")
+    disp("\nPerforming basic filtering",level="normal")
     objBas <- .filterWithSnpStatsBasic(obj,filters)
     
-    if (!is.na(filters$LD) || !is.na(filters$IBD)) {
+    #if (!is.na(filters$LD) || !is.na(filters$IBD)) {
+    if (!is.na(filters$IBD)) {
         disp("Performing sample IBD filtering and LD calculation")
         objIbd <- .filterWithSnpStatsIbd(objBas,filters,rc)
     }
@@ -14,7 +15,7 @@
     
     if (imputeMissing) {
         disp("\nImputing missing values with snpStats rules and scrime kNN")
-        objIbd <- .internalImputeWithSnpStats(objIbd,rc=rc)
+        objIbd <- .internalImputeWithSnpStats(objIbd,imputeMode,rc=rc)
     }
     
     if (filters$pcaOut) {
@@ -46,37 +47,51 @@
     snpSum <- col.summary(x)
     sampleSum <- row.summary(x)
     
+    # SNP filters init
+    filteredSnpCall <- filteredMaf <- filteredHwe <- logical(nrow(obj))
+    
     # SNP filters: call rate
-    filteredSnpCall <- snpSum$Call.rate < filters$snpCallRate
+    if (!.isEmpty(filters$snpCallRate))
+        filteredSnpCall <- snpSum$Call.rate < filters$snpCallRate
     # SNP filters: call rate
-    filteredMaf <- snpSum$MAF < filters$maf
+    if (!.isEmpty(filters$maf))
+        filteredMaf <- snpSum$MAF < filters$maf
     # SNP filters: Hardy-Weinberg p-value
-    filteredHwe <- abs(snpSum$z.HWE) >= abs(qnorm(filters$hwe/2))
+    if (!.isEmpty(filters$hwe))
+        filteredHwe <- abs(snpSum$z.HWE) >= abs(qnorm(filters$hwe/2))
+    
+    # SNP filters init
+    filteredSampleCallRate <- filteredHetero <- filteredInbreed <- 
+        logical(ncol(obj))
     
     # Sample filters: call rate
-    filteredSampleCallRate <- sampleSum$Call.rate < filters$sampleCallRate
+    if (!.isEmpty(filters$sampleCallRate))
+        filteredSampleCallRate <- sampleSum$Call.rate < filters$sampleCallRate
     # Sample filters: heterozygosity
-    if (is.na(filters$heteroHard)) {
-        if (filters$heteroStat == "mean") {
-            loc <- mean(sampleSum$Heterozygosity,na.rm=TRUE)
-            sca <- sd(sampleSum$Heterozygosity,na.rm=TRUE)
+    if (!.isEmpty(filters$heteroHard) || !.isEmpty(filters$heteroStat)) {
+        if (is.na(filters$heteroHard)) {
+            if (filters$heteroStat == "mean") {
+                loc <- mean(sampleSum$Heterozygosity,na.rm=TRUE)
+                sca <- sd(sampleSum$Heterozygosity,na.rm=TRUE)
+            }
+            else if (filters$heteroStat == "median") {
+                loc <- median(sampleSum$Heterozygosity,na.rm=TRUE)
+                sca <- IQR(sampleSum$Heterozygosity,na.rm=TRUE)
+            }
+                    
+            filteredHetero <- 
+                sampleSum$Heterozygosity < loc - filters$heteroFac*sca | 
+                    loc - sampleSum$Heterozygosity > filters$heteroFac*sca
         }
-        else if (filters$heteroStat == "median") {
-            loc <- median(sampleSum$Heterozygosity,na.rm=TRUE)
-            sca <- IQR(sampleSum$Heterozygosity,na.rm=TRUE)
-        }
-                
-        filteredHetero <- 
-            sampleSum$Heterozygosity < loc - filters$heteroFac*sca | 
-                loc - sampleSum$Heterozygosity > filters$heteroFac*sca
+        else
+            filteredHetero <- sampleSum$Heterozygosity < filters$heteroHard
     }
-    else
-        filteredHetero <- sampleSum$Heterozygosity < filters$heteroHard
+    
     # Sample filters: inbreeding coefficient
     if (!is.na(filters$inbreed)) {
         hetF <- .calcInbreedFromSnpMatrix(x,snpSum,sampleSum)
         filteredInbreed <- hetF > filters$inbreed
-    } 
+    }
     
     # Report filtered entities with metadata
     filteredSnpCallInd <- which(filteredSnpCall)
@@ -404,7 +419,7 @@
     if (!all(check)) {
         warning("The following filter names are invalid and will be ",
             "ignored:\n",paste(given[!check],collapse=", "))
-        given <- given[check]
+        f <- f[given[check]]
     }
     
     # heteroStat goes with heteroFac
@@ -493,5 +508,7 @@
         if ("pcaOut" %in% rownames(filtDf))
             message("  Robust PCA                : ",
                 filtDf["pcaOut","filtered"])
+        
+        message("")
     }
 }

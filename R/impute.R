@@ -11,11 +11,11 @@
     }
     
     disp("\nStarting imputation analysis in ",length(parts)," chunks")
-    O <- lapply(names(parts),function(x,prt,rc) {
+    O <- lapply(names(parts),function(x,prt,m,rc) {
         disp("\n========== Imputing chromosome/part ",x)
         o <- prt[[x]]
-        return(.internalImputeWithSnpStatsWorker(o,mode,rc))
-    },parts,rc)
+        return(.internalImputeWithSnpStatsWorker(o,m,rc))
+    },parts,mode,rc)
     
     disp("\nImputation finished, re-merging the output")
     
@@ -92,7 +92,7 @@
     #    nMissCurr <- length(unique(nai[,"row"]))
     #}
     ############################################################################
-    
+
     # Define the rules
     disp("Creating imputation rules")
     if (mode == "single")
