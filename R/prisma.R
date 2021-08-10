@@ -1,3 +1,8 @@
+# TODO: The GDS file should be copied to the workspace... If another R session
+# may be using it, there is often a crash... May also be the cause of the
+# mcfork(): Cannot create a pipe error.
+# The prsPipeline, if fed with a filtered object (e.g. according to GWAS
+# p-value cutoffs and the SNPs therein) can be used for PGS evaluation
 prsPipeline <- function(
     gwe,
     phenotype,
@@ -110,6 +115,13 @@ prsPipeline <- function(
     )
     
     return(theResult)
+    # Instead of the result, this function should return a list with:
+    # - The train and test indexes of the initial object
+    # - Workspaces (if not cleaned)
+    # - Several metrics from each run (PRSice R2, etc.)
+    # Not very possible though as the aggregation requires the PRS betas...
+    # Or should it just return the SNPs?
+    # Or the user should choose what to return...
 }
 
 aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
@@ -136,7 +148,7 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
         g <- lapply(colnames(b),function(n,b) {
             s <- rownames(b)[which(b[,n] != 0)]
         },b)
-        return(Reduce(mode,g))
+        return(Reduce(m,g))
     },mode)
     prsCandidates <- unlist(preCandidates)
     freq <- table(prsCandidates)
@@ -258,11 +270,6 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
         disp("\n==============================================================")
         disp("-----> External pipeline iteration ",i)
         disp("==============================================================\n")
-        
-        pad <- paste0(rep("0",dig - nchar(as.character(i))),collapse="")
-        iterWspace <- file.path(prsWorkspace,paste0(format(Sys.time(),
-            "%Y%m%d%H%M%S"),"_validation_",pad,i))
-        dir.create(iterWspace,recursive=TRUE)
         
         # Final validation with PRSice
         disp("\n----- Dataset partitioning -----\n")

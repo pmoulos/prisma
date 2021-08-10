@@ -128,7 +128,8 @@ getDefaults <- function(what) {
         },
         glm = {
             return(list(
-                family="gaussian"
+                #family="gaussian"
+                family=NULL
             ))
         },
         rrblup = {
@@ -138,12 +139,21 @@ getDefaults <- function(what) {
             ))
         },
         statgen = {
-            # Nothing for now
+            return(list(
+                kinship="astle",
+                reml="EMMA",
+                gls="single"
+            ))            
         },
         snptest = {
             return(list(
                 test="frequentist",
                 model="additive"
+            ))
+        },
+        plink = {
+            return(list(
+                effect="genotypic"
             ))
         },
         externalTools = {
@@ -207,6 +217,8 @@ disp <- function(...,level=c("normal","full")) {
 
 .splitFactorForParallel <- function(n,rc) {
     .checkNumArgs("The number of elements to split",n,"numeric",0,"gt")
+    if (is.null(rc))
+        return(factor(rep(1,n)))
     if (rc>0 && rc<=1) # Cores fraction,else chunks
         nc <- .coresFrac(rc)
     else

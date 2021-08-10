@@ -1,10 +1,11 @@
 gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     methods=c("glm","rrblup","statgen","snptest","lasso"),
     combine=c("fisher","simes","max","min","harmonic","whitlock","pandora"),
-    #args=getDefaults("gwargs"),
-    family=NULL,usepcblup=c("auto","estim","rrint","fixed","none"),
-    npcsblup=NULL,snptest=c("frequentist","bayesian"),
-    snpmodel=c("additive","dominant","recessive","general","heterozygote"),
+    glmOpts=getDefaults("glm"),rrblupOpts=getDefaults("rrblup"),
+    statgenOpts=getDefaults("statgen"),snptestOpts=getDefaults("snptest"),
+    #family=NULL,usepcblup=c("auto","estim","rrint","fixed","none"),
+    #npcsblup=NULL,snptest=c("frequentist","bayesian"),
+    #snpmodel=c("additive","dominant","recessive","general","heterozygote"),
     size=1,rc=NULL,...) {
     # Cannot run GWA in an empty object without genotypes/phenotypes or if the
     # object is not of class GWASExperiment
@@ -13,23 +14,31 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     # Check input variables
     combine <- combine[1]
     usepcblup <- usepcblup[1]
-    snptest <- snptest[1]
-    snpmodel <- snpmodel[1]
+    #snptest <- snptest[1]
+    #snpmodel <- snpmodel[1]
     .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
     .checkNumArgs("SNPs to bucket test (size)",size, "numeric",0,"gt")
-    if (!is.null(npcsblup))
-        .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
-            "gte")
     .checkTextArgs("GWAS methods (methods)",methods,c("glm","rrblup","statgen",
         "snptest","lasso"),multiarg=TRUE)
     .checkTextArgs("p-value combination",combine,c("fisher","simes","max","min",
         "harmonic","whitlock","pandora"),multiarg=FALSE)
-    .checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","rrint","fixed",
-        "none"),multiarg=FALSE)
-    .checkTextArgs("SNPTEST test",snptest,c("frequentist","bayesian"),
-        multiarg=FALSE)
-    .checkTextArgs("SNPTEST model",snpmodel,c("additive","dominant","recessive",
-        "general","heterozygote"),multiarg=FALSE)
+    
+    #if (!is.null(npcsblup))
+    #    .checkNumArgs("rrBLUP number of PCs (npcsblup)",npcsblup,"numeric",0,
+    #        "gte")
+    
+    #.checkTextArgs("PCA in rrBLUP",usepcblup,c("auto","estim","rrint","fixed",
+    #    "none"),multiarg=FALSE)
+    #.checkTextArgs("SNPTEST test",snptest,c("frequentist","bayesian"),
+    #    multiarg=FALSE)
+    #.checkTextArgs("SNPTEST model",snpmodel,c("additive","dominant","recessive",
+    #    "general","heterozygote"),multiarg=FALSE)
+        
+    glmOpts <- .checkGwaArgs(glmOpts,"glm")
+    rrblupOpts <- .checkGwaArgs(rrblupOpts,"rrblup")
+    #statgenOpts <- .checkGwaArgs(statgenOpts,"statgen")
+    snptesOpts <- .checkGwaArgs(snptestOpts,"snptest")
+    #plinkOpts <- .checkGwaArgs(plinkOpts,"plink")
     
     # rrBLUP does not like binary phenotypes
     if ("rrblup" %in% methods 
@@ -55,8 +64,9 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     P <- lapply(names(parts),function(x,prt) {
         disp("\n========== Analyzing chromosome/part ",x)
         o <- prt[[x]]
-        return(.gwaWorker(o,response,covariates,pcs,psig,methods,combine,family,
-            usepcblup,npcsblup,snptest,snpmodel,size,rc))
+        return(.gwaWorker(o,response,covariates,pcs,psig,methods,combine,
+            glmOpts$family,rrblupOpts$pcblup,rrblupOpts$npcs,
+            snptestOpts$test,snptestOpts$model,size,rc))
     },parts)
     
     disp("\nFinished, the following putative associations were found per part:")
@@ -466,7 +476,7 @@ gwaStatgen <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 
 gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     test=c("frequentist","bayesian"),model=c("additive","dominant","recessive",
-    "general","heterozygote")) {
+    "general","heterozygote"),wspace=NULL) {
     # Tool availability before all else
     if (!.toolAvailable("snptest"))
         stop("SNPTEST program not found in the system!")
@@ -483,12 +493,13 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     
     # 1. Prepare SNPTEST files (from PLINK)
     # 1a. Create a SNPTEST workspace in Rtmp
-    stwork <- file.path(tempdir(),paste0("snptest_workspace_",.randomString()))
-    if (!dir.exists(stwork))
-        dir.create(stwork,recursive=TRUE)
+    #stwork <- file.path(tempdir(),paste0("snptest_workspace_",.randomString()))
+    #if (!dir.exists(stwork))
+    #    dir.create(stwork,recursive=TRUE)
+    wspace <- .validateWorkspacePath(wspace,"plink")
     # 1b. obj to PLINK through snpStats::write.plink
     # 1c. Necessary phenotypes and covariates to SNPTEST sample file
-    tmplink <- .preparePlinkInputForSnptest(obj,response,covariates,pcs,stwork)
+    tmplink <- .preparePlinkInputForSnptest(obj,response,covariates,pcs,wspace)
     
     # 2. Run the SNPTEST command
     disp("\nPerforming GWAS with SNPTEST")
@@ -497,21 +508,20 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
     
     snptest <- .getToolPath("snptest")
-    #command <- paste(
-    #   paste0(snptest," \\"),
-    #   paste0(snptest," \\"),
-    #   paste0("  -data ",tmplink$plink," ",tmplink$sample," \\"),
-    #   paste0("  -frequentist ",modelCode[model]," \\"),
-    #   "  -method score \\",
-    #   paste0("  -pheno ",response," \\"),
-    #   "  -cov_all \\",
-    #   paste0("  -o ",file.path(stwork,"snptest.out")),
-    #   sep="\n"
-    #)
-    command <- paste0(snptest," -data ",tmplink$plink," ",tmplink$sample,
-        " -frequentist ",modelCode[model]," -method score -pheno ",response,
-        " -cov_all -o ",file.path(stwork,"snptest.out")
+    command <- paste(
+       paste0(snptest," \\"),
+       paste0("  -data ",tmplink$plink," ",tmplink$sample," \\"),
+       paste0("  -frequentist ",modelCode[model]," \\"),
+       "  -method score \\",
+       paste0("  -pheno ",response," \\"),
+       "  -cov_all \\",
+       paste0("  -o ",file.path(wspace,"snptest.out")),
+       sep="\n"
     )
+    #command <- paste0(snptest," -data ",tmplink$plink," ",tmplink$sample,
+    #    " -frequentist ",modelCode[model]," -method score -pheno ",response,
+    #    " -cov_all -o ",file.path(stwork,"snptest.out")
+    #)
     
     message("Executing: ",command)
     out <- tryCatch(system(command,ignore.stdout=TRUE,ignore.stderr=TRUE),
@@ -526,7 +536,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     }
     
     # 3. Read and gather SNPTEST output in a table similar to others
-    tmp <- read.table(file.path(stwork,"snptest.out"),header=TRUE,sep=" ")
+    tmp <- read.table(file.path(wspace,"snptest.out"),header=TRUE,sep=" ")
     res <- tmp[,c(23,24,21)]
     colnames(res) <- c("effect","se","pvalue")
     rownames(res) <- rownames(obj)
@@ -536,7 +546,85 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     return(res)
 }
 
+gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
+    wspace=NULL,rc=NULL) {
+    # Tool availability before all else
+    if (!.toolAvailable("plink"))
+        stop("PLINK program not found in the system!")
+    .canRunGwa(obj)
+    
+    # Type of trait
+    useLogistic <- .maybeBinaryForBinomial(phenotypes(obj)[,response])
+    
+    wspace <- .validateWorkspacePath(wspace,"plink")
+    
+    prepList <- .preparePlinkInputForPlink(obj,response,covariates,pcs,wspace)
+    
+    disp("\nPerforming GWAS with PLINK")
+    disp("Trait(s)    : ",response)
+    disp("Covariate(s): ",paste0(covariates,collapse=", "))
+    disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
+    
+    # Do we need to run permutations?
+    perm <- ifelse(ncol(obj)<1000,TRUE,FALSE)
+    # Threads?
+    threads <- .coresFrac(rc)
+    outBase <- file.path(wspace,paste0("out_",prepList$runid))
+    plink <- .getToolPath("plink")
+    command <- paste(
+       paste0(plink," \\"),
+       paste0("  --bfile ",prepList$bfile," \\"),
+       paste0("  --pheno ",prepList$pheno," \\"),
+       paste0("  --covar ",prepList$covar," \\"),
+       "  --allow-no-sex \\",
+       "  --ci 0.95 \\",
+       paste0("  --out ",outBase),
+       sep="\n"
+    )
+    
+    model <- ifelse(useLogistic,"  --logistic beta","  --linear")
+    if (perm)
+        model <- paste0(model," perm")
+    command <- paste0(command," \\\n",model)
+    
+    if (threads > 1) {
+        addThreads <- paste0("  --threads ",threads)
+        command <- paste0(command," \\\n",addThreads)
+    }
+    
+    message("Executing: ",command)
+    out <- tryCatch(system(command,ignore.stdout=TRUE,ignore.stderr=TRUE),
+        error=function(e) {
+        message("Caught error: ",e$message)
+        return(1L)
+    },finally="")
+    
+    if (out == 1L) {
+        message("PLINK run failed! Will return unit p-values...")
+        return(rep(1,nrow(obj)))
+    }
+    
+    # Read the results
+    suffix <- ifelse(useLogistic,"logistic","linear")
+    tmp <- read.table(paste0(outBase,".assoc.",suffix),header=TRUE,sep="")
+    tmp <- tmp[!(tmp$TEST %in% prepList$covs),,drop=FALSE]
+    res <- tmp[,c("BETA","SE","P")]
+    if (perm) {
+        ptmp <- read.table(paste0(outBase,".assoc.",suffix,".perm"),header=TRUE,
+            sep="")
+        res$P <- ptmp$EMP1
+    }
+    colnames(res) <- c("effect","se","pvalue")
+    rownames(res) <- rownames(obj)
+    
+    disp("Found ",length(which(res[,3]<psig))," associations (uncorrected ",
+        "p-values).")
+    return(res)
+}
+
 .preparePlinkInputForSnptest <- function(obj,response,covariates,pcs,wspace) {
+    disp("Preparing SNPTEST association run at workspace directory: ",wspace)
+    
     # Retrieve PLINK related data
     geno <- t(genotypes(obj))
     fam <- gsamples(obj)
@@ -561,7 +649,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     }
     
     # The plink files
-    disp("\nWriting PLINK files in ",wspace)
+    disp("  writing PLINK files in ",wspace)
     write.plink(
         file.base=file.path(wspace,"forsnptest"),
         snps=geno,
@@ -578,7 +666,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     )
     
     # Modify the phenotypes data frame
-    disp("Writing SNPTEST sample file in ",wspace)
+    disp(" writing SNPTEST sample file in ",wspace)
     p <- data.frame(sample_id=rownames(p),p)
     ct <- c("0",ct)
     sfile <- file.path(wspace,"pheno.sample")
@@ -588,6 +676,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     write.table(p,file=sfile,append=TRUE,quote=FALSE,sep=" ",row.names=FALSE,
         col.names=FALSE)
     
+    disp("Preparation done!")
     return(list(
         plink=file.path(wspace,"forsnptest.bed"),
         sample=file.path(wspace,"pheno.sample")
@@ -627,6 +716,61 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
             ctc[i] <- "D"
     }
     return(c(ctr,ctc))
+}
+
+.preparePlinkInputForPlink <- function(obj,response,covariates,pcs,wspace) {
+    disp("Preparing PLINK association run at workspace directory: ",wspace)
+    
+    # Retrieve PLINK related data
+    geno <- t(genotypes(obj))
+    fam <- gsamples(obj)
+    map <- gfeatures(obj)
+    
+    # Subset phenotypes and add PCs if requested
+    p <- phenotypes(obj)
+    chResCov <- .validateResponseAndCovariates(p,response,covariates)
+    response <- chResCov$res
+    covariates <- chResCov$cvs
+    # What PLINK expects
+    pheno <- p[,c("FID","IID",response)]
+    covar <- p[,c("FID","IID",covariates)]
+    # Make sure FID and IID matches, otherwise cannot be properly handled by
+    # snpStats::write.plink
+    if (!identical(pheno[,"FID"],pheno[,"IID"])) {
+        pheno[,"IID"] <- pheno[,"FID"]
+        covar[,"IID"] <- covar[,"FID"]
+    }
+    if (pcs) { # Include robust PCs in the model
+        if (.hasPcaCovariates(obj)) {
+            pcov <- pcaCovariates(obj)
+            covar <- cbind(covar,pcov)
+        }
+        else
+             warning("PC covariates reqeusted in the model, but no calculated ",
+                "PC covariates found! Ignoring...",immediate.=TRUE)
+    }
+    
+    # Random run id
+    runId <- .randomString()
+    
+    # The plink files
+    disp("  writing PLINK genotype files in ",wspace)
+    base <- file.path(wspace,paste0("plink_",runId))
+    writePlink(obj,response,outBase=base)
+    
+    # Prepare the phenotype - a file must be written with space delimited
+    disp("  writing the PLINK phenotype file...")
+    phenoFile <- file.path(wspace,paste0("pheno_",runId))
+    write.table(pheno,file=phenoFile,quote=FALSE,row.names=FALSE)
+    
+    # Prepare the covariates - a file must be written with space delimited
+    disp("  writing the covariates file...")
+    covarFile <- file.path(wspace,paste0("covar_",runId))
+    write.table(covar,file=covarFile,quote=FALSE,row.names=FALSE)
+    
+    disp("Preparation done!")
+    return(list(bfile=base,pheno=phenoFile,covar=covarFile,runid=runId,
+        covs=names(covar)[3:ncol(covar)]))
 }
 
 .prepareGenotypesForBlup <- function(obj) {
@@ -778,6 +922,9 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 }
 
 .checkStatgenArgs <- function(a) {
+}
+
+.checkPlinkArgs <- function(a) {
 }
 
 .checkSnptestArgs <- function(a) {

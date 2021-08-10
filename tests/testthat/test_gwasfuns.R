@@ -1,17 +1,9 @@
-test_that(".gwaGlmWorker works",{
-    # Simple dummy data test
+test_that("gwa works",{
+    # Maybe with a real test dataset or a test "thing"
 })
 
 test_that("gwaGlm works",{
     # Maybe with a real test dataset or a test "thing"
-})
-
-test_that(".prepareGenotypesForBlup works",{
-    # Maybe with a real test dataset or a test "thing"
-})
-
-test_that(".estimateNPCinBlup works",{
-    # How?
 })
 
 test_that("gwaBlup works",{
@@ -24,6 +16,22 @@ test_that("gwaStatgen works",{
 
 test_that("gwaSnptest works",{
     # Maybe with a real test dataset or a test "thing"
+})
+
+test_that(".gwaGlmWorker works",{
+    # Simple dummy data test
+})
+
+test_that(".canRunGwa works",{
+    # Simple dummy data test
+})
+
+test_that(".prepareGenotypesForBlup works",{
+    # Maybe with a real test dataset or a test "thing"
+})
+
+test_that(".estimateNPCinBlup works",{
+    # How?
 })
 
 test_that(".preparePlinkInputForSnptest works",{

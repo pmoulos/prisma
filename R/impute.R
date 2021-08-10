@@ -45,69 +45,27 @@
     if (mode == "split" && length(smIndMiss) == ncol(x)) { # Then only scrime
         disp("No samples with non-missing values found... Using only scrime ",
             "for now, otherwise consider setting mode='single'.")
-        y <- as(x,"numeric")
-        y <- .internalImputeKnn(y)
+        y <- .internalImputeKnn(.integerifyImputed(y))
         assay(obj,1) <- SnpMatrix(y)
         return(obj)
     }
     
-    ############################################################################
-    #! Because of a bug in snpStats leading to segmentation fault in imputation
-    #! process, iterative imputation cannot take place... So we do it once and
-    #! then impute the remaining with scrime...
-    ## If found, split the dataset to derive imputation rules and interate
-    #iter <- nMissCurr <- 0
-    #nMissPrev <- 1
-    #while (nrow(nai) > 0 || nMissCurr == nMissPrev) {
-    #    iter <- iter + 1
-    #    message("  imputation iteration ",iter)
-    #    train <- x[,-smIndMiss]
-    #    missSnps <- sort(unique(nai[,"row"]))
-    #    #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
-    #    noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
-    #    #noMissSnps <- setdiff(rownames(train),missSnps)
-    #    nMissPrev <- length(missSnps)
-    #    
-    #    missing <- train[missSnps,,drop=FALSE]
-    #    present <- train[noMissSnps,,drop=FALSE]
-    #    posMiss <- gfeatures(obj)[missSnps,"position"]
-    #    posPres <- gfeatures(obj)[noMissSnps,"position"]
-    #    
-    #    # Define the rules
-    #    rules <- snp.imputation(t(present),t(missing),posPres,posMiss)
-    #    
-    #    # Split the missing value matrix per sample to avoid for  
-    #    # unnecessary replacements
-    #    # CHECK: Potential parallelization
-    #    h <- split(rownames(nai),nai[,"col"])
-    #    for (i in smIndMiss) {
-    #        simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
-    #        snpmiss <- h[[as.character(i)]]
-    #        x[snpmiss,i] <- simp[,snpmiss]
-    #    }
-    #    
-    #    # Recheck missing values and continue
-    #    nai <- which(is.na(x),arr.ind=TRUE)
-    #    smIndMiss <- unique(nai[,"col"])
-    #    nMissCurr <- length(unique(nai[,"row"]))
-    #}
-    ############################################################################
-
-    # Define the rules
-    disp("Creating imputation rules")
-    if (mode == "single")
-        rules <- .makeSingleImputationRules(x,gfeatures(obj),nai,smIndMiss)
-    else if (mode == "split")
-        rules <- .makeSplitImputationRules(x,gfeatures(obj),nai,smIndMiss)
-
-    if (!any(can.impute(rules)))
-        disp(length(rules)," imputation rules created but no SNP can be ",
-            "imputed... Will skip and use kNN...")
-    else {
-        disp(length(rules)," imputation rules sucessfully created! With these ",
-            length(which(can.impute(rules)))," genotypes can be imputed.")
-        # Split the missing value matrix per sample to avoid unnecessary
-        # replacements
+    iter <- nMissCurr <- 0
+    nMissPrev <- 1
+    while (nrow(nai) > 0 && nMissCurr != nMissPrev) {
+        iter <- iter + 1
+        nMissPrev <- length(sort(unique(nai[,"row"])))
+        
+        message("-----> Imputation iteration ",iter)
+        
+        disp("Creating imputation rules")
+        if (mode == "single")
+            rules <- .makeSingleImputationRules(x,gfeatures(obj),nai,smIndMiss)
+        else if (mode == "split")
+            rules <- .makeSplitImputationRules(x,gfeatures(obj),nai,smIndMiss)
+        
+        # Split the missing value matrix per sample to avoid for  
+        # unnecessary replacements
         # CHECK: Potential parallelization
         disp("Imputing...")
         h <- split(rownames(nai),nai[,"col"])
@@ -118,21 +76,35 @@
             simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
             x[snpmiss,i] <- simp[,snpmiss]
         }
+        
+        # Recheck missing values and continue
+        nai <- which(is.na(x),arr.ind=TRUE)
+        smIndMiss <- unique(nai[,"col"])
+        nMissCurr <- length(unique(nai[,"row"]))
+        
+        tmp <- capture.output({
+            x <- SnpMatrix(.integerifyImputed(x,na=FALSE))
+        })
     }
+    ############################################################################
 
     # If NAs remain, scrime
     if (any(is.na(x))) {
         disp(length(which(is.na(x)))," missing values remaining... Will ",
             "use genotype kNN imputation.")
         # Genotypes must be in range 1-3, as(x,"integer") collapses to vector
-        y <- as(x,"numeric") + 1
-        mode(y) <- "integer"
-        y <- .internalImputeKnn(y)
+        #! Yikes, this converts a 1.8 imputed genotype to 1...
+        #y <- as(x,"numeric") + 1 
+        #!
+        y <- .internalImputeKnn(.integerifyImputed(x))
         
         if (any(is.na(y)))
-            disp(length(which(is.na(y))),"\n\n------->missing values remaining... WTF.")
+            disp(length(which(is.na(y)))," missing values remaining... This ",
+                "should not happen, have you removed SNPs missing in all ",
+                "samples? See filterGWAS()")
         # We do not want to see the coercion message
         tmp <- capture.output({
+            #assay(obj,1) <- SnpMatrix(.integerifyImputed(x,na=FALSE))
             assay(obj,1) <- SnpMatrix(y)
         })
         return(obj)
@@ -142,13 +114,127 @@
     return(obj)
 }
 
+#~ .internalImputeWithSnpStatsWorker <- function(obj,mode=c("single","split"),
+#~     rc=NULL) {
+#~     mode <- mode[1]
+#~     x <- assay(obj,1)
+#~     if (!any(is.na(x)))
+#~         return(obj)
+    
+#~     # Find samples that do not have any missing SNPs (there should be some!)
+#~     nai <- which(is.na(x),arr.ind=TRUE)
+#~     smIndMiss <- unique(nai[,"col"])
+    
+#~     if (mode == "split" && length(smIndMiss) == ncol(x)) { # Then only scrime
+#~         disp("No samples with non-missing values found... Using only scrime ",
+#~             "for now, otherwise consider setting mode='single'.")
+#~         y <- as(x,"numeric")
+#~         y <- .internalImputeKnn(y)
+#~         assay(obj,1) <- SnpMatrix(y)
+#~         return(obj)
+#~     }
+    
+#~     ############################################################################
+#~     #! Because of a bug in snpStats leading to segmentation fault in imputation
+#~     #! process, iterative imputation cannot take place... So we do it once and
+#~     #! then impute the remaining with scrime...
+#~     ## If found, split the dataset to derive imputation rules and interate
+#~     #iter <- nMissCurr <- 0
+#~     #nMissPrev <- 1
+#~     #while (nrow(nai) > 0 || nMissCurr == nMissPrev) {
+#~     #    iter <- iter + 1
+#~     #    message("  imputation iteration ",iter)
+#~     #    train <- x[,-smIndMiss]
+#~     #    missSnps <- sort(unique(nai[,"row"]))
+#~     #    #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
+#~     #    noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
+#~     #    #noMissSnps <- setdiff(rownames(train),missSnps)
+#~     #    nMissPrev <- length(missSnps)
+#~     #    
+#~     #    missing <- train[missSnps,,drop=FALSE]
+#~     #    present <- train[noMissSnps,,drop=FALSE]
+#~     #    posMiss <- gfeatures(obj)[missSnps,"position"]
+#~     #    posPres <- gfeatures(obj)[noMissSnps,"position"]
+#~     #    
+#~     #    # Define the rules
+#~     #    rules <- snp.imputation(t(present),t(missing),posPres,posMiss)
+#~     #    
+#~     #    # Split the missing value matrix per sample to avoid for  
+#~     #    # unnecessary replacements
+#~     #    # CHECK: Potential parallelization
+#~     #    h <- split(rownames(nai),nai[,"col"])
+#~     #    for (i in smIndMiss) {
+#~     #        simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+#~     #        snpmiss <- h[[as.character(i)]]
+#~     #        x[snpmiss,i] <- simp[,snpmiss]
+#~     #    }
+#~     #    
+#~     #    # Recheck missing values and continue
+#~     #    nai <- which(is.na(x),arr.ind=TRUE)
+#~     #    smIndMiss <- unique(nai[,"col"])
+#~     #    nMissCurr <- length(unique(nai[,"row"]))
+#~     #}
+#~     ############################################################################
+
+#~     # Define the rules
+#~     disp("Creating imputation rules")
+#~     if (mode == "single")
+#~         rules <- .makeSingleImputationRules(x,gfeatures(obj),nai,smIndMiss)
+#~     else if (mode == "split")
+#~         rules <- .makeSplitImputationRules(x,gfeatures(obj),nai,smIndMiss)
+
+#~     if (!any(can.impute(rules)))
+#~         disp(length(rules)," imputation rules created but no SNP can be ",
+#~             "imputed... Will skip and use kNN...")
+#~     else {
+#~         disp(length(rules)," imputation rules sucessfully created! With these ",
+#~             length(which(can.impute(rules)))," genotypes can be imputed.")
+#~         # Split the missing value matrix per sample to avoid unnecessary
+#~         # replacements
+#~         # CHECK: Potential parallelization
+#~         disp("Imputing...")
+#~         h <- split(rownames(nai),nai[,"col"])
+#~         for (i in smIndMiss) {
+#~             snpmiss <- h[[as.character(i)]]
+#~             disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
+#~             disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+#~             simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+#~             x[snpmiss,i] <- simp[,snpmiss]
+#~         }
+#~     }
+
+#~     # If NAs remain, scrime
+#~     if (any(is.na(x))) {
+#~         disp(length(which(is.na(x)))," missing values remaining... Will ",
+#~             "use genotype kNN imputation.")
+#~         # Genotypes must be in range 1-3, as(x,"integer") collapses to vector
+#~         #! Yikes, this converts a 1.8 imputed genotype to 1...
+#~         #y <- as(x,"numeric") + 1 
+#~         #!
+#~         y <- round(as(x,"numeric")) + 1 
+#~         mode(y) <- "integer"
+#~         y <- .internalImputeKnn(y)
+        
+#~         if (any(is.na(y)))
+#~             disp(length(which(is.na(y)))," missing values remaining... This ",
+#~                 "should not happen, please file a bug.")
+#~         # We do not want to see the coercion message
+#~         tmp <- capture.output({
+#~             assay(obj,1) <- SnpMatrix(y)
+#~         })
+#~         return(obj)
+#~     }
+    
+#~     assay(obj,1) <- x
+#~     return(obj)
+#~ }
+
 .makeSplitImputationRules <- function(x,feat,nai,smIndMiss) {
     train <- x[,-smIndMiss]
     missSnps <- sort(unique(nai[,"row"]))
     #missSnps <- rownames(train)[sort(unique(nai[,"row"]))]
     noMissSnps <- setdiff(seq_len(nrow(train)),missSnps)
     #noMissSnps <- setdiff(rownames(train),missSnps)
-    nMissPrev <- length(missSnps)
     
     missing <- train[missSnps,,drop=FALSE]
     present <- train[noMissSnps,,drop=FALSE]
@@ -183,15 +269,10 @@
     return(rules)
 }
 
- .internalImputeKnn <- function(x) {
+.internalImputeKnn <- function(x) {
     if (!requireNamespace("scrime"))
         stop("R package scrime is required!")
     
-    # Finalize genotypes
-    #x <- .toIntMat(x)
-    #ximp <- knncatimputeLarge(x+1L,nn=5,
-    #   verbose=prismaVerbosity() %in% c("normal","full"))
-    # Still someting may go wrong, if yes, resort to mean
     ximp <- tryCatch({
         ..knncatimputeLarge(x,nn=5,
             verbose=prismaVerbosity() %in% c("normal","full"))
@@ -204,6 +285,14 @@
     })
     colnames(ximp) <- colnames(x)
     return(ximp)
+}
+
+.integerifyImputed <- function(x,na=TRUE) {
+    y <- round(as(x,"numeric")) + 1 
+    mode(y) <- "integer"
+    if (any(is.na(y)) && !na)
+        y[is.na(y)] <- 0L
+    return(y)
 }
 
 ################ Borrowed from scrime to deal with monomorphisms ###############

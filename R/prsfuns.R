@@ -215,7 +215,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     pheno <- p[,c("FID","IID",response)]
     covar <- p[,c("FID","IID",covariates)]
     # Make sure FID and IID matches, otherwise cannot be properly handled by
-    # snpStats::write.plint
+    # snpStats::write.plink
     if (!identical(pheno[,"FID"],pheno[,"IID"])) {
         pheno[,"IID"] <- pheno[,"FID"]
         covar[,"IID"] <- covar[,"FID"]
