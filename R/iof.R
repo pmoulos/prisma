@@ -1,8 +1,45 @@
+# !!! SOS !!! snpStats read.plink **REVERSES** genotypes!
+# From the official PLINK documentation
+# https://www.cog-genomics.org/plink/1.9/formats#bed
+#
+# Allele 1 (usually minor), 'X' if absent
+# Allele 2 (usually major), 'X' if absent
+#
+# 00    Homozygous for first allele in .bim file
+# 01    Missing genotype
+# 10    Heterozygous
+# 11    Homozygous for second allele in .bim file
+#
+# Therefore it should be (with as.numeric conversion)
+# 0 = homozygous minor (risk/effect)
+# 1 = heterozygous 
+# 2 = homozygous major (non-risk)
+#
+# In map file read by snpStats we have (since it's like that in default PLINK)
+# allele.1 - minor
+# allele.2 - major
+#
+# On the contrary it is
+#
+# 0 = homozygous major (non-risk)
+# 1 = heterozygous 
+# 2 = homozygous minor (risk/effect)
+#
+# The same notation is followed by the gaston R package and possibly also by
+# bigsnpr (SOS)
+#
+
 # input may be a prefix of bim, bed, fam or a list with each
 importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
-    selection=NULL,genome=NA_character_,
+    selection=NULL,genome=NA_character_,alleleOrder=c("plink","reverse"),
     gdsfile=ifelse(backend=="snpStats",tempfile(),NA)) {
+    
     backend <- backend[1]
+    alleleOrder <- alleleOrder[1]
+    if (!(backend %in% c("snpStats","bigsnpr")))
+        stop("backend should be one of \"snpStats\" or \"bigsnpr\"")
+    .checkTextArgs("Allelic order in input (alleleOrder)",alleleOrder,
+        c("plink","reverse"),multiarg=FALSE)
     
     if (backend == "snpStats") {
         if (!requireNamespace("snpStats"))
@@ -48,8 +85,16 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             select.subjects=selection$samples,select.snps=selection$snps)
         disp("Reading PLINK files with SNPRelate framework and storing ",
             "output to ",gdsfile)
-        snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
         # We also need to read a GDS file for LD and IBD filtering
+        snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
+        # ***SWITCH ALLELES*** if PLINK default
+        if (alleleOrder == "plink") {
+            disp("Switching SnpMatrix alleles to comply with default PLINK ",
+                "behaviour")
+            snpObj$genotypes <- switch.alleles(snpObj$genotypes,
+                seq_len(ncol(snpObj$genotypes)))
+        }
+        
         return(GWASExperiment(
             genotypes=t(snpObj$genotypes),
             features=snpObj$map,

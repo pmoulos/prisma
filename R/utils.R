@@ -102,8 +102,8 @@ createSample <- function() {
 }
 
 getDefaults <- function(what) {
-    allowed <- c("filters","glm","rrblup","statgen","snptest","externalTools",
-        "lassosum","prsice")
+    allowed <- c("filters","glm","rrblup","statgen","snptest","plink",
+        "externalTools","lassosum","prsice")
     
     if (!(what %in% allowed))
         stop("what must be one of ",paste(allowed,collapse=", "))
@@ -129,7 +129,8 @@ getDefaults <- function(what) {
         glm = {
             return(list(
                 #family="gaussian"
-                family=NULL
+                family=NULL,
+                size=1
             ))
         },
         rrblup = {
@@ -148,12 +149,15 @@ getDefaults <- function(what) {
         snptest = {
             return(list(
                 test="frequentist",
-                model="additive"
+                model="additive",
+                workspace=NULL
             ))
         },
         plink = {
             return(list(
-                effect="genotypic"
+                effect="genotypic",
+                seed=42,
+                workspace=NULL
             ))
         },
         externalTools = {
@@ -485,6 +489,13 @@ disp <- function(...,level=c("normal","full")) {
 .whatIsMyName <- function(x) {
     return(deparse(substitute(x)))
 }
+
+.formatSystemOutputForDisp <- function(x) {
+    clean1 <- gsub("^\\s*\\[\\d+\\]\\s+","",x,perl=TRUE)
+    clean2 <- gsub('\\"','',clean1)
+    return(paste(clean2,collapse="\n"))
+}
+
 
 #~ getAPIBase <- function() {
 #~     base <- getOption("rpgscat_base")

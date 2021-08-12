@@ -276,7 +276,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
             paste0("  --clump-p ",clump_p," \\"),
             paste0("  --score ",score," \\"),
             paste0("  --seed ",seed," \\"),
-            paste0("  --out ",prepList$out,"\\"),
+            paste0("  --out ",prepList$out," \\"),
             "  --print-snp",
             sep="\n"
         )
@@ -293,7 +293,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
             paste0("  --no-clump \\"),
             paste0("  --score ",score," \\"),
             paste0("  --seed ",seed," \\"),
-            paste0("  --out ",prepList$out,"\\"),
+            paste0("  --out ",prepList$out," \\"),
             "  --print-snp \\",
             "  --bar-levels 1 \\",
             "  --fastscore",
@@ -315,18 +315,24 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     #   command <- paste0(command,"\\\n",addLd)
     #}
     
-    message("Executing: ",command)
+    message("\nExecuting:\n",command)
     cwd <- getwd()
     setwd(wspace)
-    #out <- tryCatch(system(command,ignore.stdout=TRUE,ignore.stderr=TRUE),
-    out <- tryCatch(system(command),
-        error=function(e) {
+    out <- tryCatch({
+        system(command,ignore.stdout=TRUE,ignore.stderr=TRUE)
+        if (prismaVerbosity() == "full") {
+            logfile <- file.path(wspace,paste0(prepList$out,".log"))
+            log <- .formatSystemOutputForDisp(readLines(logfile))
+            disp("\nPRSice output is:\n")
+            disp(paste(log,collapse="\n"))
+        }
+    },error=function(e) {
         message("Caught error: ",e$message)
         return(1L)
     },finally="")
     setwd(cwd)
     
-    if (out == 1L) {
+    if (!.isEmpty(out) && out == 1L) {
         message("PRSice run failed! Will return empty result...")
         return(.emptyVariantsDf("pgs"))
     }
@@ -335,7 +341,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     sumFile <- file.path(wspace,paste0("prsice_out_",prepList$runid,".summary"))
     sumData <- read.delim(sumFile)
     
-    disp("Done!")
+    disp("Done!\n")
     disp("Adjusted PRSice R^2 is: ",sumData$PRS.R2)
     disp("Full model R^2 is: ",sumData$Full.R2)
     disp("Null model R^2 is: ",sumData$Null.R2)
@@ -355,7 +361,10 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     df <- df[nonZero,,drop=FALSE]
     # Until we get an answer from lassosum authors, we reverse betas so as to be
     # concordant with the classical X %*% betas PRS definition
-    df$effect_weight <- -val$best.beta[nonZero]
+    ### It was WRONG as snpStats was reversing genotypes
+    #df$effect_weight <- -val$best.beta[nonZero]
+    ###
+    df$effect_weight <- val$best.beta[nonZero]
     # and conversion to odds ratios
     df$OR <- exp(df$effect_weight)
     df$locus_name <- rep(NA,nrow(df))

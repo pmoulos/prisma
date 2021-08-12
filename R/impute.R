@@ -134,7 +134,7 @@
 #~         return(obj)
 #~     }
     
-#~     ############################################################################
+#~     #########################################################################
 #~     #! Because of a bug in snpStats leading to segmentation fault in imputation
 #~     #! process, iterative imputation cannot take place... So we do it once and
 #~     #! then impute the remaining with scrime...
@@ -174,7 +174,7 @@
 #~     #    smIndMiss <- unique(nai[,"col"])
 #~     #    nMissCurr <- length(unique(nai[,"row"]))
 #~     #}
-#~     ############################################################################
+#~     #########################################################################
 
 #~     # Define the rules
 #~     disp("Creating imputation rules")
