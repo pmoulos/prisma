@@ -32,6 +32,7 @@ prsPipeline <- function(
 ) {
     #TODO: Log options in effect (or all), like in metaseqR
     #TODO: SNPTEST and PLINK workspaces should live in the main workspace
+    #TODO: Unique run identifier to append to RData files
     
     # Can we run a GWA?
     .canRunGwa(gwe)
@@ -101,8 +102,8 @@ prsPipeline <- function(
     if (is.null(snpSelection))
         theResult <- .prsPipelineDenovo(gwe,phenotype,covariates,pcs,npcs,
             trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
-            gwaMethods,gwaCombine,family,glmOpts,rrblupOpts,
-            statgenOpts,snptestOpts,prsMethods,lassosumOpts,prsiceOpts,
+            gwaMethods,gwaCombine,family,glmOpts,rrblupOpts,statgenOpts,
+            snptestOpts,plinkOpts,prsMethods,lassosumOpts,prsiceOpts,
             prsWorkspace,logging,output,rc)
     else
         # This time is a PGS Catalog data frame
@@ -182,8 +183,8 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
 
 .prsPipelineDenovo <- function(gwe,phenotype,covariates,pcs,npcs,trainSize,
     niter,filters,pcaMethod,imputeMissing,imputeMethod,gwaMethods,gwaCombine,
-    family,glmOpts,rrblupOpts,statgenOpts,snptestOpts,prsMethods,lassosumOpts,
-    prsiceOpts,prsWorkspace,logging,output,rc) {
+    family,glmOpts,rrblupOpts,statgenOpts,snptestOpts,plinkOpts,prsMethods,
+    lassosumOpts,prsiceOpts,prsWorkspace,logging,output,rc) {
     # Initialize the list of GWASExperiment s
     theResult <- vector("list",niter)
     
@@ -256,8 +257,9 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
         disp("\n----- Training (base) GWAS -----")
         # TODO: Pass method options - defaults for time being
         theTrain <- gwa(theTrain,phenotype,covariates,pcs=pcs,
-            methods=gwaMethods,combine=gwaCombine,usepcblup="rrint",
-            npcsblup=pcno,rc=rc)
+            methods=gwaMethods,combine=gwaCombine,glmOpts=glmOpts,
+            rrblupOpts=rrblupOpts,statgenOpts=statgenOpts,
+            snptestOpts=snptestOpts,plinkOpts=plinkOpts,rc=rc)
         
         # Run PRS
         disp("\n----- PRS analysis with base and target -----")

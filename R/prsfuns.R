@@ -557,7 +557,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
 }
 
 .getGwaLinArgPrior <- function() {
-    return(c("snptest","statgen","glm","rrblup"))
+    return(c("snptest","statgen","plink","glm","rrblup"))
 }
 
 .canRunPrs <- function(o,p,isBase=FALSE) {

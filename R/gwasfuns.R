@@ -567,7 +567,6 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
        paste0(plink," \\"),
        paste0("  --bfile ",prepList$bfile," \\"),
        paste0("  --pheno ",prepList$pheno," \\"),
-       paste0("  --covar ",prepList$covar," \\"),
        "  --allow-no-sex \\",
        "  --ci 0.95 \\",
        paste0("  --seed ",seed," \\"),
@@ -575,7 +574,14 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
        sep="\n"
     )
     
-    model <- ifelse(useLogistic,"  --logistic beta","  --linear")
+    # Rest arguments
+    if (!is.null(prepList$covar)) {
+        cvr <- paste0("  --covar ",prepList$covar)
+        command <- paste0(command," \\\n",cvr)
+    }
+    
+    model <- ifelse(is.null(prepList$covar)," --assoc",
+        ifelse(useLogistic,"  --logistic beta","  --linear"))
     if (perm)
         model <- paste0(model," perm")
     command <- paste0(command," \\\n",model)
@@ -713,16 +719,27 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
+    
+    # Do we need a covariates file?
+    needCov <- TRUE
+    if (is.null(covariates) && !pcs)
+        needCov <- FALSE
+    
     # What PLINK expects
     pheno <- p[,c("FID","IID",response)]
-    covar <- p[,c("FID","IID",covariates)]
+    if (needCov)
+        covar <- p[,c("FID","IID",covariates)]
+        
     # Make sure FID and IID matches, otherwise cannot be properly handled by
     # snpStats::write.plink
     if (!identical(pheno[,"FID"],pheno[,"IID"])) {
         pheno[,"IID"] <- pheno[,"FID"]
-        covar[,"IID"] <- covar[,"FID"]
+        if (needCov)
+            covar[,"IID"] <- covar[,"FID"]
     }
-    if (pcs) { # Include robust PCs in the model
+    
+    # PCs needed? Will not run if needCov is FALSE anyway as pcs is FALSE
+    if (pcs) {
         if (.hasPcaCovariates(obj)) {
             pcov <- pcaCovariates(obj)
             covar <- cbind(covar,pcov)
@@ -746,9 +763,13 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     write.table(pheno,file=phenoFile,quote=FALSE,row.names=FALSE)
     
     # Prepare the covariates - a file must be written with space delimited
-    disp("  writing the covariates file...")
-    covarFile <- file.path(wspace,paste0("covar_",runId))
-    write.table(covar,file=covarFile,quote=FALSE,row.names=FALSE)
+    if (needCov) {
+        disp("  writing the covariates file...")
+        covarFile <- file.path(wspace,paste0("covar_",runId))
+        write.table(covar,file=covarFile,quote=FALSE,row.names=FALSE)
+    }
+    else
+        covarFile <- NULL
     
     disp("Preparation done!")
     return(list(bfile=base,pheno=phenoFile,covar=covarFile,runid=runId,
