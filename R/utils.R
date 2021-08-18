@@ -186,14 +186,14 @@ getDefaults <- function(what) {
     )
 }
 
-cmclapply <- function(...,rc) {
+cmclapply <- function(...,rc,setseed=FALSE) {
     if (suppressWarnings(!requireNamespace("parallel")) 
         || .Platform$OS.type!="unix")
         ncores <- 1
     else
         ncores <- .coresFrac(rc)
     if (ncores > 1)
-        return(mclapply(...,mc.cores=ncores,mc.set.seed=FALSE))
+        return(mclapply(...,mc.cores=ncores,mc.set.seed=setseed))
     else
         return(lapply(...))
 }
@@ -468,8 +468,8 @@ disp <- function(...,level=c("normal","full")) {
     return(is.null(x) || is.na(x) || x == "" || length(x) == 0)
 }
 
-.randomString <- function(n=1) {
-  a <- do.call(paste0,replicate(5,sample(LETTERS,n,replace=TRUE),FALSE))
+.randomString <- function(n=1,s=5) {
+  a <- do.call(paste0,replicate(s,sample(LETTERS,n,replace=TRUE),FALSE))
   return(paste0(a,sprintf("%04d",sample(9999,n,replace=TRUE)),sample(LETTERS,n,
     replace=TRUE)))
 }

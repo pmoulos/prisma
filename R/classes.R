@@ -98,7 +98,12 @@ setGeneric("allPrsbetas",function(x,...) standardGeneric("allPrsbetas"))
 
 setGeneric("filterRecord",function(x,...) standardGeneric("filterRecord"))
 
-setGeneric("filterRecord<-",function(x,...,value) standardGeneric("filterRecord<-"))
+setGeneric("filterRecord<-",function(x,...,value) 
+    standardGeneric("filterRecord<-"))
+
+setGeneric("gdsfile",function(x,...) standardGeneric("gdsfile"))
+
+setGeneric("gdsfile<-",function(x,...,value) standardGeneric("gdsfile<-"))
 
 setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
 
@@ -339,6 +344,19 @@ setMethod("filterRecord","GWASExperiment",function(x) {
 setReplaceMethod("filterRecord","GWASExperiment",function(x,...,value) {
     m <- metadata(x)
     m$filters <- value
+    metadata(x) <- m
+    if (validObject(x))
+        return(x)
+})
+
+setMethod("gdsfile","GWASExperiment",function(x) {
+    m <- metadata(x)
+    return(m$gdsfile)
+})
+
+setReplaceMethod("gdsfile","GWASExperiment",function(x,...,value) {
+    m <- metadata(x)
+    m$gdsfile <- value
     metadata(x) <- m
     if (validObject(x))
         return(x)

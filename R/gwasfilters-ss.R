@@ -13,7 +13,7 @@
     else
         objIbd <- objBas
     
-    if (imputeMissing) {
+    if (imputeMissing && any(is.na(genotypes(obj)))) {
         disp("\nImputing missing values with snpStats rules and scrime kNN")
         objIbd <- .internalImputeWithSnpStats(objIbd,imputeMode,rc=rc)
     }
@@ -180,7 +180,15 @@
             ibd <- tryCatch({
                 snpgdsIBDMoM(gdsHandle,kinship=TRUE,sample.id=gdsIds,
                     snp.id=snpsetIbd,num.thread=.coresFrac(rc))
-            },)
+                },error=function(e) {
+                disp("Caught error ",e$message)
+                disp("Closing GDS file connection")
+                snpgdsClose(handle)
+            },interrupt=function(i) {
+                disp("Caught keyboard interruption!")
+                disp("Closing GDS file connection")
+                snpgdsClose(handle)
+            },finally="")
         
         disp("Performing IBD selection...")
         ibdCoeff <- snpgdsIBDSelection(ibd)

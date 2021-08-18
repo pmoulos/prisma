@@ -1,5 +1,5 @@
 gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
-    methods=c("glm","rrblup","statgen","snptest","lasso"),
+    methods=c("glm","rrblup","statgen","snptest","plink","lasso"),
     combine=c("fisher","simes","max","min","harmonic","whitlock","pandora"),
     glmOpts=getDefaults("glm"),rrblupOpts=getDefaults("rrblup"),
     statgenOpts=getDefaults("statgen"),snptestOpts=getDefaults("snptest"),
@@ -495,7 +495,8 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     snptest <- .getToolPath("snptest")
     command <- paste(
        paste0(snptest," \\"),
-       paste0("  -data ",prepList$plink," ",prepList$sample," \\"),
+       paste0("  -data ",prepList$plink," \\"),
+       paste0("    ",prepList$sample," \\"),
        paste0("  -frequentist ",modelCode[model]," \\"),
        "  -method score \\",
        paste0("  -pheno ",response," \\"),

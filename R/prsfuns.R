@@ -329,6 +329,8 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     },error=function(e) {
         message("Caught error: ",e$message)
         return(1L)
+    },interrupt=function() {
+        setwd(cwd)
     },finally="")
     setwd(cwd)
     
@@ -532,17 +534,21 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         }
         else {
             if (!dir.exists(path)) {
-                # No disp here
-                message("The desired ",tool," workspace does not exist!")
-                confirm <- menu(c("Yes","No"),
-                    title=sprintf(paste0(tool," workspace is going to be ",
-                        "created at %s. Do you agree?"),path))
-                if (confirm == 1)
+                if (!interactive()) # Just create...
                     dir.create(path,recursive=TRUE)
-                else
-                    stop(paste0(tool," cannot be executed without a valid ",
-                        "workspace.\nPlease agree or use the 'path' argument ",
-                        "in the respective function."))
+                else {
+                    # No disp here
+                    message("The desired ",tool," workspace does not exist!")
+                    confirm <- menu(c("Yes","No"),
+                        title=sprintf(paste0(tool," workspace is going to be ",
+                            "created at %s. Do you agree?"),path))
+                    if (confirm == 1)
+                        dir.create(path,recursive=TRUE)
+                    else
+                        stop(paste0(tool," cannot be executed without a valid ",
+                            "workspace.\nPlease agree or use the 'path' ",
+                            "argument in the respective function."))
+                }
             }
         }
     }
