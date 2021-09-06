@@ -8,6 +8,11 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     # object is not of class GWASExperiment
     .canRunGwa(obj)
     
+    # We might need to deactivate parallel calculations for GLM if called from
+    # the total PRISMA pipeline
+    noGlmPrl <- grepl("doTryCatch|eval\\(parse",
+        deparse(sys.calls()[[sys.nframe()-1]])[1])
+    
     # Check input variables
     combine <- combine[1]
     .checkNumArgs("Association p-value",psig,"numeric",c(0,1),"both")
@@ -23,12 +28,20 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     plinkOpts <- .checkGwaArgs(plinkOpts,"plink")
     
     # rrBLUP does not like binary phenotypes
-    if ("rrblup" %in% methods 
-        && .maybeBinaryForBinomial(phenotypes(obj)[,response])) {
-        warning("The trait ",response," is binary and not supported by ",
-            "rrBLUP which will be removed.\nConsider vanilla ridge regression ",
-            "(glmnet) if not already included.")
-        methods <- methods[methods!="rrblup"]
+    if ("rrblup" %in% methods) {
+        if (rrblupOpts$pcblup == "rrint" && is.null(rrblupOpts$npcs) && pcs) {
+            if (.hasPcaCovariates(obj))
+                rrblupOpts$npcs <- ncol(pcaCovariates(obj))
+            else
+                rrblupOpts$npcs <- 0
+        }
+        
+        if (.maybeBinaryForBinomial(phenotypes(obj)[,response])) {
+            warning("The trait ",response," is binary and not supported by ",
+                "rrBLUP which will be removed.\nConsider vanilla ridge ",
+                "regression (glmnet) if not already included.",immediate.=TRUE)
+            methods <- methods[methods!="rrblup"]
+        }
     }
     
     # Splits the association analysis per chromosome, ortherwise, some chunks
@@ -50,7 +63,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
             glmOpts$family,rrblupOpts$pcblup,rrblupOpts$npcs,
             snptestOpts$test,snptestOpts$model,snptestOpts$workspace,
             plinkOpts$effect,plinkOpts$seed,plinkOpts$workspace,glmOpts$size,
-            rc))
+            noGlmPrl,rc))
     },parts)
     names(P) <- names(parts)
     
@@ -77,7 +90,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 # Returns only the p-value matrix. For assigning p-values to object, use GWA
 .gwaWorker <- function(obj,response,covariates,pcs,psig,methods,combine,
     family,usepcblup,npcsblup,snptest,snpmodel,snpspace,pleff,plseed,plspace,
-    size,rc=NULL,...) {
+    size,noglmprl,rc=NULL,...) {
     # Initialize pvalue matrix
     pMatrix <- eMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
     rownames(pMatrix) <- rownames(eMatrix) <- rownames(obj)
@@ -87,8 +100,11 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     for (m in methods) {
         switch(m,
             glm = {
+                rcLocal <- rc
+                if (noglmprl)
+                    rcLocal <- NULL
                 glmRes <- gwaGlm(obj,response,covariates,pcs,family,psig,
-                    penalized=FALSE,size,rc)
+                    penalized=FALSE,size,rc=rcLocal)
                 pMatrix[,m] <- glmRes[,4]
                 eMatrix[,m] <- glmRes[,1]
             },
@@ -657,11 +673,6 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     # Random run id
     runId <- .randomString()
     
-    # The plink files
-    disp("  writing PLINK files in ",wspace)
-    base <- file.path(wspace,paste0("plink_snptest_",runId))
-    writePlink(obj,response,outBase=base)
-    
     # Modify the phenotypes data frame
     disp(" writing SNPTEST sample file in ",wspace)
     p <- data.frame(sample_id=rownames(p),p)
@@ -672,6 +683,11 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     writeLines(c(r1,r2),sfile)
     write.table(p,file=sfile,append=TRUE,quote=FALSE,sep=" ",row.names=FALSE,
         col.names=FALSE)
+    
+    # The plink files
+    disp("  writing PLINK files in ",wspace)
+    base <- file.path(wspace,paste0("plink_snptest_",runId))
+    writePlink(obj,response,outBase=base)
     
     disp("Preparation done!")
     return(list(plink=paste0(base,".bed"),sample=sfile,runid=runId))
@@ -753,11 +769,6 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     # Random run id
     runId <- .randomString()
     
-    # The plink files
-    disp("  writing PLINK genotype files in ",wspace)
-    base <- file.path(wspace,paste0("plink_plink_",runId))
-    writePlink(obj,response,outBase=base)
-    
     # Prepare the phenotype - a file must be written with space delimited
     disp("  writing the PLINK phenotype file...")
     phenoFile <- file.path(wspace,paste0("pheno_",runId))
@@ -771,6 +782,11 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     }
     else
         covarFile <- NULL
+    
+    # The plink files
+    disp("  writing PLINK genotype files in ",wspace)
+    base <- file.path(wspace,paste0("plink_plink_",runId))
+    writePlink(obj,response,outBase=base)
     
     disp("Preparation done!")
     return(list(bfile=base,pheno=phenoFile,covar=covarFile,runid=runId,

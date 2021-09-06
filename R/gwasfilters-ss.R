@@ -69,7 +69,7 @@
         filteredSampleCallRate <- sampleSum$Call.rate < filters$sampleCallRate
     # Sample filters: heterozygosity
     if (!.isEmpty(filters$heteroHard) || !.isEmpty(filters$heteroStat)) {
-        if (is.na(filters$heteroHard)) {
+        if (.isEmpty(filters$heteroHard)) {
             if (filters$heteroStat == "mean") {
                 loc <- mean(sampleSum$Heterozygosity,na.rm=TRUE)
                 sca <- sd(sampleSum$Heterozygosity,na.rm=TRUE)
@@ -88,7 +88,7 @@
     }
     
     # Sample filters: inbreeding coefficient
-    if (!is.na(filters$inbreed)) {
+    if (!.isEmpty(filters$inbreed)) {
         hetF <- .calcInbreedFromSnpMatrix(x,snpSum,sampleSum)
         filteredInbreed <- hetF > filters$inbreed
     }
