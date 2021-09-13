@@ -467,8 +467,12 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     statsInfo <- gfeatures(base)
     statsInfo <- as.data.frame(statsInfo[,c("chromosome","position",
         "snp.name","allele.1","allele.2")])
-    preP <- pvalues(base,res,cvs,npcs)
-    p <- preP[,ncol(preP)]
+    if (identical(colnames(base),colnames(target)))
+        p <- rep(1,nrow(target))
+    else {
+        preP <- pvalues(base,res,cvs,npcs)
+        p <- preP[,ncol(preP)]
+    }
     e <- effects(base,res,cvs,npcs)
     
     # Until we find a better way of summarizing effects across methods,

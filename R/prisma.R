@@ -9,6 +9,8 @@ prisma <- function(
     quantiles=c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
+    evalR2=c("adjusted","full","null"),
+    selectionTest=c("empirical","wilcoxon","ttest"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -28,6 +30,7 @@ prisma <- function(
     logging=c("screen","file"),
     output=c("gwaslist","summaries"),
     continue=FALSE,
+    useDenovoWorkspace=NULL,
     runId=NULL,
     rc=NULL
 ) {
@@ -124,7 +127,7 @@ prisma <- function(
         rc=rc
     )
 
-    
+    # WIP
 }
 
 prsSelection <- function(
@@ -139,6 +142,8 @@ prsSelection <- function(
     quantiles=c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
+    evalR2=c("adjusted","full","null"),
+    selectionTest=c("empirical","wilcoxon","ttest"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -157,13 +162,20 @@ prsSelection <- function(
     cleanup=c("none","intermediate","all"),
     logging=c("screen","file"),
     continue=FALSE,
+    useDenovoWorkspace=NULL,
     runId=NULL,
     rc=NULL
 ) {
     # The rest are checked downstream
     aggregation <- aggregation[1]
+    evalR2 <- evalR2[1]
+    selectionTest <- selectionTest[1]
     .checkTextArgs("SNP aggregation method (aggregation)",aggregation,
         c("intersection","union"),multiarg=FALSE)
+    .checkTextArgs("R2 type for evaluation (evalR2)",evalR2,
+        c("adjusted","full","null"),multiarg=FALSE)
+    .checkTextArgs("PRS selection test (selectionTest)",selectionTest,
+        c("empirical","wilcoxon","ttest"),multiarg=FALSE)
     
     disp("Creating aggregation marker list, in ",aggregation," mode.")
     snpList <- cmclapply(quantiles,function(x,a,D) {
@@ -216,6 +228,7 @@ prsSelection <- function(
                 logging=logging,
                 output="summaries",
                 continue=continue,
+                useDenovoWorkspace=useDenovoWorkspace,
                 runId=runId,
                 rc=rc
             )
@@ -229,55 +242,10 @@ prsSelection <- function(
     
     # Or, since the function is called 'selection', continue with graphs?
     # A loop for how many tests we want
-    .evalPrismaParts(dnResult,r2Df)
+    .evalPrismaParts(dnList,r2Df,evalR2,selectionTest)
     # This function should probably become internal and the main prisma function
     # should return some summary statistics, plot/report object which is input
     # later to some report generation function.
-}
-
-.evalPrismaParts <- function(dn,qus,r2=c("adjusted","full","null"),
-    test=c("empirical","wilcoxon","ttest")) {
-    
-    # Inputs    
-    r2 <- r2[1]
-    test <- test[1]
-    sel <- ifelse(r2=="adjusted","r2p",ifelse(r2=="full","r2m","r2n"))
-    
-    # Plot/selection data
-    baseline <- .getR2(dn)[,sel]
-    qu <- lapply(qus,function(x,s) {
-        return(x[,s])
-    },sel)
-    
-    # Siginificance of the result
-    switch(test,
-        empirical = {
-            p <- unlist(lapply(qu,function(x,b) {
-                b <- .subsampleBase(x,b)
-                return(length(which(x < b))/length(b))
-            },baseline))
-        },
-        wilcoxon = {
-            p <- unlist(lapply(qu,function(x,b) {
-                if (length(b) > 2*length(x))
-                    b <- .subsampleBase(x,b)
-                h <- wilcox.test(x,b,alternative="greater")
-                return(h$p.value)
-            },baseline))
-        },
-        ttest = {
-            p <- unlist(lapply(qu,function(x,b) {
-                if (length(b) > 2*length(x))
-                    b <- .subsampleBase(x,b)
-                h <- t.test(x,b,alternative="greater")
-                return(h$p.value)
-            },baseline))
-        }
-    )
-    
-    gQuanDens <- .plotQuantileDensities(baseline,qus)
-    gQuanSel <- .plotQuantileEvaluation(qus,p,baseline)
-
 }
 
 prsPipeline <- function(
@@ -308,10 +276,16 @@ prsPipeline <- function(
     logging=c("screen","file"),
     output=c("gwaslist","summaries"),
     continue=FALSE,
+    useDenovoWorkspace=NULL,
     runId=NULL,
     rc=NULL
 ) {
     #TODO: Log options in effect (or all), like in metaseqR
+    #TODO: Check mutual exclusive trainSize. useBeta etc.
+    # Finally: useBeta -> useWorkspace
+    # If provided, an object will be harvested and fed to the 1st version of
+    # the .prsPipelineValidate
+    
     
     # Can we run a GWA?
     .canRunGwa(gwe)
@@ -377,21 +351,29 @@ prsPipeline <- function(
         cleanup <- callParams$cleanup
         logging <- callParams$logging
         output <- callParams$output
+        useDenovoWorkspace <- callParams$useDenovoWorkspace
         runId <- callParams$runId
         # For output directory (workspace) format
         dig <- nchar(as.character(max(niter)))
         
         # Now, we must try to guess how many iterations are complete so as to
         # remove them from the total
-        denovo <- FALSE
+        denovo <- fast <- FALSE
         if (is.null(snpSelection)) {
             denovo <- TRUE
             sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_denovo_"),
                 full.names=TRUE)
         }
-        else
-            sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_external_"),
-                full.names=TRUE)
+        else {
+            if (.isDenovoWorkspace(useDenovoWorkspace)) {
+                fast <- TRUE
+                sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_validate_"),
+                    full.names=TRUE)
+            }
+            else
+                sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_external_"),
+                    full.names=TRUE)
+        }
         idone <- unlist(lapply(seq_along(sdirs),function(i,s) {
             f <- file.path(s[i],".prog.json")
             if (!file.exists(f)) # Very unlikely as it's created 1st thing
@@ -404,11 +386,11 @@ prsPipeline <- function(
         if (length(niter) == 0) {
             disp("All requsted PRISMA iterations seem to have been performed!",
                 "Nothing to do but re-gathering the results...")
-            return(harvestWorkspace(prsWorkspace,runId,denovo))
+            return(harvestWorkspace(prsWorkspace,runId,denovo,fast))
         }
         else {
             disp("Harvesting previous iterations...")
-            prevResult <- harvestWorkspace(prsWorkspace,runId,denovo)
+            prevResult <- harvestWorkspace(prsWorkspace,runId,denovo,fast)
             disp("Resuming PRISMA iterations ",paste0(niter,collapse=", "))
         }
     }
@@ -420,10 +402,13 @@ prsPipeline <- function(
     cleanup <- cleanup[1]
     output <- output[1]
     
+    # niter can be a scalar or a vector of missing iterations
     if (length(niter) == 1)
         .checkNumArgs("Number of iterations (niter)",niter,"numeric",0,"gt")
-    .checkNumArgs("Training dataset size fraction (trainSize)",trainSize,
-        "numeric",0,"gt")
+    # trainSize can be a scalar (fraction) or the index of the training split
+    if (length(trainSize) == 1)
+        .checkNumArgs("Training dataset size fraction (trainSize)",trainSize,
+            "numeric",0,"gt")
     .checkTextArgs("PCA method (pcaMethod)",pcaMethod,c("auto","snprel",
         "grid","hubert"),multiarg=FALSE)
     .checkNumArgs("Number of PCs (npcs)",npcs,"numeric",0,"gte")
@@ -479,6 +464,11 @@ prsPipeline <- function(
         else # ...or a 16-byte unique run id for continuation if required
             runId <- .randomString(1,11)
         
+        # In this case only, we may provide a list of a denovo run
+        dnwsHelper <- NULL
+        if (!.isPreviousDenovoList(useDenovoWorkspace))
+            dnwsHelper <- useDenovoWorkspace
+
         callParams <- list(
             phenotype=phenotype,
             covariates=covariates,
@@ -505,6 +495,7 @@ prsPipeline <- function(
             cleanup=cleanup,
             logging=logging,
             output=output,
+            useDenovoWorkspace=dnwsHelper,
             runId=runId
         )
         
@@ -533,95 +524,13 @@ prsPipeline <- function(
         trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
         gwaMethods,gwaCombine,glmOpts,rrblupOpts,statgenOpts,snptestOpts,
         plinkOpts,prsMethods,lassosumOpts,prsiceOpts,prsWorkspace,cleanup,
-        logging,output,runId,dig,rc)
+        logging,output,useDenovoWorkspace,runId,dig,rc)
     
     return(c(prevResult,currResult))
 }
 
-# The prsPipeline, if fed with a filtered object (e.g. according to GWAS
-# p-value cutoffs and the SNPs therein) can be used for PGS evaluation
-.prsPipeline <- function(gwe,phenotype,covariates,pcs,npcs,snpSelection,
-    trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,gwaMethods,
-    gwaCombine,glmOpts,rrblupOpts,statgenOpts,snptestOpts,plinkOpts,prsMethods,
-    lassosumOpts,prsiceOpts,prsWorkspace,cleanup,logging,output,runId,dig,rc) {
-    # Validate response and covariates
-    p <- phenotypes(gwe)
-    chResCov <- .validateResponseAndCovariates(p,phenotype,covariates)
-    phenotype <- chResCov$res
-    covariates <- chResCov$cvs
-    
-    # Missing value imputation before all else
-    if (imputeMissing) {
-        gwe <- imputeGWAS(gwe,mode=imputeMethod)
-        imputeMissing <- FALSE # No need to pass downstream!
-    }
-    
-    # Copy the gds file in the master workspace only in the case of no 
-    # parallelization. Multi-opening is not possible...
-    if (is.null(rc)) {
-        gorig <- gdsfile(gwe)
-        gdest <- file.path(prsWorkspace,basename(gorig))
-        file.copy(from=gorig,to=gdest,overwrite=TRUE)
-        gdsfile(gwe) <- gdest
-    }
-    
-    # Main iteration
-    if (is.null(snpSelection))
-        theResult <- .prsPipelineDenovo(gwe,phenotype,covariates,pcs,npcs,
-            trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
-            gwaMethods,gwaCombine,glmOpts,rrblupOpts,statgenOpts,snptestOpts,
-            plinkOpts,prsMethods,lassosumOpts,prsiceOpts,prsWorkspace,logging,
-            output,runId,dig,rc)
-    else {
-        switch(gwaMethods[1],
-            glm = { gwaOpts <- glmOpts },
-            rrblup = { gwaOpts <- rrblupOpts },
-            statgen = { gwaOpts <- statgenOpts },
-            snptest = { gwaOpts <- snptestOpts },
-            plink = { gwaOpts <- plinkOpts }
-        )
-        # This time is a PGS Catalog data frame
-        theResult <- .prsPipelineExternal(gwe,phenotype,covariates,pcs,npcs,
-            snpSelection,trainSize,niter,filters,pcaMethod,imputeMissing,
-            imputeMethod,gwaMethods[1],gwaOpts,prsiceOpts,prsWorkspace,logging,
-            runId,dig,rc)
-    }
-
-    switch(cleanup,
-        none = {
-            disp("All pipeline output can be found at ",prsWorkspace)
-        },
-        intermediate = {
-            disp("Cleaning up temporary program-specific intermediate files ",
-                "from ",prsWorkspace)
-            .partialCleanup(prsWorkspace)
-            # Some routine to delete PLINK and summary stats etc.
-        },
-        all = {
-            disp("Cleaning up all pipeline files!")
-            unlink(prsWorkspace,recursive=TRUE,force=TRUE)
-            theResult <- lapply(theResult,function(x) {
-                attr(x,"workspace") <- NULL
-            })
-        }
-    )
-    
-    # If output is gwaslist and no parallelization, restore the original GDS 
-    # file location (otherwise already restored)
-    if (is.null(rc)) {
-        if (output == "gwalist") {
-            theResult <- lapply(theResult,function(x,g) {
-                gdsfile(x) <- g
-                return(x)
-            },gorig)
-        }
-        # Delete the copy from the workspace
-        unlink(gdest,force=TRUE)
-    }
-    
-    return(theResult)
-}
-
+# TODO: Average effects! - Add one more column to out with averaged effect for
+# each SNP... M4BU
 aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
     # Check if prsbetas non-empty everywhere
     isGwaExp <- FALSE
@@ -670,8 +579,8 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
     return(out[order(out$freq,decreasing=TRUE),,drop=FALSE])
 }
 
-harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
-    pat <- ifelse(denovo,"denovo_","external_")
+harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
+    pat <- ifelse(denovo,"denovo_",ifelse(fast,"validate_","external_"))
     sdirs <- dir(wspace,pattern=paste0(rid,"_",pat),full.names=TRUE)
     disp("Harvesting PRISMA workspace ",wspace)
     results <- lapply(sdirs,function(x) {
@@ -689,6 +598,105 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
     return(results)
 }
 
+# The prsPipeline, if fed with a filtered object (e.g. according to GWAS
+# p-value cutoffs and the SNPs therein) can be used for PGS evaluation
+.prsPipeline <- function(gwe,phenotype,covariates,pcs,npcs,snpSelection,
+    trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,gwaMethods,
+    gwaCombine,glmOpts,rrblupOpts,statgenOpts,snptestOpts,plinkOpts,prsMethods,
+    lassosumOpts,prsiceOpts,prsWorkspace,cleanup,logging,output,
+    useDenovoWorkspace,runId,dig,rc) {
+    # Validate response and covariates
+    p <- phenotypes(gwe)
+    chResCov <- .validateResponseAndCovariates(p,phenotype,covariates)
+    phenotype <- chResCov$res
+    covariates <- chResCov$cvs
+    
+    # Missing value imputation before all else
+    if (imputeMissing) {
+        gwe <- imputeGWAS(gwe,mode=imputeMethod)
+        imputeMissing <- FALSE # No need to pass downstream!
+    }
+    
+    # Copy the gds file in the master workspace only in the case of no 
+    # parallelization. Multi-opening is not possible...
+    if (is.null(rc)) {
+        gorig <- gdsfile(gwe)
+        gdest <- file.path(prsWorkspace,basename(gorig))
+        file.copy(from=gorig,to=gdest,overwrite=TRUE)
+        gdsfile(gwe) <- gdest
+    }
+    
+    # Main iteration
+    if (is.null(snpSelection))
+        theResult <- .prsPipelineDenovo(gwe,phenotype,covariates,pcs,npcs,
+            trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
+            gwaMethods,gwaCombine,glmOpts,rrblupOpts,statgenOpts,snptestOpts,
+            plinkOpts,prsMethods,lassosumOpts,prsiceOpts,prsWorkspace,logging,
+            output,runId,dig,rc)
+    else {
+        switch(gwaMethods[1],
+            glm = { gwaOpts <- glmOpts },
+            rrblup = { gwaOpts <- rrblupOpts },
+            statgen = { gwaOpts <- statgenOpts },
+            snptest = { gwaOpts <- snptestOpts },
+            plink = { gwaOpts <- plinkOpts }
+        )
+        # This time the output is a PGS Catalog data frame
+        if (is.null(useDenovoWorkspace))
+            theResult <- .prsPipelineExternal(gwe,phenotype,covariates,pcs,npcs,
+                snpSelection,trainSize,niter,filters,pcaMethod,imputeMissing,
+                imputeMethod,gwaMethods[1],gwaOpts,prsiceOpts,prsWorkspace,
+                logging,runId,dig,rc)
+        else {
+            # Has been validated upstream that is a valid denovo workspace or
+            # a list from harvested workspace
+            if (is.list(useDenovoWorkspace))
+                dnList <- useDenovoWorkspace
+            else {
+                prm <- fromJSON(file.path(useDenovoWorkspace,"params.json"))
+                dnList <- harvestWorkspace(useDenovoWorkspace,prm$runId)
+            }
+            theResult <- .prsPipelineValidate(dnList,gwe,phenotype,covariates,
+                pcs,snpSelection,trainSize,niter,pcaMethod,gwaMethods[1],
+                prsiceOpts,prsWorkspace,logging,runId,dig,rc)
+        }
+    }
+
+    switch(cleanup,
+        none = {
+            disp("All pipeline output can be found at ",prsWorkspace)
+        },
+        intermediate = {
+            disp("Cleaning up temporary program-specific intermediate files ",
+                "from ",prsWorkspace)
+            .partialCleanup(prsWorkspace)
+            # Some routine to delete PLINK and summary stats etc.
+        },
+        all = {
+            disp("Cleaning up all pipeline files!")
+            unlink(prsWorkspace,recursive=TRUE,force=TRUE)
+            theResult <- lapply(theResult,function(x) {
+                attr(x,"workspace") <- NULL
+            })
+        }
+    )
+    
+    # If output is gwaslist and no parallelization, restore the original GDS 
+    # file location (otherwise already restored)
+    if (is.null(rc)) {
+        if (output == "gwalist") {
+            theResult <- lapply(theResult,function(x,g) {
+                gdsfile(x) <- g
+                return(x)
+            },gorig)
+        }
+        # Delete the copy from the workspace
+        unlink(gdest,force=TRUE)
+    }
+    
+    return(theResult)
+}
+
 .prsPipelineDenovo <- function(gwe,phenotype,covariates,pcs,npcs,trainSize,
     niter,filters,pcaMethod,imputeMissing,imputeMethod,gwaMethods,gwaCombine,
     glmOpts,rrblupOpts,statgenOpts,snptestOpts,plinkOpts,prsMethods,
@@ -698,9 +706,6 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
         iters <- niter
     else
         iters <- seq_len(niter)
-    
-    ## The RData file to save iteratively the growing result oject
-    #saveFile <- file.path(prsWorkspace,"denovo_iter_data.RData")
     
     # Get the GDS file for copying to subfolders if needed
     gorig <- gdsfile(gwe)
@@ -778,6 +783,19 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
         theTest <- .runPRSWorkerCreate(theTrain,theTest,phenotype,covariates,
             pcs,prsMethods,prsiceOpts,iterWspace,rc,logging)
         
+        # The theTest variable will be returned if output is "gwaslist", we
+        # need to supply the original effects and p-values
+        eff <- pv <- matrix(0,nrow(theTest),length(gwaMethods))
+        rownames(eff) <- rownames(pv) <- rownames(theTest)
+        colnames(eff) <- colnames(pv) <- colnames(pvalues(theTrain))
+        sf <- intersect(rownames(theTrain),rownames(theTest))
+        eff[sf,] <- effects(theTrain)[sf,,drop=FALSE]
+        pv[sf,] <- pvalues(theTrain)[sf,,drop=FALSE]
+        pcno <- ifelse(pcs,ifelse(.hasPcaCovariates(theTest),
+            ncol(pcaCovariates(theTest)),0),0)
+        effects(theTest,phenotype,covariates,pcno) <- eff
+        pvalues(theTest,phenotype,covariates,pcno) <- pv
+        
         # A temporary attribute to the GWASExperiment output to maintain the
         # workspace directory for evaluation. Will be removed if super clean
         attr(theTest,"workspace") <- iterWspace
@@ -789,27 +807,21 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
             # Restore original GDS
             if (!is.null(rc))
                 gdsfile(theTest) <- gorig
-            #theResult[[i]] <- theTest
             result <- theTest
         }
         else if (output == "summaries")
-            #theResult[[i]] <- list(
             result <- list(
                 baseIndex=trainIndex,
                 targetIndex=testIndex,
+                effects=effects(theTest),
                 betas=prsbetas(theTest),
+                npcs=pcno,
                 pr2=attr(theTest,"PR2")
             )
         
         # Remove copied GDS
         if (!is.null(rc))
             unlink(gdest,force=TRUE)
-        
-        ## Iteratively save the result on the root workspace to be able to
-        ## continue later in case of crash
-        #disp("\n----- Saving results up to iteration ",i," to ",saveFile,
-        #    "-----\n")
-        #save(theResult,file=saveFile)
         
         disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
         save(result,file=saveFile)
@@ -894,7 +906,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
             gdsfile(base) <- gdsfile(target) <- gdest
         }
         
-         # Base and target QC
+        # Base and target QC
         qcResult <- .localQc(base,target,filters,imputeMissing,pcs,
             pcaMethod,npcs,logging)
         base <- qcResult$base
@@ -908,21 +920,29 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
         safeguard <- Reduce("intersect",list(snpSelection,rownames(base),
             rownames(target)))
         if (length(safeguard) < length(snpSelection)) {
-            disp("  ",length(snpSelection) - length(safeguard)," SNPs not ",
-                "found in base data! Excluding...")
+            disp(length(snpSelection) - length(safeguard)," SNPs not found in ",
+                "base data! Excluding...")
             subBase <- base[safeguard,,drop=FALSE]
+            #subBase <- base
             subTarget <- target[safeguard,,drop=FALSE]
-            if (pcs) {
-                disp("  ...and recalculating PCs...")
-                pcno <- ncol(pcaCovariates(base))
-                subBase <- calcPcaCovar(subBase,method=pcaMethod,npc=pcno)
-                subTarget <- calcPcaCovar(subBase,method=pcaMethod,npc=pcno)
-            }
         }
         else {
-            subBase <- base
-            subTarget <- target
+            subBase <- base[snpSelection,,drop=FALSE]
+            #subBase <- base
+            subTarget <- target[snpSelection,,drop=FALSE]
         }
+        if (pcs) {
+            disp("Recalculating PCs...")
+            pcno <- ncol(pcaCovariates(base))
+            subBase <- calcPcaCovar(subBase,method=pcaMethod,npc=pcno)
+            subTarget <- calcPcaCovar(subTarget,method=pcaMethod,npc=pcno)
+        }
+        
+        # This approach may not work well, as some algorithms are potentially
+        # using SNP relationships internally (e.g. SNPTEST, or statgenGWAS)
+        ## Run basic GWAS on base to get coefficients (from one method for now)
+        #subBase <- .gwaForPrsReducedWorker(subBase,phenotype,covariates,pcs,
+        #   gwaMethod,gwaOpts,rc,logging)
         
         result <- .runPRSWorkerApply(subBase,subTarget,phenotype,covariates,
             pcs,iterWspace,rc,logging)
@@ -954,6 +974,150 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE) {
         
         return(result)
     },rc=rc,setseed=TRUE)
+    
+    return(theResult)
+}
+
+.prsPipelineValidate <- function(dnList,gwe,phenotype,covariates,pcs,
+    snpSelection,trainSize,niter,pcaMethod,gwaMethod,prsiceOpts,prsWorkspace,
+    logging,runId,dig,rc) {
+    # Do we continue a crashed/interrupted run?
+    if (length(niter) > 1)
+        iters <- niter
+    else
+        iters <- seq_len(niter)
+        
+    # Get the GDS file for copying to subfolders if needed
+    gorig <- gdsfile(gwe)
+        
+    # The actual worker
+    theResult <- cmclapply(iters,function(i,D) {
+        pad <- paste0(rep("0",dig - nchar(as.character(i))),collapse="")
+        iterWspace <- file.path(prsWorkspace,paste0(runId,"_validate_",pad,i))
+        dir.create(iterWspace,recursive=TRUE,showWarnings=FALSE)
+        
+        # Record progress
+        .recordProgress(i,iterWspace)
+        
+        # Local result saving for restoring after possible crash
+        saveFile <- file.path(iterWspace,"validate_result.RData")
+        
+        if (logging == "file") {
+            # Print something basic before sinking
+            ilf <- file.path(prsWorkspace,paste0(runId,"_iter_",pad,i,".log"))
+            disp("Executing validation pipeline iteration ",i,", log is at ",
+                ilf)
+            fh <- file(ilf,open="wt")
+            sink(fh,type="output")
+            sink(fh,type="message")
+        }
+        else
+            disp("\n")
+        
+        disp("==============================================================")
+        disp("-----> Validation pipeline iteration ",i)
+        disp("==============================================================\n")
+        
+        # Run PRS with a safeguard for possibly filtered SNPs
+        dnTmp <- D[[i]]
+        
+        # If dnList is a list of GWASExperiments/targets - OK, else we must
+        # retrieve the genotypes from the total object.
+        if (!is(dnTmp,"GWASExperiment")) { # Should be a summary list
+            dnObj <- gwe[,dnTmp$targetIndex,drop=FALSE]
+            effs <- dnTmp$effects
+            betas <- dnTmp$betas
+            pcno <- dnTmp$npcs
+            if (is.null(pcno))
+                pcno <- ifelse(.hasPcaCovariates(gwe),
+                    ncol(pcaCovariates(gwe)),0)
+            #colnames(betas)[colnames(betas)=="prsice"] <- gwaMethod
+        }
+        else { # Is already target (may have PCs)
+            dnObj <- dnTmp
+            effs <- effects(dnObj)
+            betas <- prsbetas(dnObj)
+            pcno <- ifelse(.hasPcaCovariates(dnObj),
+                    ncol(pcaCovariates(dnObj)),0)
+            #colnames(betas)[colnames(betas)=="prsice"] <- gwaMethod
+        }
+        
+        # Copy the gds file in the iteration workspace and change training and
+        # test objects metadata, if running in parallel
+        if (!is.null(rc)) {
+            gdest <- file.path(iterWspace,basename(gorig))
+            file.copy(from=gorig,to=gdest,overwrite=TRUE)
+            gdsfile(dnObj) <- gdest
+        }
+        
+        safeguard <- Reduce("intersect",list(snpSelection,rownames(dnObj),
+            rownames(betas)))
+        if (length(safeguard) < length(snpSelection))
+            disp(length(snpSelection) - length(safeguard)," SNPs not found in ",
+                "target data! Excluding...")
+        else
+            safeguard <- snpSelection
+        
+        # Construct the effects of the reduced object
+        feff <- effs[safeguard,gwaMethod,drop=FALSE]
+        if ("lassosum" %in% colnames(betas)) {
+            # Lassosum always has > SNPs than PRSice
+            notInPrsice <- rownames(betas)[which(betas[,"prsice"] == 0)]
+            inLasso <- rownames(betas)[which(betas[,"lassosum"] != 0)]
+            toReplace <- intersect(safeguard,intersect(inLasso,notInPrsice))
+            feff[toReplace,gwaMethod] <- betas[toReplace,"lassosum"]
+        }
+        # Some zero effects may remain due to aggregation
+        feff <- feff[feff[,1] != 0,,drop=FALSE]
+        # The final safeguard
+        subObj <- dnObj[rownames(feff),,drop=FALSE]
+        
+        #pcno <- 0
+        if (pcs) {
+            disp("Recalculating PCs...")
+            #if (is(dnTmp,"GWASExperiment"))
+            #    pcno <- ifelse(.hasPcaCovariates(dnObj),
+            #        ncol(pcaCovariates(dnObj)),0)
+            #else
+            #    pcno <- ifelse(.hasPcaCovariates(gwe),
+            #        ncol(pcaCovariates(gwe)),0)
+            subObj <- calcPcaCovar(subObj,method=pcaMethod,npc=pcno)
+            pcno <- ncol(pcaCovariates(subObj))
+        }
+        
+        
+        effects(subObj,phenotype,covariates,pcno) <- feff
+        
+        result <- .runPRSWorkerApply(subObj,subObj,phenotype,covariates,
+            pcs,iterWspace,rc,logging)
+        
+        # A temporary attribute to the GWASExperiment output to maintain the
+        # workspace directory for evaluation. Will be removed if super clean
+        attr(result,"workspace") <- iterWspace
+        # And also keep the PRSice R2 triplet
+        attr(result,"PR2") <- .readPrsiceR2(iterWspace)
+        
+        # Remove copied GDS
+        if (!is.null(rc))
+            unlink(gdest,force=TRUE)
+        
+        disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
+        save(result,file=saveFile)
+        
+        disp("==============================================================")
+        
+        if (logging == "file") {
+            sink(type="message")
+            sink(type="output")
+        }
+        else
+            disp("\n")
+        
+        # Record progress
+        .recordProgress(i,iterWspace,TRUE)
+        
+        return(result)
+    },dnList,rc=rc,setseed=TRUE)
     
     return(theResult)
 }
@@ -1195,6 +1359,48 @@ harvestR2 <- function(obj) {
     })
 }
 
+.isDenovoWorkspace <- function(d) {
+    furtherCheck <- ifelse(!is.null(d) && is.character(d) && dir.exists(d),
+        TRUE,FALSE)
+    if (furtherCheck) {
+        checks <- logical(3)
+        # Does it contain individual directories with the _denovo_ pattern?
+        sdirs <- dir(d,pattern="_denovo_",full.names=TRUE)
+        checks[1] <- length(sdirs) > 0
+        # Does it contain a params.json file?
+        checks[2] <- file.exists(file.path(d,"params.json"))
+        # Is a complete run?
+        if (checks[2]) {
+            prm <- fromJSON(file.path(d,"params.json"))
+            nAsked <- prm$niter
+            nDone <- length(unlist(lapply(seq_along(sdirs),function(i,s) {
+                f <- file.path(s[i],".prog.json")
+                if (!file.exists(f)) # Very unlikely as it's created 1st thing
+                    return(NULL)
+                js <- fromJSON(f)
+                if (js$done)
+                    return(js$iter)
+            },sdirs)))
+            checks[3] <- nAsked == nDone
+        }
+        return(all(checks))
+    }
+    else
+        return(furtherCheck)
+}
+
+.isPreviousDenovoList <- function(x) {
+    if (!is.list(x))
+        return(FALSE)   
+    if (is(x[[1]],"GWASExperiment") && !.isEmpty(effects(x[[1]]))
+        && !.isEmpty(prsbetas(x[[1]])))
+        return(TRUE)
+    if (is(x[[1]],"list") && !.isEmpty(x[[1]]$effects)
+        && !.isEmpty(x[[1]]$betas))
+        return(TRUE)
+    return(FALSE)
+}
+
 .exitFromSink <- function(s) {
     if (s == "file") {
         sink(type="message")
@@ -1202,7 +1408,17 @@ harvestR2 <- function(obj) {
     }
 }
 
-.prettyLogOptions <- function() {
+.prettyLogOptions <- function(callArgs,what=c("prisma","pipeline")) {
+    what <- what[1]
+    if (what == "prisma")
+        allArgs <- .getPrismaMainDefaults()
+    else if (what == "pipeline")
+        allArgs <- .getPrsPipelineDefaults()
+    
+    # For upstream
+    #thisCall <- as.list(match.call())[-1]
+    
+    
     # Display initialization report
     disp(strftime(Sys.time()),": Data processing started...\n")
     ############################################################################
@@ -1328,4 +1544,72 @@ harvestR2 <- function(obj) {
     if ("stats" %in% exportWhat)
         disp("Output statistics: ",paste(exportStats,collapse=", "),"\n")
     ############################################################################
+}
+
+.getPrismaMainDefaults <- function() {
+    return(list(
+        covariates=NULL,
+        pcs=FALSE,
+        npcs=0,
+        trainSize=0.8,
+        niter=10,
+        quantiles=c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+        dropSameQuantiles=TRUE,
+        aggregation="intersection",
+        filters=getDefaults("filters"),
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        imputeMethod="single",
+        gwaMethods="glm",
+        gwaCombine="simes",
+        glmOpts=getDefaults("glm"),
+        rrblupOpts=getDefaults("rrblup"),
+        statgenOpts=getDefaults("statgen"),
+        snptestOpts=getDefaults("snptest"),
+        plinkOpts=getDefaults("plink"),
+        prsMethods=c("lassosum","prsice"),
+        lassosumOpts=getDefaults("lassosum"),
+        prsiceOpts=getDefaults("prsice"),
+        prsWorkspace=NULL,
+        cleanup=c("none","intermediate","all"),
+        logging=c("screen","file"),
+        output=c("gwaslist","summaries"),
+        continue=FALSE,
+        useDenovoWorkspace=NULL,
+        runId=NULL,
+        rc=NULL
+    ))
+}
+
+.getPrsPipelineDefaults <- function() {
+    return(list(
+        covariates=NULL,
+        pcs=FALSE,
+        npcs=0,
+        snpSelection=NULL,
+        trainSize=0.8,
+        niter=10,
+        filters=getDefaults("filters"),
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        imputeMethod="single",
+        gwaMethods="glm",
+        gwaCombine="simes",
+        glmOpts=getDefaults("glm"),
+        rrblupOpts=getDefaults("rrblup"),
+        statgenOpts=getDefaults("statgen"),
+        snptestOpts=getDefaults("snptest"),
+        plinkOpts=getDefaults("plink"),
+        prsMethods=c("lassosum","prsice"),
+        lassosumOpts=getDefaults("lassosum"),
+        prsiceOpts=getDefaults("prsice"),
+        prsWorkspace=NULL,
+        cleanup="intermediate",
+        logging="screen",
+        output="gwaslist",
+        continue=FALSE,
+        useDenovoWorkspace=NULL,
+        runId=NULL,
+        rc=NULL
+    ))
 }

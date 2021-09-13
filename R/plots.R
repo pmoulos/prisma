@@ -1,9 +1,58 @@
+.evalPrismaParts <- function(dn,qus,r2=c("adjusted","full","null"),
+    test=c("empirical","wilcoxon","ttest")) {
+    
+    # Inputs    
+    r2 <- r2[1]
+    test <- test[1]
+    sel <- ifelse(r2=="adjusted","r2p",ifelse(r2=="full","r2m","r2n"))
+    
+    # Plot/selection data
+    baseline <- .getR2(dn)[,sel]
+    qu <- lapply(qus,function(x,s) {
+        return(x[,s])
+    },sel)
+    
+    # Siginificance of the result
+    switch(test,
+        empirical = {
+            p <- unlist(lapply(qu,function(x,b) {
+                b <- .subsampleBase(x,b)
+                return(length(which(x < b))/length(b))
+            },baseline))
+        },
+        wilcoxon = {
+            p <- unlist(lapply(qu,function(x,b) {
+                if (length(b) > 2*length(x))
+                    b <- .subsampleBase(x,b)
+                h <- wilcox.test(x,b,alternative="greater")
+                return(h$p.value)
+            },baseline))
+        },
+        ttest = {
+            p <- unlist(lapply(qu,function(x,b) {
+                if (length(b) > 2*length(x))
+                    b <- .subsampleBase(x,b)
+                h <- t.test(x,b,alternative="greater")
+                return(h$p.value)
+            },baseline))
+        }
+    )
+    
+    gQuanDens <- .plotQuantileDensities(baseline,qu)
+    gQuanSel <- .plotQuantileEvaluation(qu,p,baseline)
+    
+    return(list(density=gQuanDens,selection=gQuanSel))
+}
+
 .plotQuantileEvaluation <- function(qu,p,b) {
     r2 <- unlist(lapply(qu,mean))
     s <- unlist(lapply(qu,sd))
     p <- .zeroFix(p,.Machine$double.eps)
     logp <- -log10(p)
-    normP <- logp/max(logp)
+    if (max(logp) == 0)
+        normP <- rep(0,length(logp))
+    else
+        normP <- logp/max(logp)
     names(r2) <- names(s) <- 
         paste0(100*suppressWarnings(as.numeric(gsub("Q","",names(qu)))),"%")
 
@@ -12,15 +61,29 @@
         PR2=r2,
         SD=s,
         Quantile=names(r2),
-        P=.scaleP2R(normP,min(normP),max(normP),min(r2),max(r2))
+        P=.scaleP2R(normP,min(normP-s),max(normP+s),min(r2-s),max(r2+s)),
+        Ptext=as.character(round(logp,3))
     )
+     
+    #breaksR <- pretty(c(ggdata$PR2-s,ggdata$PR2+s))
+    if (max(b) > max(ggdata$PR2+s)) {
+        breaksR <- pretty(c(ggdata$PR2-s,b+sd(b)))
+        labelsR <- paste0(round(100*breaksR,digits=1),"%")
+        breaksP <- pretty(c(ggdata$P,ggdata$P))
+        tmp <- normP*max(logp)
+        labelsP <- round(seq(min(tmp),max(tmp),length.out=length(breaksP)),
+            digits=1)
+    }
+    else {
+        breaksR <- pretty(c(b-sd(b),ggdata$PR2-s,ggdata$PR2+s,b+sd(b)))
+        labelsR <- paste0(round(100*breaksR,digits=1),"%")
+        breaksP <- pretty(c(ggdata$P,ggdata$P))
+        tmp <- normP*max(logp)
+        labelsP <- round(seq(min(tmp),max(tmp),length.out=length(breaksP)),
+            digits=1)
+    }
     
-    breaksR <- pretty(ggdata$PR2)
-    labelsR <- paste0(round(100*breaksR,digits=1),"%")
-    breaksP <- pretty(ggdata$P)
-    tmp <- normP*max(logp)
-    labelsP <- round(seq(min(tmp),max(tmp),length.out=length(labelsR)))
-
+    
     g <- ggplot(ggdata,aes(x=Quantile,y=PR2)) + 
         geom_bar(stat="identity",fill="#2A9D8F",width=0.6) +
         geom_errorbar(aes(ymin=PR2-SD,ymax=PR2+SD),width=0.1,colour="#264653") +
@@ -32,9 +95,10 @@
         geom_point(aes(x=Index,y=P),size=3,colour="#E76F51") +
         geom_line(aes(x=Index,y=P),linetype="dashed",colour="#E76F51") +
         scale_y_continuous(name=expression("PRSice adjusted mean R"^"2"),
-            breaks=breaksR,labels=labelsR,
+            breaks=breaksR,labels=labelsR,limits=c(min(breaksR),max(breaksR)),
             sec.axis=sec_axis(~ . *1,name=expression("-log"[10]*"(p-value)"),
             breaks=breaksP,labels=labelsP)) +
+        #geom_text(aes(x=Index,y=P,label=Ptext),colour="#E76F51") +
         xlab("\nPRS candidates frequency quantile cutoff") +
         theme_bw() + 
         theme(
