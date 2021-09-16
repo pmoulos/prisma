@@ -1,5 +1,3 @@
-#! Add betas accessor to GWASExperiment (maybe after PRSice)
-
 # More arguments to come, like PRS formula like in PRSice etc.
 PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
     # Some validation here
@@ -10,7 +8,8 @@ PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
     prs <- X[,snps$variant_id] %*% snps[snps$variant_id,"effect_weight"]
 }
 
-.prs <- function(g,e,s) {
+.prs <- function(g,e,s=c("avg","sum","std")) {
+    s <- s[1]
     switch(s,
         avg = {
             return((g %*% e)/length(e))

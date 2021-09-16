@@ -326,7 +326,8 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
         },error=function(e) {
             disp("Caught error: ",e$message)
             disp("Removing penalizing factor (lambda=0)")
-            return(summary(islasso(f,data=dat,family=fam,unpenalized=covs,lambda=1,...)))
+            return(summary(islasso(f,data=dat,family=fam,unpenalized=covs,
+                lambda=1,...)))
         },finally="")
         return(ret)
     }

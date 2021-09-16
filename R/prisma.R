@@ -281,11 +281,12 @@ prsPipeline <- function(
     rc=NULL
 ) {
     #TODO: Log options in effect (or all), like in metaseqR
-    #TODO: Check mutual exclusive trainSize. useBeta etc.
-    # Finally: useBeta -> useWorkspace
-    # If provided, an object will be harvested and fed to the 1st version of
-    # the .prsPipelineValidate
-    
+    #TODO: Check mutual exclusive or warn
+    #      e.g. trainSize and niter is ignored when useDenovoWorkspace
+    # snpSelection may be:
+    # i) a vector of SNP names, in this case individual run effects are used
+    # ii) a data frame output from aggregatePrsMarkers, in this case, the
+    # effects present in this data frame are used
     
     # Can we run a GWA?
     .canRunGwa(gwe)
@@ -441,14 +442,30 @@ prsPipeline <- function(
             "parallel runs.",call.=FALSE,immediate.=TRUE)
         logging <- "file"
     }
-    # If a SNP selection is provided, output cannot be a GWASExperiment list
-    if (!is.null(snpSelection) && output == "gwaslist") {
-        warning("A list of GWASExperiment-s requested as output but a set ",
-            "of markers was provided! Switching to 'summaries'...",call.=FALSE,
-            immediate.=TRUE)
-        output <- "summaries"
+    # Check the format of SNP selection and also compatible output format
+    if (!is.null(snpSelection)) {
+        # Verify what was provided
+        # i) a character vector or a data.frame
+        if (!is.character(snpSelection) && !is.data.frame(snpSelection))
+            stop("When provided, snpSelection must be either a character ",
+                "vector (SNP names to use) or a data.frame from the ",
+                "aggregatePrsMarkers function!")
+        # ii) if data.frame, must be output from aggregatePrsMarkers or an
+        # acceptable subset (containing snps and effects)
+        if (is.data.frame(snpSelection) && !("effect" %in% names(snpSelection)))
+            stop("When snpSelection is a data.frame, it must have at least ",
+                "a column named effects. Please provide the output of ",
+                "the aggregatePrsMarkers function directly.")
+        
+        # Output cannot be a GWASExperiment list
+        if (output == "gwaslist") {
+            warning("A list of GWASExperiment-s requested as output but a set ",
+                "of markers was provided! Switching to 'summaries'...",
+                call.=FALSE,immediate.=TRUE)
+            output <- "summaries"
+        }
     }
-    
+        
     # Check if the filters are given properly
     filters <- .checkFilters(filters)
     
@@ -531,7 +548,9 @@ prsPipeline <- function(
 
 # TODO: Average effects! - Add one more column to out with averaged effect for
 # each SNP... M4BU
-aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
+aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
+    assoc=c("auto","glm","rrblup","statgen","snptest","plink","lasso"),
+    avgfun=c("mean","median","weight")) {
     # Check if prsbetas non-empty everywhere
     isGwaExp <- FALSE
     if (is(gwaList[[1]],"GWASExperiment")) {
@@ -554,11 +573,34 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
     
     # Argument validation
     mode <- mode[1]
+    assoc <- assoc[1]
+    avgfun <- avgfun[1]
     .checkTextArgs("Aggregation mode (mode)",mode,c("intersect","union"),
         multiarg=FALSE)
+    .checkTextArgs("Association test to choose from (assoc)",assoc,
+        c("auto","glm","rrblup","statgen","snptest","plink","lasso"),
+        multiarg=FALSE)
+    .checkTextArgs("Effect averaging method (avgfun)",avgfun,
+        c("mean","median","weight"),multiarg=FALSE)
     .checkNumArgs("Quantile cutoff",qcut,"numeric",c(0,1),"both")
     
-    # TODO: Argument to control which association to choose from?
+    # Select which effects to use (until all)
+    if (isGwaExp)
+        tmpe <- effects(gwaList[[1]])
+    else
+        tmpe <- gwaList[[1]]$effects
+    if (assoc != "auto" && !(assoc %in% names(tmpe))) {
+        warning("The requested association method (",assoc,") cannot be ",
+            "found in the imput object! Switching to auto...",
+            immediate.=TRUE)
+        assoc <- "auto"     
+    }
+    if (assoc == "auto") {
+        pri <- .getGwaLinArgPrior()
+        if (any(pri %in% colnames(tmpe)))
+            assoc <- colnames(tmpe)[which(pri %in% colnames(tmpe))[1]]
+    }
+    
     preCandidates <- lapply(gwaList,function(x,m,ge) {
         if (isGwaExp)
             b <- prsbetas(x)
@@ -573,8 +615,40 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9) {
     freq <- table(prsCandidates)
     goods <- names(freq)[freq >= floor(quantile(freq,qcut))]
     
+    # Average effects for all?
+    
+    allEffs <- do.call("cbind",lapply(gwaList,function(x) {
+        if (isGwaExp)
+            e <- effects(x)[,assoc]
+        else
+            e <- x$effects[,assoc]
+        eff <- numeric(length(freq))
+        names(eff) <- names(freq)
+        curr <- intersect(names(e),names(freq))
+        eff[curr] <- e[curr]
+        return(eff)
+    }))
+    if (avgfun %in% c("mean","median"))
+        avgEffs <- apply(allEffs,1,avgfun)
+    else { # Weighting
+        r1 <- .getR2(gwaList)[,"r2p"]
+        #w <- sqrt(1/r1)
+        r2 <- 1-r1
+        w <- (sum(r2)/r2)/sum(sum(r2)/r2)
+        #w <- r2/sum(r2)
+        #hlp <- sign(diff(rev(r1)))
+        #s <- c(sign(diff(r1)),hlp[1])
+        #s[s==-1] <- 0.5
+        #s[s==1] <- 1.5
+        #w <- w + s
+        avgEffs <- apply(allEffs,1,function(x,w) {
+            return(sum(x*w))
+        },w)
+    }
+    
     out <- as.data.frame(freq[goods])
     names(out) <- c("snp","freq")
+    out$effect <- avgEffs[goods]
     rownames(out) <- out$snp
     return(out[order(out$freq,decreasing=TRUE),,drop=FALSE])
 }
@@ -916,6 +990,10 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         base <- .gwaForPrsReducedWorker(base,phenotype,covariates,pcs,gwaMethod,
             gwaOpts,rc,logging)
             
+        # If snpSelection is a data.frame, use its rownames
+        if (is.data.frame(snpSelection))
+            snpSelection <- rownames(snpSelection)
+        
         # Run PRS with a safeguard for possibly filtered SNPs
         safeguard <- Reduce("intersect",list(snpSelection,rownames(base),
             rownames(target)))
@@ -1050,6 +1128,14 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
             gdsfile(dnObj) <- gdest
         }
         
+        # Check of snpSelection has been performed upstream
+        hasAvgEffs <- FALSE
+        if (is.data.frame(snpSelection)) {
+            avgEffs <- snpSelection[,"effect",drop=FALSE]
+            snpSelection <- rownames(snpSelection)
+            hasAvgEffs <- TRUE
+        }
+        
         safeguard <- Reduce("intersect",list(snpSelection,rownames(dnObj),
             rownames(betas)))
         if (length(safeguard) < length(snpSelection))
@@ -1059,13 +1145,19 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
             safeguard <- snpSelection
         
         # Construct the effects of the reduced object
-        feff <- effs[safeguard,gwaMethod,drop=FALSE]
+        if (hasAvgEffs) {
+            feff <- as.matrix(avgEffs[safeguard,,drop=FALSE])
+            colnames(feff) <- gwaMethod
+        }
+        else
+            feff <- effs[safeguard,gwaMethod,drop=FALSE]
+            
         if ("lassosum" %in% colnames(betas)) {
             # Lassosum always has > SNPs than PRSice
             notInPrsice <- rownames(betas)[which(betas[,"prsice"] == 0)]
             inLasso <- rownames(betas)[which(betas[,"lassosum"] != 0)]
             toReplace <- intersect(safeguard,intersect(inLasso,notInPrsice))
-            feff[toReplace,gwaMethod] <- betas[toReplace,"lassosum"]
+            feff[toReplace,1] <- betas[toReplace,"lassosum"]
         }
         # Some zero effects may remain due to aggregation
         feff <- feff[feff[,1] != 0,,drop=FALSE]
@@ -1084,7 +1176,6 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
             subObj <- calcPcaCovar(subObj,method=pcaMethod,npc=pcno)
             pcno <- ncol(pcaCovariates(subObj))
         }
-        
         
         effects(subObj,phenotype,covariates,pcno) <- feff
         
@@ -1410,10 +1501,16 @@ harvestR2 <- function(obj) {
 
 .prettyLogOptions <- function(callArgs,what=c("prisma","pipeline")) {
     what <- what[1]
-    if (what == "prisma")
+    if (what == "prisma") {
         allArgs <- .getPrismaMainDefaults()
-    else if (what == "pipeline")
+        allArgs[names(callArgs)] <- callArgs
+        .prettyLogOptionsPrisma(allArgs)
+    }
+    else if (what == "pipeline") {
         allArgs <- .getPrsPipelineDefaults()
+        allArgs[names(callArgs)] <- callArgs
+        .prettyLogOptionsPrs(allArgs)
+    }
     
     # For upstream
     #thisCall <- as.list(match.call())[-1]
