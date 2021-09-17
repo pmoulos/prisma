@@ -1,5 +1,76 @@
-prsRegress <- function(snpSelection,gwe,response,covariates=NULL,pcs=FALSE,
-    step=10,family=NULL,rc=NULL,...) {
+selectPrs <- function(metrics,snpSelection,gwe,
+    crit=c("prs_r2","prs_pvalue","prs_aic")) {
+    if (!requireNamespace("akmedoids"))
+        stop("R package akmedoids is required!")
+    
+    if (missing(gwe) || !is(gwe,"GWASExperiment"))
+        stop("gwe must be provided and be a GWASExperiment object!")
+    
+    crit <- crit[1]
+    .checkTextArgs("PRS selection criterion (crit)",crit,
+        c("prs_r2","prs_pvalue","prs_aic"),multiarg=TRUE)
+    
+    # TODO: Some more checks for snpSelection and metrics
+    if (is.unsorted(rev(snpSelection$freq)))
+        snpSelection <- 
+            snpSelection[order(snpSelection$freq,decreasing=TRUE),,drop=FALSE]
+    
+    x <- metrics$n_snp
+    switch(crit,
+        prs_r2 = {
+            y <- metrics$prs_R2
+        },
+        prs_pvalue = {
+            y <- -log10(metrics$prs_pvalue)
+        },
+        prs_aic = {
+            y <- -metrics$prs_aic
+        }
+    )
+    
+    # Now, find elbow...
+    E <- elbow_point(x,y)
+    # ...and get the SNPs as well as other metrics
+    disp("The optimal number of markers for PRS based on ",crit," is ",
+        round(E$x)," at ",crit,"=",round(E$y,5))
+    # Make the selection
+    theSelection <- snpSelection[seq_len(round(E$x)),,drop=FALSE]
+    
+    # Construct (the output
+    obj <- gwe[rownames(theSelection),,drop=FALSE]
+    df <- as.data.frame(gfeatures(obj))
+    # Basic info
+    out <- df[,c("chromosome","position","snp.name","allele.1","allele.2")]
+    # Attach effects
+    out$effect_weight <- theSelection$effect
+    out$OR <- exp(out$effect_weight)
+    out$locus_name <- rep(NA,nrow(out))
+    
+    # Final alignment with the external API fetch outcomes from PGS catalog
+    names(out)[c(3,4,5)] <- c("variant_id","risk_allele","reference_allele")
+    out <- out[,c("chromosome","position","variant_id","risk_allele",
+        "reference_allele","locus_name","effect_weight","OR")]
+    gb <- genome(obj)
+    if (is.null(gb))
+        gb <- "nr"
+    out$asm <- rep(gb,nrow(out))
+    
+    # Attach also the frequencies - revisit this later
+    out$freq <- theSelection$freq
+    
+    return(out)
+}
+
+# Function to find R2 after selection over each split so it can be used for
+# p-value
+someName <- function(finalSelection,gweList,response,covariates=NULL,
+    pcs=FALSE,rc=NULL) {
+    
+    # Again two cases, gweList is a summaries list or a full GWASExperiment
+}
+
+prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
+    pcs=FALSE,step=10,family=NULL,rc=NULL,...) {
     .canRunGwa(gwe)
     
     # Construct the glm data frame, check if response and covariate names are
@@ -45,41 +116,107 @@ prsRegress <- function(snpSelection,gwe,response,covariates=NULL,pcs=FALSE,
     # the snpSelection data frame and construct a PRS using the effects there
     indexList <- .makeStepList(step,nrow(snpSelection))
     
-    
-    
-    # Then regress with it
-    
     disp("\nRegressing with GLM")
     disp("Trait(s)    : ",response)
     disp("Covariate(s): ",paste0(covariates,collapse=", "))
     disp("Regression  : ",family," (",fpredHelper,")")
     disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
     
-    metricsList <- cmclapply(indexList,function(i,p,r,f,sdf,snps,...) {
+    # Full model   : phenoptype ~ covariates + PRS
+    # Reduced model: phenoptype ~ covariates
+    # Null model   : phenoptype ~ 1
+    # We need to collect the following metrics:
+    # - Number of SNPs used
+    # - R^2 of the full model 
+    # - R^2 of the reduced model
+    # - R^2 difference (adjusted in PRSice) of full - reduced models
+    # - p-value of the full model (F test of full against null)
+    # - p-value of the reduced model (F test of reduced against null)
+    # - p-value of the reduced against the full (F test)
+    # - AIC of the full model
+    # - AIC of the reduced model
+    # - AIC of the difference (full - reduced), if < 0 then full better
+    #https://stackoverflow.com/questions/17674148/one-p-value-for-glm-model
+    
+    # The reduced model
+    dat <- p
+    ii <- which(colnames(dat)==response)
+    colnames(dat) <- make.names(colnames(dat))
+    covs <- colnames(dat)[-ii]
+    cres <- colnames(dat)[ii]
+    fr <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    disp("Reduced model formula is: ",level="full")
+    disp(show(fr),level="full")
+    redFit <- glm(fr,data=dat,family=family,...)
+    redModel <- summary(redFit)
+    
+    # The null model
+    fn <- as.formula(paste(cres,1,sep="~"))
+    disp("Null model formula is: ",level="full")
+    disp(show(fn),level="full")
+    nullFit <- glm(fn,data=dat,family=family,...)
+    nullModel <- summary(nullFit)
+    
+    # Stats for later use
+    redR2 <- 1 - redModel$deviance/redModel$null.deviance
+    redP <- anova(nullFit,redFit,test="F")[["Pr(>F)"]][2]
+    
+    metricsList <- cmclapply(indexList,function(i,p,r,f,sdf,snps,rf,nf,...) {
         snpset <- sdf[i,,drop=FALSE]
-        if (!is.null(rownames(snpset)))
-            n <- rownames(snpset)
-        else
-            n <- seq_along(nrow(snpset))
+        n <- rownames(snpset)
         
         disp("  testing PRS with SNPs from ",n[1]," to ",n[length(n)])
         thePrs <- .prs(snps[,n],sdf[n,"effect"])
         dat <- cbind(p,thePrs)
         colnames(dat)[ncol(dat)] <- "PRS"
         
-        tmpFull <- .gwaGlmWorker("glm",dat,r,f)
-        tmpNull <- .gwaGlmWorker("glm",p,r,f)
+        ii <- which(colnames(dat)==r)
+        colnames(dat) <- make.names(colnames(dat))
+        covs <- colnames(dat)[-ii]
+        cres <- colnames(dat)[ii]
+        fm <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+        disp("Full model formula is: ",level="full")
+        disp(show(fm),level="full")
+        #fullFit <- glm(fm,data=dat,family=f,...)
+        fullFit <- glm(fm,data=dat,family=f)
+        fullModel <- summary(fullFit)
         
-        r2Full <- 1 - tmpFull$deviance/tmpFull$null.deviance
-        r2Null <- 1 - tmpNull$deviance/tmpNull$null.deviance
-        aicFull <- tmpFull$aic
-        aicNull <- tmpNull$aic
+        # Number of SNPs
+        nsnp <- length(n)
         
-        # Calculate p-value
-#https://stats.stackexchange.com/questions/129958/glm-in-r-which-pvalue-represents-the-goodness-of-fit-of-entire-model
+        # - R^2 of the full model
+        fullR2 <- 1 - fullModel$deviance/fullModel$null.deviance
         
-
-    },p,response,family,sdf,snps,...,rc=rc)
+        # - p-value of the full model (F test of full against null)
+        tmp <- anova(nf,fullFit,test="F")
+        fullP <- tmp[["Pr(>F)"]][2]
+        
+        # - p-value of the reduced against the full (F test)
+        tmp <- anova(rf,fullFit,test="F")
+        diffP <- tmp[["Pr(>F)"]][2]
+        
+        # - AIC of the full model
+        fullAIC <- fullModel$aic
+        
+        return(c(
+            n_snp=nsnp,
+            full_R2=fullR2,
+            full_pvalue=fullP,
+            prs_pvalue=diffP,
+            full_aic=fullAIC
+        ))
+    },p,response,family,sdf,snps,redFit,nullFit,rc=rc)
+    
+    # Construct final metrics matrix
+    metrics <- as.data.frame(do.call("rbind",metricsList))
+    metrics$reduced_R2 <- rep(redR2,nrow(metrics))
+    metrics$prs_R2 <- metrics$full_R2 - metrics$reduced_R2
+    metrics$reduced_pvalue <- rep(redP,nrow(metrics))
+    metrics$reduced_aic <- rep(redModel$aic,nrow(metrics))
+    metrics$prs_aic <- metrics$full_aic - metrics$reduced_aic
+    
+    # data frame with metric
+    return(metrics)
 }
 
 .makeStepList <- function(step,N) {
@@ -93,10 +230,28 @@ prsRegress <- function(snpSelection,gwe,response,covariates=NULL,pcs=FALSE,
     if (mo != 0)
         last <- seq_len(N)
     
-    return(c(indexList,last))
+    return(c(indexList,list(last)))
 }
 
-
-
-
-
+#~ .evalGlmWorker <- function(dat,res,red,fam,...) {
+#~     ii <- which(colnames(dat)==res)
+#~     jj <- which(colnames(dat)==red)
+#~     colnames(dat) <- make.names(colnames(dat))
+#~     covs <- colnames(dat)[-ii]
+#~     covsRed <- colnames(dat)[-c(ii,jj)]
+#~     cres <- colnames(dat)[ii]
+#~     ff <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+#~     fr <- as.formula(paste(cres,paste0(covsRed,collapse="+"),sep="~"))
+#~     fn <- as.formula(paste(cres,1,sep="~"))
+#~     disp("Full model formula is: ",level="full")
+#~     disp(show(ff),level="full")
+#~     disp("Reduced model formula is: ",level="full")
+#~     disp(show(fr),level="full")
+#~     disp("Null model formula is: ",level="full")
+#~     disp(show(fn),level="full")
+#~     return(list(
+#~         full=glm(ff,data=dat,family=fam,...),
+#~         reduced=glm(fr,data=dat,family=fam,...),
+#~         null=glm(fn,data=dat,family=fam,...)
+#~     ))
+#~ }
