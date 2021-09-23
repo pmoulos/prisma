@@ -1,10 +1,10 @@
-.evalPrismaParts <- function(dn,qus,r2=c("adjusted","full","null"),
+.evalPrismaParts <- function(dn,qus,r2=c("r2_adj","r2_full"),
     test=c("empirical","wilcoxon","ttest")) {
     
-    # Inputs    
+    # Inputs
     r2 <- r2[1]
     test <- test[1]
-    sel <- ifelse(r2=="adjusted","r2p",ifelse(r2=="full","r2m","r2n"))
+    sel <- ifelse(r2=="r2_adj","r2p","r2m")
     
     # Plot/selection data
     baseline <- .getR2(dn)[,sel]

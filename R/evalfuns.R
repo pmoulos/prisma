@@ -61,14 +61,6 @@ selectPrs <- function(metrics,snpSelection,gwe,
     return(out)
 }
 
-# Function to find R2 after selection over each split so it can be used for
-# p-value
-someName <- function(finalSelection,gweList,response,covariates=NULL,
-    pcs=FALSE,rc=NULL) {
-    
-    # Again two cases, gweList is a summaries list or a full GWASExperiment
-}
-
 prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     pcs=FALSE,step=10,family=NULL,rc=NULL,...) {
     .canRunGwa(gwe)
@@ -81,7 +73,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     covariates <- chResCov$cvs
     
     # Reduce the phenotypes for testing and check GLM call integrity
-    p <- p[,c(response,covariates)]
+    p <- p[,c(response,covariates),drop=FALSE]
     # We must ensure that if binomial requested, res is 0-1 and binary
     if (!is.null(family)) {
         family <- family[1]
@@ -139,18 +131,23 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     #https://stackoverflow.com/questions/17674148/one-p-value-for-glm-model
     
     # The reduced model
+    disp("Creating the reduced model")
     dat <- p
     ii <- which(colnames(dat)==response)
     colnames(dat) <- make.names(colnames(dat))
     covs <- colnames(dat)[-ii]
     cres <- colnames(dat)[ii]
-    fr <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    if (length(covs) > 0)
+        fr <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    else
+        fr <- as.formula(paste(cres,1,sep="~"))
     disp("Reduced model formula is: ",level="full")
     disp(show(fr),level="full")
     redFit <- glm(fr,data=dat,family=family,...)
     redModel <- summary(redFit)
     
     # The null model
+    disp("Creating the null model")
     fn <- as.formula(paste(cres,1,sep="~"))
     disp("Null model formula is: ",level="full")
     disp(show(fn),level="full")
@@ -161,6 +158,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     redR2 <- 1 - redModel$deviance/redModel$null.deviance
     redP <- anova(nullFit,redFit,test="F")[["Pr(>F)"]][2]
     
+    disp("Testing full models")
     metricsList <- cmclapply(indexList,function(i,p,r,f,sdf,snps,rf,nf,...) {
         snpset <- sdf[i,,drop=FALSE]
         n <- rownames(snpset)
@@ -205,7 +203,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
             prs_pvalue=diffP,
             full_aic=fullAIC
         ))
-    },p,response,family,sdf,snps,redFit,nullFit,rc=rc)
+    },p,response,family,snpSelection,snps,redFit,nullFit,rc=rc)
     
     # Construct final metrics matrix
     metrics <- as.data.frame(do.call("rbind",metricsList))
@@ -230,7 +228,9 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     if (mo != 0)
         last <- seq_len(N)
     
-    return(c(indexList,list(last)))
+    if (!is.null(last))
+        return(c(indexList,list(last)))
+    return(indexList)
 }
 
 #~ .evalGlmWorker <- function(dat,res,red,fam,...) {

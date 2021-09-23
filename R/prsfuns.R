@@ -466,12 +466,12 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     statsInfo <- gfeatures(base)
     statsInfo <- as.data.frame(statsInfo[,c("chromosome","position",
         "snp.name","allele.1","allele.2")])
-    if (identical(colnames(base),colnames(target)))
-        p <- rep(1,nrow(target))
-    else {
+    #if (identical(colnames(base),colnames(target)))
+    #    p <- rep(1,nrow(target))
+    #else {
         preP <- pvalues(base,res,cvs,npcs)
         p <- preP[,ncol(preP)]
-    }
+    #}
     e <- effects(base,res,cvs,npcs)
     
     # Until we find a better way of summarizing effects across methods,
@@ -511,6 +511,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     disp("  preparing PLINK temporary files - target...")
     resp <- names(pheno)[3]
     targetBase <- file.path(wspace,paste0("plink_prsice_",runId))
+    #writePlink(target,resp,outBase=targetBase,reverse=TRUE)
     writePlink(target,resp,outBase=targetBase)
     
     ## Let's see what will happen with lassosum LD blocks...

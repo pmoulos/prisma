@@ -11,7 +11,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     # We might need to deactivate parallel calculations for GLM if called from
     # the total PRISMA pipeline
     noGlmPrl <- grepl("doTryCatch|eval\\(parse",
-        deparse(sys.calls()[[sys.nframe()-1]])[1])
+        deparse(sys.calls()[sys.nframe()-1])[1])
     
     # Check input variables
     combine <- combine[1]
@@ -206,7 +206,7 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     covariates <- chResCov$cvs
     
     # Reduce the phenotypes for testing and check GLM call integrity
-    p <- p[,c(response,covariates)]
+    p <- p[,c(response,covariates),drop=FALSE]
     # We must ensure that if binomial requested, res is 0-1 and binary
     if (!is.null(family)) {
         family <- family[1]
@@ -238,6 +238,9 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
     # per snp will most probably cause more overhead than chunking and iterating
     # We split according to the number of available cores for analysis.
     snps <- genotypes(obj)
+    ##!!!
+    #snps <- switch.alleles(snps,seq_len(ncol(snps)))
+    ##!!!
     splitFactor <- .splitFactorForParallel(nrow(snps),rc)
     # We now need to split the SnpMatrix, as glm is quite fast, parallelizng
     # per snp will most probably cause more overhead than chunking and iterating
@@ -358,7 +361,7 @@ gwaBlup <- function(obj,response,covariates=NULL,usepc=c("auto","estim",
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
-    p <- p[,c(response,covariates)]
+    p <- p[,c(response,covariates),drop=FALSE]
     
     later <- FALSE
     switch(usepc,
@@ -445,10 +448,11 @@ gwaStatgen <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
-    p <- p[,c(response,covariates)]
+    p <- p[,c(response,covariates),drop=FALSE]
     
     # Convert to gData object
     disp("\nPreparing data for statgenGWAS...")
+    #sg <- GWASExperiment2gData(obj,covariates,pcs,reverse=TRUE)
     sg <- GWASExperiment2gData(obj,covariates,pcs)
     
     disp("Performing GWAS with statgenGWAS model")
@@ -586,6 +590,7 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
        paste0("  --bfile ",prepList$bfile," \\"),
        paste0("  --pheno ",prepList$pheno," \\"),
        "  --allow-no-sex \\",
+       #"  --keep-allele-order \\",
        "  --ci 0.95 \\",
        paste0("  --seed ",seed," \\"),
        paste0("  --out ",outBase),
@@ -658,7 +663,7 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     chResCov <- .validateResponseAndCovariates(p,response,covariates)
     response <- chResCov$res
     covariates <- chResCov$cvs
-    p <- p[,c(response,covariates)]
+    p <- p[,c(response,covariates),drop=FALSE]
     ct <- .initSnptestSampleFirstRow(p,response,covariates)
     if (pcs) { # Include robust PCs in the model
         if (.hasPcaCovariates(obj)) {
@@ -689,6 +694,9 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     disp("  writing PLINK files in ",wspace)
     base <- file.path(wspace,paste0("plink_snptest_",runId))
     writePlink(obj,response,outBase=base)
+    # FIXME: We reverse until find out wtf is going on...
+    # But PLINK always returns specific effects no matter what
+    #writePlink(obj,response,outBase=base,reverse=TRUE)
     
     disp("Preparation done!")
     return(list(plink=paste0(base,".bed"),sample=sfile,runid=runId))
@@ -800,6 +808,9 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     geno[geno==0] <- -1
     geno[geno==1] <- 0
     geno[geno==2] <- 1
+    #geno[geno==0] <- 1
+    #geno[geno==1] <- 0
+    #geno[geno==2] <- -1
     geno <- as.data.frame(geno)
     phold <- data.frame(snp=rownames(geno),chrom=rep(NA,nrow(geno)),
         bp=rep(NA,nrow(geno)))

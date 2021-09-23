@@ -1070,7 +1070,7 @@ listPrs <- function(obj) {
 #})
 
 # Convert GWASExperiment to gData (statgenGWAS)
-GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE) {
+GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE,reverse=FALSE) {
     if (!requireNamespace("statgenGWAS"))
         stop("R package statgenGWAS is required!")
     
@@ -1114,7 +1114,10 @@ GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE) {
     
     
     # Genotypes
-    geno <- as(t(assay(obj,1)),"numeric")
+    geno <- t(genotypes(obj))
+    if (reverse)
+        geno <- switch.alleles(geno,seq_len(ncol(geno)))
+    geno <- as(geno,"numeric")
     
     # Map
     map <- as.data.frame(gfeatures(obj))

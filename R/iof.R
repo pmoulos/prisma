@@ -1,3 +1,8 @@
+# Update:
+# I checked manually the below... It is not true and genotypes are not
+# reversed... There may be differences on how each software counts...
+# Until we figure what is going on, we reverse the manual PRS
+#
 # !!! SOS !!! snpStats read.plink **REVERSES** genotypes!
 # From the official PLINK documentation
 # https://www.cog-genomics.org/plink/1.9/formats#bed
@@ -87,13 +92,13 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             "output to ",gdsfile)
         # We also need to read a GDS file for LD and IBD filtering
         snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
-        # ***SWITCH ALLELES*** if PLINK default
-        if (alleleOrder == "plink") {
-            disp("Switching SnpMatrix alleles to comply with default PLINK ",
-                "behaviour")
-            snpObj$genotypes <- switch.alleles(snpObj$genotypes,
-                seq_len(ncol(snpObj$genotypes)))
-        }
+        ## ***SWITCH ALLELES*** if PLINK default
+        #if (alleleOrder == "plink") {
+        #    disp("Switching SnpMatrix alleles to comply with default PLINK ",
+        #        "behaviour")
+        #    snpObj$genotypes <- switch.alleles(snpObj$genotypes,
+        #        seq_len(ncol(snpObj$genotypes)))
+        #}
         
         return(GWASExperiment(
             genotypes=t(snpObj$genotypes),
@@ -104,7 +109,8 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
                 genome=genome,
                 backend=backend,
                 filters=.initFilterInfo(),
-                gdsfile=gdsfile
+                gdsfile=gdsfile,
+                alleleOrder=alleleOrder
             )
         ))
     }
@@ -170,7 +176,8 @@ imputeGWAS <- function(obj,mode=c("single","split"),rc=NULL) {
     return(s)
 }
 
-writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE) {
+writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
+    reverse=FALSE) {
     if (!is(obj,"GWASExperiment"))
         stop("The input object (obj) must be a GWASExperiment object!")
     if (is.null(outBase))
@@ -180,6 +187,11 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE) {
     map <- gfeatures(obj)
     fam <- gsamples(obj)
     gen <- t(genotypes(obj))
+    
+    # If the input object comes with default PLINK allele order, then they were
+    # reversed upon importing and also have the alleleOrder metadata field.
+    if (reverse)
+        gen <- switch.alleles(gen,seq_len(ncol(gen)))
     
     if (salvage) {
         if (is.na(genome(obj)))
