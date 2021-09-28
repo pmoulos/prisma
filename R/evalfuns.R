@@ -1,64 +1,120 @@
-selectPrs <- function(metrics,snpSelection,gwe,
-    crit=c("prs_r2","prs_pvalue","prs_aic")) {
+selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
+    crit=c("prs_r2","prs_pvalue","prs_aic"),stat=c("mean","median","none"),
+    r2type=c("adjusted","raw"),base=NULL) {
+    method <- method[1]
+    crit <- crit[1]
+    stat <- stat[1]
+    r2type <- r2type[1]
+    .checkTextArgs("PRS selection method (method)",method,c("maxima","elbow"),
+        multiarg=TRUE)
+    .checkTextArgs("PRS selection criterion (crit)",crit,
+        c("prs_r2","prs_pvalue","prs_aic"),multiarg=TRUE)
+    .checkTextArgs("PRS selection statistic (stat)",stat,c("mean","median",
+        "none"),multiarg=TRUE)
+    .checkTextArgs("PRS R2 for selection (r2type)",r2type,c("adjusted","raw"),
+        multiarg=TRUE)
+    
     if (!requireNamespace("akmedoids"))
         stop("R package akmedoids is required!")
     
-    if (missing(gwe) || !is(gwe,"GWASExperiment"))
-        stop("gwe must be provided and be a GWASExperiment object!")
-    
-    crit <- crit[1]
-    .checkTextArgs("PRS selection criterion (crit)",crit,
-        c("prs_r2","prs_pvalue","prs_aic"),multiarg=TRUE)
-    
-    # TODO: Some more checks for snpSelection and metrics
+    # Is snpSelection sorted by frequency (required for elbow)
     if (is.unsorted(rev(snpSelection$freq)))
         snpSelection <- 
             snpSelection[order(snpSelection$freq,decreasing=TRUE),,drop=FALSE]
+            
+    # What type of metrics we have? Raw output from prsRegressionMetrics or
+    # a summarized over iterations from prsSelection. If the former, mean/median
+    # will not be available. If the latter, only mean/median available. It does
+    # not matter, but there must be revert options.
+    fromSel <- any(grepl("mean",colnames(metrics)))
+    if (fromSel && stat=="none") # Silently fallback to mean
+        stat <- "mean"
+    else if (!fromSel && stat != "none") # Silently fallback to none
+        stat <- "none"
     
-    x <- metrics$n_snp
+    x <- metrics[,"n_snp"]
     switch(crit,
         prs_r2 = {
-            y <- metrics$prs_R2
+            switch(stat,
+                mean = { sel <- "mean_prs_r2" },
+                median = { sel <- "median_prs_r2" },
+                none = { sel <- "prs_r2" }
+            )
+            y <- metrics[,sel]
         },
         prs_pvalue = {
-            y <- -log10(metrics$prs_pvalue)
+            sel <- ifelse(fromSel,"reduced_p","prs_pvalue")
+            y <- -log10(metrics[,sel])
         },
         prs_aic = {
-            y <- -metrics$prs_aic
+            switch(stat,
+                mean = { sel <- "mean_prs_aic" },
+                median = { sel <- "median_prs_aic" },
+                none = { sel <- "prs_aic" }
+            )
+            y <- -metrics[,sel]
         }
     )
+    if (crit == "prs_r2" && r2type == "adjusted")
+        y <- sqrt(y/log(x))
     
-    # Now, find elbow...
-    E <- elbow_point(x,y)
-    # ...and get the SNPs as well as other metrics
-    disp("The optimal number of markers for PRS based on ",crit," is ",
-        round(E$x)," at ",crit,"=",round(E$y,5))
-    # Make the selection
-    theSelection <- snpSelection[seq_len(round(E$x)),,drop=FALSE]
-    
-    # Construct (the output
-    obj <- gwe[rownames(theSelection),,drop=FALSE]
-    df <- as.data.frame(gfeatures(obj))
-    # Basic info
-    out <- df[,c("chromosome","position","snp.name","allele.1","allele.2")]
-    # Attach effects
-    out$effect_weight <- theSelection$effect
-    out$OR <- exp(out$effect_weight)
-    out$locus_name <- rep(NA,nrow(out))
-    
-    # Final alignment with the external API fetch outcomes from PGS catalog
-    names(out)[c(3,4,5)] <- c("variant_id","risk_allele","reference_allele")
-    out <- out[,c("chromosome","position","variant_id","risk_allele",
-        "reference_allele","locus_name","effect_weight","OR")]
-    gb <- genome(obj)
-    if (is.null(gb))
-        gb <- "nr"
-    out$asm <- rep(gb,nrow(out))
-    
-    # Attach also the frequencies - revisit this later
-    out$freq <- theSelection$freq
-    
-    return(out)
+    if (method == "elbow") {
+        # Now, find elbow...
+        E <- elbow_point(x,y)
+        # ...and get the SNPs as well as other metrics
+        disp("The optimal number of markers for PRS based on ",crit," is ",
+            round(E$x)," at ",crit,"=",round(E$y,5))
+        # Make the selection
+        #theSelection <- snpSelection[seq_len(round(E$x)),,drop=FALSE]
+        snps <- rownames(snpSelection[seq_len(round(E$x)),,drop=FALSE])
+        return(list(main=.constructOutput(snps,snpSelection,gwe),others=NULL))
+    }
+    else if (method == "maxima") {
+        # This method will return a lot of points. They must be refined and
+        # suggested as alternative results.
+        im <- .localMaxima(y)
+        
+        # We essentially don't want the first (too many) and last (too few)
+        # elements of im, unless of course there are no others
+        if (length(im) > 2)
+            im <- im[-c(1,length(im))]
+        
+        # If baseline R2 given and R2 is our metric, then use it to further
+        # narrow down results
+        if (!is.null(base) && crit == "prs_r2") {
+            jm <- which(metrics[,sel] > mean(base))
+            if (length(jm) > 0)
+                im <- intersect(im,jm)
+        }
+        
+        # Make the selection and construct list of SNP vectors
+        fm <- metrics[im,c("n_snp","freq",sel),drop=FALSE]
+        theBestIndex <- which(fm[,sel] == max(fm[,sel]))
+        theBest <- im[theBestIndex]
+        allSnps <- lapply(fm[,"freq"],function(f,D) {
+            return(rownames(D[D[,"freq"] >= f,]))
+        },snpSelection)
+        
+        disp("The optimal number of markers for PRS based on ",crit," is ",
+            fm[theBestIndex,"n_snp"]," at ",crit,"=",
+            round(fm[theBestIndex,sel],5))
+        if (length(allSnps) > 1) {
+            others <- setdiff(im,theBest)
+            disp("Other possible options include:")
+            for (o in others) {
+                disp("  ",metrics[o,"n_snp"]," markers for PRS with ",crit,"=",
+                    round(metrics[o,sel],5))
+            }
+        }
+        
+        main <- .constructOutput(allSnps[[theBestIndex]],snpSelection,gwe)
+        others <- NULL
+        if (length(allSnps) > 1)
+            others <- lapply(allSnps[-theBestIndex],.constructOutput,
+                snpSelection,gwe)
+        
+        return(list(main=main,others=others))
+    }
 }
 
 prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
@@ -162,6 +218,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     metricsList <- cmclapply(indexList,function(i,p,r,f,sdf,snps,rf,nf,...) {
         snpset <- sdf[i,,drop=FALSE]
         n <- rownames(snpset)
+        freq <- snpset$freq[nrow(snpset)]
         
         disp("  testing PRS with SNPs from ",n[1]," to ",n[length(n)])
         thePrs <- .prs(snps[,n],sdf[n,"effect"])
@@ -198,7 +255,8 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
         
         return(c(
             n_snp=nsnp,
-            full_R2=fullR2,
+            freq=freq,
+            full_r2=fullR2,
             full_pvalue=fullP,
             prs_pvalue=diffP,
             full_aic=fullAIC
@@ -207,14 +265,50 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     
     # Construct final metrics matrix
     metrics <- as.data.frame(do.call("rbind",metricsList))
-    metrics$reduced_R2 <- rep(redR2,nrow(metrics))
-    metrics$prs_R2 <- metrics$full_R2 - metrics$reduced_R2
+    metrics$reduced_r2 <- rep(redR2,nrow(metrics))
+    metrics$prs_r2 <- metrics$full_r2 - metrics$reduced_r2
     metrics$reduced_pvalue <- rep(redP,nrow(metrics))
     metrics$reduced_aic <- rep(redModel$aic,nrow(metrics))
     metrics$prs_aic <- metrics$full_aic - metrics$reduced_aic
     
     # data frame with metric
     return(metrics)
+}
+
+.constructOutput <- function(snps,snpSelection,gwe) {
+    # Construct (the output
+    obj <- gwe[snps,,drop=FALSE]
+    df <- as.data.frame(gfeatures(obj))
+    # Basic info
+    out <- df[,c("chromosome","position","snp.name","allele.1","allele.2")]
+    # Attach effects
+    out$effect_weight <- snpSelection[snps,"effect"]
+    out$OR <- exp(out$effect_weight)
+    out$locus_name <- rep(NA,nrow(out))
+    
+    # Final alignment with the external API fetch outcomes from PGS catalog
+    names(out)[c(3,4,5)] <- c("variant_id","risk_allele","reference_allele")
+    out <- out[,c("chromosome","position","variant_id","risk_allele",
+        "reference_allele","locus_name","effect_weight","OR")]
+    gb <- genome(obj)
+    if (is.null(gb))
+        gb <- "nr"
+    out$asm <- rep(gb,nrow(out))
+    
+    # Attach also the frequencies - revisit this later
+    out$freq <- snpSelection[snps,"freq"]
+    
+    return(out)
+}
+
+#https://stackoverflow.com/questions/6836409/finding-local-maxima-and-minima
+.localMaxima <- function(x) {
+    y <- diff(c(-.Machine$integer.max, x)) > 0L
+    y <- cumsum(rle(y)$lengths)
+    y <- y[seq.int(1L, length(y), 2L)]
+    if (x[[1]] == x[[2]])
+        y <- y[-1]
+    return(y)
 }
 
 .makeStepList <- function(step,N) {

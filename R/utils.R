@@ -496,6 +496,20 @@ disp <- function(...,level=c("normal","full")) {
     return(paste(clean2,collapse="\n"))
 }
 
+.elap2human <- function(start.time) {
+    start.time <- as.POSIXct(start.time)
+    dt <- difftime(Sys.time(),start.time,units="secs")
+    ndt <- as.numeric(dt)
+    if (ndt<60)
+        format(.POSIXct(dt,tz="GMT"),"%S seconds")
+    else if (ndt>=60 && ndt<3600)
+        format(.POSIXct(dt,tz="GMT"),"%M minutes %S seconds")
+    else if (ndt>=3600 && ndt<86400)
+        format(.POSIXct(dt,tz="GMT"),"%H hours %M minutes %S seconds")
+    else if (ndt>=86400)
+        format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
+}
+
 
 #~ getAPIBase <- function() {
 #~     base <- getOption("rpgscat_base")

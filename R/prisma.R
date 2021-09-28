@@ -6,11 +6,15 @@ prisma <- function(
     npcs=0,
     trainSize=0.8,
     niter=10,
-    quantiles=c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+    resolution=c("frequency","quantile"),
+    step=if (resolution=="frequency") 1 else 
+        c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+    minFreq=2,
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
-    evalR2=c("adjusted","full","null"),
-    selectionTest=c("empirical","wilcoxon","ttest"),
+    effectWeight=c("mean","median","weight"),
+    #evalR2=c("adjusted","full","null"),
+    #selectionTest=c("empirical","wilcoxon","ttest"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -55,6 +59,10 @@ prisma <- function(
         prsWorkspace <- .validateWorkspacePath(prsWorkspace,"prisma")
     }
     
+    # Display initialization report
+    TB <- Sys.time()
+    disp(strftime(Sys.time()),": Data processing started...\n")
+    
     # First part - PRS candidate SNPs. prsPipeline takes care for the collection
     # of thw whole dnResult list, whether that run has failed or not. When
     # continue=TRUE, prsPipeline will continue from this point and the dnResult
@@ -91,9 +99,9 @@ prisma <- function(
         rc=rc
     )
     
-    # Second part - if continue=TRUE, dnResult will be collected from the 
-    # previous step and passed here.
-    prsSelection(
+    # Second part collect evaluation metrics - if continue=TRUE, dnResult will 
+    # be collected from the previous step and passed here.
+    evalMetrics <- prsSelection(
         dnList=dnResult,
         gwe=gwe,
         phenotype=phenotype,
@@ -102,9 +110,12 @@ prisma <- function(
         npcs=npcs,
         trainSize=trainSize,
         niter=niter,
-        quantiles=quantiles,
+        resolution=resolution,
+        step=step,
+        minFreq=minFreq,
         dropSameQuantile=dropSameQuantile,
         aggregation=aggregation,
+        effectWeight=effectWeight,
         filters=filters,
         pcaMethod=pcaMethod,
         imputeMissing=imputeMissing,
@@ -125,12 +136,20 @@ prisma <- function(
         output=output,
         continue=continue,
         runId=runId,
+        evalWith=evalWith,
         rc=rc
     )
 
-    # WIP
     # The final output should be an object that can be used to build a
     # report but also some kind of inspection
+    # .report(dnList,evalMetrics)
+    # or even better construct an environment/list with all inputs (for logging)
+    # and pass to a reporting function
+    # .report(env)
+    
+    disp("\n",strftime(Sys.time()),": Data processing finished!\n")
+    execTime <- .elap2human(TB)
+    disp("Total processing time: ",execTime,"\n\n")
 }
 
 prsSelection <- function(
@@ -149,8 +168,8 @@ prsSelection <- function(
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
     effectWeight=c("mean","median","weight"),
-    evalMetric=c("r2_adj","r2_full","aic_adj","aic_full"),
-    selectionTest=c("empirical","wilcoxon","ttest"),
+    #evalMetric=c("r2_adj","r2_full","aic_adj","aic_full"),
+    #selectionTest=c("empirical","wilcoxon","ttest"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -172,28 +191,31 @@ prsSelection <- function(
     useDenovoWorkspace=NULL,
     runId=NULL,
     evalWith=c("vanilla","prscice"),
+    output=c("summary","full"),
     rc=NULL
 ) {
     # The rest are checked downstream
     aggregation <- aggregation[1]
     effectWeight <- effectWeight[1]
     resolution <- resolution[1]
-    evalMetric <- evalMetric[1]
-    selectionTest <- selectionTest[1]
+    #evalMetric <- evalMetric[1]
+    #selectionTest <- selectionTest[1]
     .checkTextArgs("SNP aggregation method (aggregation)",aggregation,
         c("intersection","union"),multiarg=FALSE)
-    .checkTextArgs("Evaluation metric type (evalMetric)",evalMetric,
-        c("r2_adj","r2_full","aic_adj","aic_full"),multiarg=FALSE)
-    .checkTextArgs("PRS selection test (selectionTest)",selectionTest,
-        c("empirical","wilcoxon","ttest"),multiarg=FALSE)
+    #.checkTextArgs("Evaluation metric type (evalMetric)",evalMetric,
+    #    c("r2_adj","r2_full","aic_adj","aic_full"),multiarg=FALSE)
+    #.checkTextArgs("PRS selection test (selectionTest)",selectionTest,
+    #    c("empirical","wilcoxon","ttest"),multiarg=FALSE)
+    .checkTextArgs("Output data level (output)",output,c("summary","full"),
+        multiarg=FALSE)
     .checkNumArgs("Minimum frequency (minFreq)",minFreq,"numeric",0,"gte")
     
-    # If evaluation with PRSice, evalMetric cannot contain AIC
-    if (evalWith == "prsice" && grepl("aic",evalMetric)) {
-        warning("AIC metrics are not available in evaluation with PRSice! ",
-            "Switching to R2...",immediate.=TRUE)
-        evalMetric <- ifelse(grepl("adj",evalMetric),"r2_adj","r2_full")
-    }
+    ## If evaluation with PRSice, evalMetric cannot contain AIC
+    #if (evalWith == "prsice" && grepl("aic",evalMetric)) {
+    #    warning("AIC metrics are not available in evaluation with PRSice! ",
+    #        "Switching to R2...",immediate.=TRUE)
+    #    evalMetric <- ifelse(grepl("adj",evalMetric),"r2_adj","r2_full")
+    #}
     
     # Check if the selected GWA method is in dnList
     gwaMethods <- gwaMethods[1]
@@ -332,29 +354,97 @@ prsSelection <- function(
     #   train/test splits and returns more metrics.
     #   Output: a list of niterx10 data frames with the three PRSice2 R2 metrics
     
-    if (evalWith == "prsice") {
-        sel <- ifelse(evalMetric=="r2_adj","r2p","r2m")
-        baseline <- .getR2(dnList)[,sel]
-        freqMetrics <- lapply(metrics,function(x,s) {
-            return(x[,c("n_snp",s),drop=FALSE])
-        },sel)
-        
-    }
-    else if (evalWith == "vanilla") {
-    }
-    
-    # We should simply return all eval metrics since they are supported...
-    # and use R2 for PRS selection...
-    #
-    # We need a metrics summarization function. The output should essentially
-    # be a length(fstep) x m columns data frame with
+    # Here we collect
     # - Number of snps in fstep
-    # - Mean of evaluation metrics in fstep
-    # - Std of evaluation metrics in fstep
+    # - Mean/median of evaluation metrics in fstep
+    # - Std/IQR of evaluation metrics in fstep
     # - Adjusted (sqrt(R2/log(N))) evaluation metrics
     # - p-value against the baseline (R2 only)
-    #
-    # 
+    baseline <- .getR2(dnList)
+    if (evalWith == "prsice")
+        freqMetrics <- lapply(metrics,function(x) {
+            # for p-values
+            b <- .subsampleBase(x$r2p,baseline)
+            
+            return(c(
+                n_snp=x$n_snp[1],
+                freq=x$freq[1],
+                mean_prs_r2=mean(x$r2p),
+                mean_full_r2=mean(x$r2m),
+                mean_reduced_r2=mean(x$r2n),
+                sd_prs_r2=sd(x$r2p),
+                sd_full_r2=sd(x$r2m),
+                sd_reduced_r2=sd(x$r2n),
+                median_prs_r2=median(x$r2p),
+                median_full_r2=median(x$r2m),
+                median_reduced_r2=median(x$r2n),
+                iqr_prs_r2=IQR(x$r2p),
+                iqr_full_r2=IQR(x$r2m),
+                iqr_reduced_r2=IQR(x$r2n),
+                mean_prs_aic=NA,
+                mean_full_aic=NA,
+                mean_reduced_aic=NA,
+                sd_prs_aic=NA,
+                sd_full_aic=NA,
+                sd_reduced_aic=NA,
+                median_prs_aic=NA,
+                median_full_aic=NA,
+                median_reduced_aic=NA,
+                iqr_prs_aic=NA,
+                iqr_full_aic=NA,
+                iqr_reduced_aic=NA,
+                prs_p=NA,
+                full_p=max(x$p),
+                reduced_p=NA,
+                p_emp=length(which(x$r2p < b))/length(b),
+                p_ttest=t.test(x$r2p,b,alternative="greater")$p.value,
+                p_wilcox=wilcox.test(x$r2p,b,alternative="greater")$p.value
+            ))
+        })
+    else if (evalWith == "vanilla")
+        freqMetrics <- lapply(metrics,function(x) {
+            # for p-values
+            b <- .subsampleBase(x$prs_r2,baseline)
+
+            return(c(
+                n_snp=x$n_snp[1],
+                freq=x$freq[1],
+                mean_prs_r2=mean(x$prs_r2),
+                mean_full_r2=mean(x$full_r2),
+                mean_reduced_r2=mean(x$reduced_r2),
+                sd_prs_r2=sd(x$prs_r2),
+                sd_full_r2=sd(x$full_r2),
+                sd_reduced_r2=sd(x$reduced_r2),
+                median_prs_r2=median(x$prs_r2),
+                median_full_r2=median(x$full_r2),
+                median_reduced_r2=median(x$reduced_r2),
+                iqr_prs_r2=IQR(x$prs_r2),
+                iqr_full_r2=IQR(x$full_r2),
+                iqr_reduced_r2=IQR(x$reduced_r2),
+                mean_prs_aic=mean(x$prs_aic),
+                mean_full_aic=mean(x$full_aic),
+                mean_reduced_aic=mean(x$reduced_aic),
+                sd_prs_aic=sd(x$prs_aic),
+                sd_full_aic=sd(x$full_aic),
+                sd_reduced_aic=sd(x$reduced_aic),
+                median_prs_aic=median(x$prs_aic),
+                median_full_aic=median(x$full_aic),
+                median_reduced_aic=median(x$reduced_aic),
+                iqr_prs_aic=IQR(x$prs_aic),
+                iqr_full_aic=IQR(x$full_aic),
+                iqr_reduced_aic=IQR(x$reduced_aic),
+                prs_p=max(x$prs_pvalue),
+                full_p=max(x$full_pvalue),
+                reduced_p=max(x$reduced_pvalue),
+                p_emp=length(which(x$prs_r2 < b))/length(b),
+                p_ttest=t.test(x$prs_r2,b,alternative="greater")$p.value,
+                p_wilcox=wilcox.test(x$prs_r2,b,alternative="greater")$p.value
+            ))
+        })
+    
+    freqMetrics <- do.call("rbind",freqMetrics)
+    rownames(freqMetrics) <- freqMetrics[,"n_snp"]
+     
     # Consider changing the previous barchart to something like returned by
     # PRSice (heatmap in colorbars denoting significance) since it's hell to
     # properly create a second axis.
@@ -362,12 +452,20 @@ prsSelection <- function(
     # Also, user should choose the level of output: metric summaries only or
     # metric summaries and metric details.
     
-    # Or, since the function is called 'selection', continue with graphs?
-    # A loop for how many tests we want
-    .evalPrismaParts(dnList,r2Df,evalR2,selectionTest)
-    # This function should probably become internal and the main prisma function
-    # should return some summary statistics, plot/report object which is input
-    # later to some report generation function.
+    if (output == "summary")
+        return(list(
+            baseline=baseline,
+            metrics=freqMetrics
+        ))
+    else if (output == "full") {
+        return(list(
+            baseline=baseline,
+            metrics=freqMetrics,
+            full=metrics
+        ))
+    }
+    
+    #.evalPrismaParts(dnList,r2Df,evalR2,selectionTest)
 }
 
 prsPipeline <- function(
@@ -949,7 +1047,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         }
         else {
             tmp <- lapply(obj,function(x) {
-                return(c(r2m=NA,r2n=NA,r2p=NA))
+                return(c(r2m=NA,r2n=NA,r2p=NA,p=NA,emp=NA,nsnp=NA))
             })
         }
     }
@@ -1036,10 +1134,13 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     
     # For upstream
     #thisCall <- as.list(match.call())[-1]
+}
+
+.prettyLogOptionsPrs <- function(args) {
+    disp("Input object: a GWASExperiment object with ",nrow(args$gwe),
+        " markers (SNPs) and ",ncol(args$gwe)," samples")
     
     
-    # Display initialization report
-    disp(strftime(Sys.time()),": Data processing started...\n")
     ############################################################################
     disp("Read counts file: ",countsName)
     disp("Conditions: ",paste(names(sampleList),collapse=", "))
@@ -1172,7 +1273,10 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         npcs=0,
         trainSize=0.8,
         niter=10,
-        quantiles=c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+        resolution=c("frequency","quantile"),
+        step=if (resolution=="frequency") 1 else 
+            c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+        minFreq=2,
         dropSameQuantiles=TRUE,
         aggregation="intersection",
         filters=getDefaults("filters"),
