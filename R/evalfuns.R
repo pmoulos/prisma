@@ -1,3 +1,5 @@
+#finalizeEffects <- function() {}
+
 selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
     crit=c("prs_r2","prs_pvalue","prs_aic"),stat=c("mean","median","none"),
     r2type=c("adjusted","raw"),base=NULL) {
@@ -107,14 +109,204 @@ selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
             }
         }
         
-        main <- .constructOutput(allSnps[[theBestIndex]],snpSelection,gwe)
+        if (ncol(snpSelection) > 3) # Already in PGS format
+            main <- snpSelection[allSnps[[theBestIndex]],,drop=FALSE]
+        else
+            main <- .constructOutput(allSnps[[theBestIndex]],snpSelection,gwe)
+        
         others <- NULL
-        if (length(allSnps) > 1)
-            others <- lapply(allSnps[-theBestIndex],.constructOutput,
-                snpSelection,gwe)
+        if (length(allSnps) > 1) {
+            if (ncol(snpSelection) > 3)
+                others <- lapply(allSnps[-theBestIndex],function(x) {
+                    return(snpSelection[x,,drop=FALSE])
+                })
+            else
+                others <- lapply(allSnps[-theBestIndex],.constructOutput,
+                    snpSelection,gwe)
+        }
         
         return(list(main=main,others=others))
     }
+}
+
+prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
+    pcs=FALSE,leaveOut=0.05,times=10,family=NULL,rc=NULL,...) {
+    .checkNumArgs("Fraction of samples to leave out (leaveOut)",leaveOut,
+        "numeric",c(0,1),"both")
+    .checkNumArgs("Number of cross-validation fits (times)",as.integer(times),
+        "integer",1L,"gte")
+    
+    # Other initial checks
+    .canRunGwa(gwe)
+    p <- phenotypes(gwe)
+    chResCov <- .validateResponseAndCovariates(p,response,covariates)
+    response <- chResCov$res
+    covariates <- chResCov$cvs
+    p <- p[,c(response,covariates),drop=FALSE]
+    
+    # Regression family stuff...
+    if (!is.null(family)) {
+        family <- family[1]
+        .checkTextArgs("Regression family",family,
+            c("gaussian","binomial","poisson"),multiarg=FALSE)
+        fpredHelper <- "provided"
+    }
+    else {
+        family <- ifelse(.maybeBinaryForBinomial(p[,response]),"binomial",
+            "gaussian")
+        fpredHelper <- "predicted"
+    }
+    if (family == "binomial")
+        p[,response] <- .validateBinaryForBinomial(p[,response])
+    
+    
+    # Deal with PCs. In this case, as we are later dealing with model
+    # predictions, we need to pre-calculate the population structure and include
+    # in the objects covariates.
+    if (pcs) {
+        if (.hasPcaCovariates(gwe)) {
+            pcov <- pcaCovariates(gwe)
+            p <- cbind(p,pcov)
+            phenotypes(gwe) <- p
+        }
+        else
+            warning("PC covariates requested in the model, but no calculated ",
+                "PC covariates found! Ignoring...",immediate.=TRUE)
+    }
+    
+    # Run the CV
+    disp("\nRegressing with GLM")
+    disp("Trait(s)    : ",response)
+    disp("Covariate(s): ",paste0(covariates,collapse=", "))
+    disp("Regression  : ",family," (",fpredHelper,")")
+    disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
+    
+    metrics <- cmclapply(seq_len(times),function(i) {
+        if (is.null(rc)) {
+            silent <- FALSE
+            disp("===========================================================")
+            disp("-----> Cross-validation iteration ",i)
+            disp("==========================================================\n")
+        }
+        else {
+            disp("Running cross-validation iteration ",i)
+            silent = TRUE
+        }
+        
+        # Verbosity
+        if (silent) {
+            verbosity <- prismaVerbosity()
+            prismaVerbosity("silent")
+        }
+    
+        # Split
+        tmp <- partitionGWAS(gwe,by=response,n=1,frac=1-leaveOut,out="index")
+        trainIndex <- tmp[[1]]
+        testIndex <- setdiff(seq_len(ncol(gwe)),trainIndex)
+        M <- .prsCvWorker(trainIndex,testIndex,snpSelection,gwe,response,
+            family,...)
+        
+        # Restore verbosity
+        if (silent)
+            prismaVerbosity(verbosity)
+            
+        return(M)
+    },rc=rc,setseed=TRUE)
+    
+    return(do.call("rbind",metrics))
+}
+
+.prsCvWorker <- function(trainIndex,testIndex,snpSelection,gwe,response,
+    family,...) {
+    # Create the objects to be regressed/predicted and checks
+    train <- gwe[,trainIndex,drop=FALSE]
+    test <- gwe[,testIndex,drop=FALSE]
+    
+    # response, covariates have been validated upstream
+    p <- phenotypes(train)
+    
+    # Fit the reduced model
+    disp("Creating the reduced model")
+    dat <- p
+    ii <- which(colnames(dat)==response)
+    colnames(dat) <- make.names(colnames(dat))
+    covs <- colnames(dat)[-ii]
+    cres <- colnames(dat)[ii]
+    if (length(covs) > 0)
+        fr <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    else
+        fr <- as.formula(paste(cres,1,sep="~"))
+    disp("Reduced model formula is: ",level="full")
+    disp(show(fr),level="full")
+    redFit <- glm(fr,data=dat,family=family,...)
+    redModel <- summary(redFit)
+    
+    # Calculate and attach the PRS
+    trainSnps <- t(as(genotypes(train),"numeric"))
+    trainPrs <- .prs(trainSnps[,rownames(snpSelection)],
+        snpSelection[,grep("effect",colnames(snpSelection))])
+    dat <- cbind(p,trainPrs)
+
+    # Fit the full model
+    disp("Creating the full model")
+    colnames(dat)[ncol(dat)] <- "PRS"
+    ii <- which(colnames(dat)==response)
+    colnames(dat) <- make.names(colnames(dat))
+    covs <- colnames(dat)[-ii]
+    cres <- colnames(dat)[ii]
+    fm <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    disp("Full model formula is: ",level="full")
+    disp(show(fm),level="full")
+    fullFit <- glm(fm,data=dat,family=family,...)
+    #fullFit <- glm(fm,data=dat,family=family)
+    fullModel <- summary(fullFit)
+    
+    # - R^2 of the reduced model
+    redR2 <- 1 - redModel$deviance/redModel$null.deviance
+    
+    # - R^2 of the full model
+    fullR2 <- 1 - fullModel$deviance/fullModel$null.deviance
+    
+    # - p-value of the reduced against the full (F test)
+    tmp <- anova(redFit,fullFit,test="F")
+    P <- tmp[["Pr(>F)"]][2]
+    
+    # Now predictions (response, covariates were validated before)
+    pp <- phenotypes(test)
+    testSnps <- t(as(genotypes(test),"numeric"))
+    testPrs <- .prs(testSnps[,rownames(snpSelection)],
+        snpSelection[,grep("effect",colnames(snpSelection))])
+    pp <- cbind(pp,testPrs)    
+    colnames(pp)[ncol(pp)] <- "PRS"
+    
+    # Predictions
+    redPred <- predict(redFit,pp)
+    fullPred <- predict(fullFit,pp)
+    
+    # RMSE and MAE
+    redRmse <- sqrt(sum((redPred - pp[,response])^2)/nrow(pp))
+    fullRmse <- sqrt(sum((fullPred - pp[,response])^2)/nrow(pp))
+    redMae <- mean(abs((redPred - pp[,response])))
+    fullMae <- mean(abs((fullPred - pp[,response])))
+    redCor <- cor(redPred,pp[,response])
+    fullCor <- cor(fullPred,pp[,response])
+    
+    # Finally, return metrics
+    return(c(
+        reduced_r2=redR2,
+        full_r2=fullR2,
+        prs_r2=fullR2-redR2,
+        prs_pvalue=P,
+        reduced_rmse=redRmse,
+        full_rmse=fullRmse,
+        reduced_mae=redMae,
+        full_mae=fullMae,
+        reduced_pred_cor=redCor,
+        full_pred_cor=fullCor,
+        reduced_pred_r2=redCor^2,
+        full_pred_r2=fullCor^2,
+        prs_pred_r2=fullCor^2-redCor^2
+    ))
 }
 
 prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
@@ -232,8 +424,8 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
         fm <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
         disp("Full model formula is: ",level="full")
         disp(show(fm),level="full")
-        #fullFit <- glm(fm,data=dat,family=f,...)
-        fullFit <- glm(fm,data=dat,family=f)
+        fullFit <- glm(fm,data=dat,family=f,...)
+        #fullFit <- glm(fm,data=dat,family=f)
         fullModel <- summary(fullFit)
         
         # Number of SNPs
@@ -261,7 +453,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
             prs_pvalue=diffP,
             full_aic=fullAIC
         ))
-    },p,response,family,snpSelection,snps,redFit,nullFit,rc=rc)
+    },p,response,family,snpSelection,snps,redFit,nullFit,...,rc=rc)
     
     # Construct final metrics matrix
     metrics <- as.data.frame(do.call("rbind",metricsList))

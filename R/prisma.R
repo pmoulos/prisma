@@ -13,8 +13,12 @@ prisma <- function(
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
     effectWeight=c("mean","median","weight"),
-    #evalR2=c("adjusted","full","null"),
-    #selectionTest=c("empirical","wilcoxon","ttest"),
+    prsSelectMethod=c("maxima","elbow"),
+    prsSelectCrit=c("prs_r2","prs_pvalue","prs_aic"),
+    prsSelectStat=c("mean","median","none"),
+    prsSelectR2=c("adjusted","raw"),
+    cvOutSize=0.05,
+    ncvs=10,
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -139,7 +143,34 @@ prisma <- function(
         evalWith=evalWith,
         rc=rc
     )
-
+    
+    # Third part, suggest PRS
+    candidates <- selectPrs(
+        metrics=evalMetrics$metrics,
+        snpSelection=evalMetrics$pgs,
+        gwe=gwe,
+        method=prsSelectMethod,
+        crit=prsSelectCrit,
+        stat=prsSelectStat,
+        r2type=prsSelectR2,
+        base=evalMetrics$baseline
+    )
+    
+    # Fourth part, evaluate the candidates with the total dataset
+    cvMetrics <- prsCrossValidate(
+        snpSelection=candidates$main,
+        gwe=gwe,
+        response=phenotype,
+        covariates=covariates,
+        pcs=pcs,
+        leaveOut=cvOutSize,
+        times=ncvs,
+        rc=rc
+    )
+    
+    # Also, cvMetrics on the rest?
+    # summarizeCvMetrics(cvMetrics) # Shall print a report
+    
     # The final output should be an object that can be used to build a
     # report but also some kind of inspection
     # .report(dnList,evalMetrics)
@@ -168,8 +199,6 @@ prsSelection <- function(
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
     effectWeight=c("mean","median","weight"),
-    #evalMetric=c("r2_adj","r2_full","aic_adj","aic_full"),
-    #selectionTest=c("empirical","wilcoxon","ttest"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -198,26 +227,13 @@ prsSelection <- function(
     aggregation <- aggregation[1]
     effectWeight <- effectWeight[1]
     resolution <- resolution[1]
-    #evalMetric <- evalMetric[1]
-    #selectionTest <- selectionTest[1]
     .checkTextArgs("SNP aggregation method (aggregation)",aggregation,
         c("intersection","union"),multiarg=FALSE)
-    #.checkTextArgs("Evaluation metric type (evalMetric)",evalMetric,
-    #    c("r2_adj","r2_full","aic_adj","aic_full"),multiarg=FALSE)
-    #.checkTextArgs("PRS selection test (selectionTest)",selectionTest,
-    #    c("empirical","wilcoxon","ttest"),multiarg=FALSE)
     .checkTextArgs("Output data level (output)",output,c("summary","full"),
         multiarg=FALSE)
     .checkNumArgs("Minimum frequency (minFreq)",minFreq,"numeric",0,"gte")
     
-    ## If evaluation with PRSice, evalMetric cannot contain AIC
-    #if (evalWith == "prsice" && grepl("aic",evalMetric)) {
-    #    warning("AIC metrics are not available in evaluation with PRSice! ",
-    #        "Switching to R2...",immediate.=TRUE)
-    #    evalMetric <- ifelse(grepl("adj",evalMetric),"r2_adj","r2_full")
-    #}
-    
-    # Check if the selected GWA method is in dnList
+      # Check if the selected GWA method is in dnList
     gwaMethods <- gwaMethods[1]
     if (is(dnList[[1]],"GWASExperiment"))
         tmpn <- colnames(effects(dnList[[1]]))
@@ -258,7 +274,7 @@ prsSelection <- function(
     }
     else if (resolution == "frequency") {
         if (step == 1)
-            fstep <- sort(unique(snpSelection$freq))
+            fstep <- sort(unique(snpSummary$freq))
         else {
             # We would need at least 20 data points in this case...
             if (step > round(max(fstep)/20)) {
@@ -299,7 +315,7 @@ prsSelection <- function(
             npcs=npcs,
             trainSize=trainSize,
             niter=niter,
-            snpSelection=rownames(snpList[[qun]]),
+            snpSelection=snpSelection,
             filters=filters,
             pcaMethod=pcaMethod,
             imputeMissing=imputeMissing,
@@ -454,18 +470,18 @@ prsSelection <- function(
     
     if (output == "summary")
         return(list(
+            pgs=snpSummary,
             baseline=baseline,
             metrics=freqMetrics
         ))
     else if (output == "full") {
         return(list(
+            pgs=snpSummary,
             baseline=baseline,
             metrics=freqMetrics,
             full=metrics
         ))
     }
-    
-    #.evalPrismaParts(dnList,r2Df,evalR2,selectionTest)
 }
 
 prsPipeline <- function(
@@ -779,7 +795,7 @@ prsPipeline <- function(
 # each SNP... M4BU
 aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
     assoc=c("auto","glm","rrblup","statgen","snptest","plink","lasso"),
-    avgfun=c("mean","median","weight")) {
+    avgfun=c("mean","median","weight"),gwe=NULL) {
     # Check if prsbetas non-empty everywhere
     isGwaExp <- FALSE
     if (is(gwaList[[1]],"GWASExperiment")) {
@@ -907,6 +923,15 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
     names(out) <- c("snp","freq")
     out$effect <- avgEffs[goods]
     rownames(out) <- out$snp
+    
+    # Correct the strange thing with effects except PLINK by reversing...
+    if (assoc != "plink")
+        out$effect <- -avgEffs[goods]
+    
+    # If a GWAS object is provided, harmonize the output with PGS
+    if (!is.null(gwe))
+        out <- .constructOutput(rownames(out),out,gwe)
+    
     return(out[order(out$freq,decreasing=TRUE),,drop=FALSE])
 }
 
@@ -1119,12 +1144,17 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     return(FALSE)
 }
 
-.prettyLogOptions <- function(callArgs,what=c("prisma","pipeline")) {
+.prettyLogOptions <- function(callArgs,what=c("prisma","select","pipeline")) {
     what <- what[1]
     if (what == "prisma") {
         allArgs <- .getPrismaMainDefaults()
         allArgs[names(callArgs)] <- callArgs
         .prettyLogOptionsPrisma(allArgs)
+    }
+    else if (what == "select") {
+        allArgs <- .getPrsSelectionDefaults()
+        allArgs[names(callArgs)] <- callArgs
+        .prettyLogOptionsSelect(allArgs)
     }
     else if (what == "pipeline") {
         allArgs <- .getPrsPipelineDefaults()
@@ -1279,6 +1309,53 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         minFreq=2,
         dropSameQuantiles=TRUE,
         aggregation="intersection",
+        effectWeight="mean",
+        prsSelectMethod="maxima",
+        prsSelectCrit="prs_r2",
+        prsSelectStat="mean",
+        prsSelectR2="adjusted",
+        cvOutSize=0.05,
+        ncvs=10,
+        filters=getDefaults("filters"),
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        imputeMethod="single",
+        gwaMethods="glm",
+        gwaCombine="simes",
+        glmOpts=getDefaults("glm"),
+        rrblupOpts=getDefaults("rrblup"),
+        statgenOpts=getDefaults("statgen"),
+        snptestOpts=getDefaults("snptest"),
+        plinkOpts=getDefaults("plink"),
+        prsMethods=c("lassosum","prsice"),
+        lassosumOpts=getDefaults("lassosum"),
+        prsiceOpts=getDefaults("prsice"),
+        prsWorkspace=NULL,
+        cleanup=c("none","intermediate","all"),
+        logging=c("screen","file"),
+        output=c("gwaslist","summaries"),
+        continue=FALSE,
+        useDenovoWorkspace=NULL,
+        runId=NULL,
+        evalWith="vanilla",
+        rc=NULL
+    ))
+}
+
+.getPrsSelectionDefaults <- function() {
+    return(list(
+        covariates=NULL,
+        pcs=FALSE,
+        npcs=0,
+        trainSize=0.8,
+        niter=10,
+        resolution=c("frequency","quantile"),
+        step=if (resolution=="frequency") 1 else 
+            c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
+        minFreq=2,
+        dropSameQuantiles=TRUE,
+        aggregation="intersection",
+        effectWeight="mean",
         filters=getDefaults("filters"),
         pcaMethod="snprel",
         imputeMissing=FALSE,

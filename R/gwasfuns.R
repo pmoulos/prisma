@@ -230,7 +230,7 @@ gwaGlm <- function(obj,response,covariates=NULL,pcs=FALSE,family=NULL,psig=0.05,
             p <- cbind(p,pcov)
         }
         else
-            warning("PC covariates requested in the model, but not calculated ",
+            warning("PC covariates requested in the model, but no calculated ",
                 "PC covariates found! Ignoring...",immediate.=TRUE)
     }
     
