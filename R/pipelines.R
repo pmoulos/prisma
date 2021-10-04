@@ -743,7 +743,7 @@
     if (is.character(sum) && file.exists(sum)) {
         tmp <- read.delim(sum)
         return(c(r2m=tmp$Full.R2,r2n=tmp$Null.R2,r2p=tmp$PRS.R2,p=tmp$P,
-            emp=Empirical.P,nsnp=tmp$Num_SNP))
+            emp=tmp$Empirical.P,nsnp=tmp$Num_SNP))
     }
     else
         return(c(r2m=NA,r2n=NA,r2p=NA,p=NA,emp=NA,nsnp=NA))

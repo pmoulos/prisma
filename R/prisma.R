@@ -10,6 +10,7 @@ prisma <- function(
     step=if (resolution=="frequency") 1 else 
         c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
     minFreq=2,
+    minSnps=5,
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
     effectWeight=c("mean","median","weight"),
@@ -19,6 +20,7 @@ prisma <- function(
     prsSelectR2=c("adjusted","raw"),
     cvOutSize=0.05,
     ncvs=10,
+    sigTest=c("ttest","wilcoxon","empirical"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
     imputeMissing=FALSE,
@@ -40,10 +42,39 @@ prisma <- function(
     continue=FALSE,
     useDenovoWorkspace=NULL,
     runId=NULL,
+    evalOnSplit=c("original","new"),
     evalWith=c("vanilla","prscice"),
     rc=NULL
 ) {
-    # Arguments are checked downstream
+    prsSelectMethod <- prsSelectMethod[1]
+    prsSelectCrit <- prsSelectCrit[1]
+    prsSelectStat <- prsSelectStat[1]
+    prsSelectR2 <- prsSelectR2[1]
+    sigTest <- sigTest[1]
+    evalOnSplit <- evalOnSplit[1]
+    .checkTextArgs("PRS selection method (prsSelectMethod)",prsSelectMethod,
+        c("maxima","elbow"),multiarg=FALSE)
+    .checkTextArgs("PRS selection criterion (prsSelectCrit)",prsSelectCrit,
+        c("prs_r2","prs_pvalue","prs_aic"),multiarg=FALSE)
+    .checkTextArgs("PRS selection statistics (prsSelectStat)",prsSelectStat,
+        c("mean","median","none"),multiarg=FALSE)
+    .checkTextArgs("PRS R2 for selection (prsSelectStat)",prsSelectR2,
+        c("adjusted","raw"),multiarg=FALSE)
+    .checkTextArgs("Significance test for report/plots (sigTest)",sigTest,
+        c("ttest","wilcoxon","empirical"),multiarg=FALSE)
+    .checkTextArgs("Evaluation on initial or new split (evalOnSplit)",
+        evalOnSplit,c("original","new"),multiarg=FALSE)
+    .checkNumArgs("Cross-validation leave-out samples fraction (cvOutSize)",
+        cvOutSize,"numeric",c(0,1),"both")
+    .checkNumArgs("Number of cross-validation fits (ncvs)",as.integer(ncvs),
+        "integer",1L,"gte")
+    # Rest arguments are checked downstream
+    
+    # For the time being, vanilla evaluation with new splits is not implemented!
+    if (evalWith == "vanilla" && evalOnSplit == "new")
+        stop("Evaluation with R internal functions with a new dataset split ",
+            "is not yet implemented!\nPlease use evalWith = \"prsice\" or ",
+            "evalOnSplit = \"original\".",call.=FALSE)
     
     # Only one used for now, until we run linear optimization in effects
     gwaMethods <- gwaMethods[1]
@@ -105,6 +136,9 @@ prisma <- function(
     
     # Second part collect evaluation metrics - if continue=TRUE, dnResult will 
     # be collected from the previous step and passed here.
+    uDnS <- NULL
+    if (evalOnSplit == "original")
+        uDnS <- dnResult
     evalMetrics <- prsSelection(
         dnList=dnResult,
         gwe=gwe,
@@ -117,6 +151,7 @@ prisma <- function(
         resolution=resolution,
         step=step,
         minFreq=minFreq,
+        minSnps=minSnps,
         dropSameQuantile=dropSameQuantile,
         aggregation=aggregation,
         effectWeight=effectWeight,
@@ -137,10 +172,11 @@ prisma <- function(
         prsWorkspace=file.path(prsWorkspace,"selection"),
         cleanup=cleanup,
         logging=logging,
-        output=output,
+        output="summary", # If full, run prsSelection directly
         continue=continue,
         runId=runId,
         evalWith=evalWith,
+        useDenovoWorkspace=uDnS,
         rc=rc
     )
     
@@ -169,7 +205,33 @@ prisma <- function(
     )
     
     # Also, cvMetrics on the rest?
-    # summarizeCvMetrics(cvMetrics) # Shall print a report
+    if (!is.null(candidates$others))
+        cvMetricsOthers <- lapply(candidates$others,function(x) {
+            prsCrossValidate(
+                snpSelection=x,
+                gwe=gwe,
+                response=phenotype,
+                covariates=covariates,
+                pcs=pcs,
+                leaveOut=cvOutSize,
+                times=ncvs,
+                rc=rc
+            )
+        })
+    
+    summarizeCvMetrics(cvMetrics,nrow(candidates$main)) # Shall print a report
+    
+    # Make the plots and pass them to the report object later
+    plStat <- prsSelectStat
+    if (prsSelectStat == "none")
+        plStat <- "mean"
+    plval <- ifelse(sigTest=="ttest","p_ttest",ifelse(sigTest=="wilcoxon",
+        "p_wilcox","p_emp"))
+    plots <- .plotPrsEvaluation(evalMetrics$baseline,evalMetrics$metrics,
+        by=prsSelectCrit,pval=plval,stat=plStat)
+    if (!is.null(evalMetrics$full))
+        plots$frden <- .plotFreqDensities(evalMetrics$baseline,
+            evalMetrics$full,by="prs_r2")
     
     # The final output should be an object that can be used to build a
     # report but also some kind of inspection
@@ -181,6 +243,15 @@ prisma <- function(
     disp("\n",strftime(Sys.time()),": Data processing finished!\n")
     execTime <- .elap2human(TB)
     disp("Total processing time: ",execTime,"\n\n")
+    
+    return(list(
+        dnResult=dnResult,
+        evalMetrics=evalMetrics,
+        candidates=candidates,
+        cvMetricsMain=cvMetrics,
+        cvMetricsOthers=cvMetricsOthers,
+        plots=plots
+    ))
 }
 
 prsSelection <- function(
@@ -196,6 +267,7 @@ prsSelection <- function(
     step=if (resolution=="frequency") 1 else 
         c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
     minFreq=2,
+    minSnps=5,
     dropSameQuantiles=TRUE,
     aggregation=c("intersection","union"),
     effectWeight=c("mean","median","weight"),
@@ -227,13 +299,18 @@ prsSelection <- function(
     aggregation <- aggregation[1]
     effectWeight <- effectWeight[1]
     resolution <- resolution[1]
+    output <- output[1]
+    evalWith <- evalWith[1]
     .checkTextArgs("SNP aggregation method (aggregation)",aggregation,
         c("intersection","union"),multiarg=FALSE)
     .checkTextArgs("Output data level (output)",output,c("summary","full"),
         multiarg=FALSE)
+    .checkTextArgs("Evaluation framework (evalWith)",evalWith,
+        c("vanilla","prsice"),multiarg=FALSE)
     .checkNumArgs("Minimum frequency (minFreq)",minFreq,"numeric",0,"gte")
     
-      # Check if the selected GWA method is in dnList
+    # Check if the selected GWA method is in dnList
+    # Consider adding an auto function, will use .getPri to find or licomb later
     gwaMethods <- gwaMethods[1]
     if (is(dnList[[1]],"GWASExperiment"))
         tmpn <- colnames(effects(dnList[[1]]))
@@ -260,6 +337,7 @@ prsSelection <- function(
         .checkNumArgs("Frequency step (step)",step,"numeric",0,"gte")
     
     # Start doing the job
+    if (aggregation == "intersection") aggregation <- "intersect"
     snpSummary <- aggregatePrsMarkers(dnList,mode=aggregation,qcut=0,
         assoc=gwaMethods,avgfun=effectWeight)
     # Apply minimum frequency threshold
@@ -273,9 +351,8 @@ prsSelection <- function(
             fstep <- fstep[!duplicated(fstep,fromLast=TRUE)]
     }
     else if (resolution == "frequency") {
-        if (step == 1)
-            fstep <- sort(unique(snpSummary$freq))
-        else {
+        fstep <- sort(unique(snpSummary$freq))
+        if (step > 1) {
             # We would need at least 20 data points in this case...
             if (step > round(max(fstep)/20)) {
                 warning("The chosen frequency is too large and does not leave ",
@@ -283,15 +360,20 @@ prsSelection <- function(
                     "Auto-adjusting...",immediate.=TRUE)
                 step <- round(max(fstep)/20)
             }
-            fstep <- seq(from=fstep[1],to=fstep[2],by=step)
+            fstep <- seq(from=fstep[1],to=fstep[length(fstep)],by=step)
         }
     }
     
-    # Finally, ensure that the final frequency step contains more than 1 SNP -
-    # if yes, exclude it, otherwise crashes, besides PRS with 1 SNP is not PRS
+    # Finally, ensure that the final frequency step contains more than minSnps
+    # SNPs - if yes, exclude them, otherwise crashes, besides PRS with very
+    # few SNPs is not PRS
     fval <- snpSummary[snpSummary$freq>=fstep[length(fstep)],,drop=FALSE]
-    if (nrow(fval) == 1)
+    while (nrow(fval) <= minSnps) {
         fstep <- fstep[-length(fstep)]
+        fval <- snpSummary[snpSummary$freq>=fstep[length(fstep)],,drop=FALSE]
+    }
+    #if (nrow(fval) == 1)
+    #    fstep <- fstep[-length(fstep)]
     
     # Validation - selection runs
     # If continue=TRUE, prsPipeline will detect if the run is complete in the
@@ -299,11 +381,17 @@ prsSelection <- function(
     # In this way, one can simply collect the results of a previous runs
     # without a dedicated function for this and by simply re-running the
     # initial command with the initial arguments - the workspace must exist!
+    # Some tweaking per selection threshold is required.
     metrics <- vector("list",length(fstep))
     counter <- 0
     for (n in fstep) {
         counter <- counter + 1
         snpSelection <- snpSummary[snpSummary$freq>=n,,drop=FALSE]
+        
+        currSpace <- file.path(prsWorkspace,n)
+        currType <- ifelse(is.null(useDenovoWorkspace),"external","evaluate")
+        currCont <- ifelse(.isPrismaWorkspace(currSpace,currType),TRUE,FALSE)
+        
         message("===========================================================")
         message("-----> Frequency ",n," <-----")
         message("===========================================================")
@@ -330,11 +418,11 @@ prsSelection <- function(
             prsMethods=prsMethods,
             lassosumOpts=lassosumOpts,
             prsiceOpts=prsiceOpts,
-            prsWorkspace=file.path(prsWorkspace,n),
+            prsWorkspace=currSpace,
             cleanup=cleanup,
             logging=logging,
             output="summaries",
-            continue=continue,
+            continue=currCont,
             useDenovoWorkspace=useDenovoWorkspace,
             runId=as.character(n),
             evalWith=evalWith,
@@ -349,7 +437,7 @@ prsSelection <- function(
         else if (evalWith == "vanilla")
             metrics[[counter]] <- do.call("rbind",exResult)
     }
-    
+
     # The PRS selection function never does denovo. So there are 3 cases of
     # pipeline execution and downstream calculations
     # - External validation: use the SNPs in the aggregated data frame and
@@ -376,7 +464,7 @@ prsSelection <- function(
     # - Std/IQR of evaluation metrics in fstep
     # - Adjusted (sqrt(R2/log(N))) evaluation metrics
     # - p-value against the baseline (R2 only)
-    baseline <- .getR2(dnList)
+    baseline <- .getR2(dnList)[,"r2p"]
     if (evalWith == "prsice")
         freqMetrics <- lapply(metrics,function(x) {
             # for p-values
@@ -421,7 +509,7 @@ prsSelection <- function(
         freqMetrics <- lapply(metrics,function(x) {
             # for p-values
             b <- .subsampleBase(x$prs_r2,baseline)
-
+            
             return(c(
                 n_snp=x$n_snp[1],
                 freq=x$freq[1],
@@ -456,6 +544,7 @@ prsSelection <- function(
                 p_ttest=t.test(x$prs_r2,b,alternative="greater")$p.value,
                 p_wilcox=wilcox.test(x$prs_r2,b,alternative="greater")$p.value
             ))
+            print("THE ERROR IS HERE 2")
         })
     
     freqMetrics <- do.call("rbind",freqMetrics)
@@ -557,7 +646,8 @@ prsPipeline <- function(
                 callParams <- fromJSON(pfile)
             else {
                 warning("Parameters file for run ",runId," was not found! ",
-                    "Reading the latest one...",call.=FALSE,immediate.=TRUE)
+                    "This is normal if providing a runId for the first ", "time. Reading the latest one...",call.=FALSE,
+                    immediate.=TRUE)
                 callParams <- fromJSON(file.path(prsWorkspace,"params.json"))
             }
         }
@@ -589,7 +679,10 @@ prsPipeline <- function(
         cleanup <- callParams$cleanup
         logging <- callParams$logging
         output <- callParams$output
-        useDenovoWorkspace <- callParams$useDenovoWorkspace
+        # A previous denovo workspace may have been provided...
+        if (!.isPreviousDenovoList(useDenovoWorkspace) 
+            && !.isPreviousDenovoList(useDenovoWorkspace))
+            useDenovoWorkspace <- callParams$useDenovoWorkspace
         runId <- callParams$runId
         evalWith <- callParams$evalWith
         # For output directory (workspace) format
@@ -604,7 +697,8 @@ prsPipeline <- function(
                 full.names=TRUE)
         }
         else {
-            if (.isDenovoWorkspace(useDenovoWorkspace)) {
+            if (.isPrismaWorkspace(useDenovoWorkspace,"denovo")
+                || .isPreviousDenovoList(useDenovoWorkspace)) {
                 fast <- TRUE
                 sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_evaluate_"),
                     full.names=TRUE)
@@ -785,9 +879,9 @@ prsPipeline <- function(
         plinkOpts,prsMethods,lassosumOpts,prsiceOpts,prsWorkspace,cleanup,
         logging,output,useDenovoWorkspace,runId,evalWith,dig,rc)
     
-    if (evalWith == "vanilla")
-        return(do.call("rbind",currResult))
-    else
+    #if (evalWith == "vanilla")
+    #    return(do.call("rbind",currResult))
+    #else
         return(c(prevResult,currResult))
 }
 
@@ -834,7 +928,7 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
         tmpe <- effects(gwaList[[1]])
     else
         tmpe <- gwaList[[1]]$effects
-    if (assoc != "auto" && !(assoc %in% names(tmpe))) {
+    if (assoc != "auto" && !(assoc %in% colnames(tmpe))) {
         warning("The requested association method (",assoc,") cannot be ",
             "found in the input object! Switching to auto...",
             immediate.=TRUE)
@@ -1102,13 +1196,15 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     })
 }
 
-.isDenovoWorkspace <- function(d) {
+.isPrismaWorkspace <- function(d,type) {
     furtherCheck <- ifelse(!is.null(d) && is.character(d) && dir.exists(d),
         TRUE,FALSE)
     if (furtherCheck) {
         checks <- logical(3)
         # Does it contain individual directories with the _denovo_ pattern?
-        sdirs <- dir(d,pattern="_denovo_",full.names=TRUE)
+        pat <- ifelse(type=="denovo","_denovo_",ifelse(type=="external",
+            "_external_","_evaluate_"))
+        sdirs <- dir(d,pattern=pat,full.names=TRUE)
         checks[1] <- length(sdirs) > 0
         # Does it contain a params.json file?
         checks[2] <- file.exists(file.path(d,"params.json"))
@@ -1307,6 +1403,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         step=if (resolution=="frequency") 1 else 
             c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
         minFreq=2,
+        minSnps=5,
         dropSameQuantiles=TRUE,
         aggregation="intersection",
         effectWeight="mean",
@@ -1337,6 +1434,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         continue=FALSE,
         useDenovoWorkspace=NULL,
         runId=NULL,
+        evalOnSplit="original",
         evalWith="vanilla",
         rc=NULL
     ))
@@ -1353,6 +1451,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         step=if (resolution=="frequency") 1 else 
             c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
         minFreq=2,
+        minSnps=5,
         dropSameQuantiles=TRUE,
         aggregation="intersection",
         effectWeight="mean",

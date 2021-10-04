@@ -4,6 +4,7 @@
     s <- metrics[,paste0(ifelse(stat=="mean","sd","iqr"),"_",by)]
     p <- .zeroFix(metrics[,pval],.Machine$double.eps)
     fr <- metrics[,"freq"]
+    N <- metrics[,"n_snp"]
     r2adj <- sqrt(r2/log(N))
     logp <- -log10(p)
     names(r2) <- as.character(metrics[,"n_snp"])

@@ -143,6 +143,7 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     response <- chResCov$res
     covariates <- chResCov$cvs
     p <- p[,c(response,covariates),drop=FALSE]
+    phenotypes(gwe) <- p
     
     # Regression family stuff...
     if (!is.null(family)) {
@@ -307,6 +308,118 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
         full_pred_r2=fullCor^2,
         prs_pred_r2=fullCor^2-redCor^2
     ))
+}
+
+summarizeCvMetrics <- function(M,nsnp) {
+    disp("\n==================================================")
+    disp("PRISMA PRS cross-validation report")
+    disp("==================================================\n")
+    
+    disp("Number of SNPs in PRS                                 : ",nsnp)
+    disp("Number of cross-validations                           : ",nrow(M))
+    disp("Statistical significance of PRS in model              : ",
+        formatC(max(M[,"prs_pvalue"]),format="e",digits=3))
+    disp("--------------------------------------------------\n")
+    
+    disp("R^2 summary statistics")
+    disp("R^2 of the full regression model including the PRS    : ",
+        round(mean(M[,"full_r2"]),4)," +/- ",round(sd(M[,"full_r2"]),4))
+    disp("R^2 of the reduced regression model excluding the PRS : ",
+        round(mean(M[,"reduced_r2"]),4)," +/- ",round(sd(M[,"reduced_r2"]),4))
+    disp("Adjusted R^2 of the PRS full model contribution       : ",
+        round(mean(M[,"prs_r2"]),4)," +/- ",round(sd(M[,"prs_r2"]),4))
+    disp("--------------------------------------------------\n")
+    
+    disp("Statistical significance of full R^2 against reduced R^2")
+    disp("t-test         : ",formatC(t.test(M[,"full_r2"],M[,"reduced_r2"],
+        alternative="greater")$p.value,format="e",digits=3))
+    disp("Wilcoxon test  : ",formatC(wilcox.test(M[,"full_r2"],
+        M[,"reduced_r2"],alternative="greater")$p.value,format="e",
+        digits=3))
+    disp("Empirical test : ",
+        length(which(M[,"full_r2"]<M[,"reduced_r2"]))/nrow(M))
+    disp("--------------------------------------------------\n")
+    
+    disp("RMSE summary statistics")
+    disp("RMSE of the full regression model including the PRS    : ",
+        round(mean(M[,"full_rmse"]),4)," +/- ",round(sd(M[,"full_rmse"]),4))
+    disp("RMSE of the reduced regression model excluding the PRS : ",
+        round(mean(M[,"reduced_rmse"]),4)," +/- ",
+        round(sd(M[,"reduced_rmse"]),4))
+    disp("--------------------------------------------------\n")
+    
+    disp("Statistical significance of full RMSE against reduced RMSE")
+    disp("t-test         : ",formatC(t.test(M[,"full_rmse"],
+        M[,"reduced_rmse"],alternative="less")$p.value,format="e",
+        digits=3))
+    disp("Wilcoxon test  : ",formatC(wilcox.test(M[,"full_rmse"],
+        M[,"reduced_rmse"],alternative="less")$p.value,format="e",
+        digits=3))
+    disp("Empirical test : ",
+        length(which(M[,"full_rmse"]>M[,"reduced_rmse"]))/nrow(M))
+    disp("--------------------------------------------------\n")
+    
+    disp("MAE summary statistics")
+    disp("MAE of the full regression model including the PRS    : ",
+        round(mean(M[,"full_mae"]),4)," +/- ",round(sd(M[,"full_mae"]),4))
+    disp("MAE of the reduced regression model excluding the PRS : ",
+        round(mean(M[,"reduced_mae"]),4)," +/- ",
+        round(sd(M[,"reduced_mae"]),4))
+    disp("--------------------------------------------------\n")
+    
+    disp("Statistical significance of full MAE against reduced MAE")
+    disp("t-test         : ",formatC(t.test(M[,"full_mae"],
+        M[,"reduced_mae"],alternative="less")$p.value,format="e",
+        digits=3))
+    disp("Wilcoxon test  : ",formatC(wilcox.test(M[,"full_mae"],
+        M[,"reduced_mae"],alternative="less")$p.value,format="e",
+        digits=3))
+    disp("Empirical test : ",
+        length(which(M[,"full_mae"]>M[,"reduced_mae"]))/nrow(M))
+    disp("--------------------------------------------------\n")
+    
+    disp("Correlation summary statistics")
+    disp("R between observed & predicted values with the full model    : ",
+        round(mean(M[,"full_pred_cor"]),4)," +/- ",
+        round(sd(M[,"full_pred_cor"]),4))
+    disp("R between observed & predicted values with the reduced model : ",
+        round(mean(M[,"reduced_pred_cor"]),4)," +/- ",
+        round(sd(M[,"reduced_pred_cor"]),4))
+    disp("--------------------------------------------------\n")
+    
+    disp("Statistical significance of full R against reduced R")
+    disp("t-test         : ",formatC(t.test(M[,"full_pred_cor"],
+        M[,"reduced_pred_cor"],alternative="greater")$p.value,format="e",
+        digits=3))
+    disp("Wilcoxon test  : ",formatC(wilcox.test(M[,"full_pred_cor"],
+        M[,"reduced_pred_cor"],alternative="greater")$p.value,format="e",
+        digits=3))
+    disp("Empirical test : ",
+        length(which(M[,"reduced_pred_cor"]>M[,"reduced_pred_cor"]))/nrow(M))
+    disp("--------------------------------------------------\n")
+    
+    disp("R^2 summary statistics for the predicted test values")
+    disp("R^2 from the full regression model including the PRS    : ",
+        round(mean(M[,"full_pred_r2"]),4)," +/- ",
+        round(sd(M[,"full_pred_r2"]),4))
+    disp("R^2 from the reduced regression model excluding the PRS : ",
+        round(mean(M[,"reduced_pred_r2"]),4)," +/- ",
+        round(sd(M[,"reduced_pred_r2"]),4))
+    disp("Adjusted R^2 from the PRS full model contribution       : ",
+        round(mean(M[,"prs_pred_r2"]),4)," +/- ",
+        round(sd(M[,"prs_pred_r2"]),4))
+    disp("--------------------------------------------------\n")
+    
+    disp("Significance of full R^2 against reduced R^2 (predicted)")
+    disp("t-test         : ",formatC(t.test(M[,"full_pred_r2"],
+        M[,"reduced_pred_r2"],alternative="greater")$p.value,format="e",
+        digits=3))
+    disp("Wilcoxon test  : ",formatC(wilcox.test(M[,"full_pred_r2"],
+        M[,"reduced_pred_r2"],alternative="greater")$p.value,format="e",
+        digits=3))
+    disp("Empirical test : ",
+        length(which(M[,"full_pred_r2"]<M[,"reduced_pred_r2"]))/nrow(M))
+    disp("--------------------------------------------------\n")
 }
 
 prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
