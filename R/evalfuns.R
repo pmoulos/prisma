@@ -1,4 +1,29 @@
-#finalizeEffects <- function() {}
+# snpSelection in PGS format
+adjustPrsWeights <- function(snpSelection,gwe,response,covariates=NULL,
+    pcs=FALSE,family=NULL,rc=NULL) {
+    # Firstly, preserve the PC covariates as they are (correctly) being dropped
+    # in subsetting a GWASExperiment
+    if (pcs) {
+        if (.hasPcaCovariates(gwe)) {
+            p <- phenotypes(gwe)
+            pcov <- pcaCovariates(gwe)
+            p <- cbind(p,pcov)
+            phenotypes(gwe) <- p
+            covariates <- c(covariates,colnames(pcov))
+        }
+        else 
+            warning("PC covariates requested in the final model, but no ",
+                "calculated PC covariates found! Ignoring...",immediate.=TRUE)
+    }
+    
+    glmEff <- gwaGlm(gwe[rownames(snpSelection),,drop=FALSE],response,
+        covariates,pcs=FALSE,rc=rc)
+    # Still, effects are reversed...
+    snpSelection$effect_weight <- -glmEff[,"Estimate"]
+    snpSelection$OR <- exp(snpSelection$effect_weight)
+    
+    return(snpSelection)
+}
 
 selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
     crit=c("prs_r2","prs_pvalue","prs_aic"),stat=c("mean","median","none"),
@@ -85,8 +110,12 @@ selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
         # narrow down results
         if (!is.null(base) && crit == "prs_r2") {
             jm <- which(metrics[,sel] > mean(base))
-            if (length(jm) > 0)
-                im <- intersect(im,jm)
+            if (length(jm) > 0) {
+                # Could be only in the beginning of the distribution
+                tim <- intersect(im,jm)
+                if (length(tim) > 0)
+                    im <- tim
+            }
         }
         
         # Make the selection and construct list of SNP vectors
@@ -185,7 +214,7 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     metrics <- cmclapply(seq_len(times),function(i) {
         if (is.null(rc)) {
             silent <- FALSE
-            disp("===========================================================")
+            disp("\n==========================================================")
             disp("-----> Cross-validation iteration ",i)
             disp("==========================================================\n")
         }

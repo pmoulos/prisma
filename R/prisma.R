@@ -96,13 +96,20 @@ prisma <- function(
     
     # Display initialization report
     TB <- Sys.time()
-    disp(strftime(Sys.time()),": Data processing started...\n")
+    disp("\n",strftime(Sys.time()),": Data processing started...")
+    
+    # Here, display options
+    callArgs <- as.list(match.call())[-1]
+    .prettyLogOptions(callArgs,"prisma") 
     
     # First part - PRS candidate SNPs. prsPipeline takes care for the collection
     # of thw whole dnResult list, whether that run has failed or not. When
     # continue=TRUE, prsPipeline will continue from this point and the dnResult
     # goinf to the next part will be intact. Also, the work is split to two
     # directories in the workspace, baseline and selection
+    disp("\n##################################################################")
+    disp("1. Discovery of de novo PRS candidates")
+    disp("##################################################################\n")
     dnResult <- prsPipeline(
         gwe=gwe,
         phenotype=phenotype,
@@ -136,6 +143,9 @@ prisma <- function(
     
     # Second part collect evaluation metrics - if continue=TRUE, dnResult will 
     # be collected from the previous step and passed here.
+    disp("\n##################################################################")
+    disp("2. Calculation of PRS evaluation metrics")
+    disp("##################################################################\n")
     uDnS <- NULL
     if (evalOnSplit == "original")
         uDnS <- dnResult
@@ -181,6 +191,9 @@ prisma <- function(
     )
     
     # Third part, suggest PRS
+    disp("\n##################################################################")
+    disp("3. Selection of best PRS candidate markers")
+    disp("##################################################################\n")
     candidates <- selectPrs(
         metrics=evalMetrics$metrics,
         snpSelection=evalMetrics$pgs,
@@ -193,6 +206,9 @@ prisma <- function(
     )
     
     # Fourth part, evaluate the candidates with the total dataset
+    disp("\n##################################################################")
+    disp("4.1. Primary PRS candidate cross-validation")
+    disp("##################################################################")
     cvMetrics <- prsCrossValidate(
         snpSelection=candidates$main,
         gwe=gwe,
@@ -205,6 +221,9 @@ prisma <- function(
     )
     
     # Also, cvMetrics on the rest?
+    disp("\n##################################################################")
+    disp("4.2. Secondary PRS candidate (if any) cross-validation")
+    disp("##################################################################")
     if (!is.null(candidates$others))
         cvMetricsOthers <- lapply(candidates$others,function(x) {
             prsCrossValidate(
@@ -219,9 +238,10 @@ prisma <- function(
             )
         })
     
-    summarizeCvMetrics(cvMetrics,nrow(candidates$main)) # Shall print a report
-    
     # Make the plots and pass them to the report object later
+    disp("\n##################################################################")
+    disp("5. Wrap-up and graphics")
+    disp("##################################################################\n")
     plStat <- prsSelectStat
     if (prsSelectStat == "none")
         plStat <- "mean"
@@ -232,6 +252,16 @@ prisma <- function(
     if (!is.null(evalMetrics$full))
         plots$frden <- .plotFreqDensities(evalMetrics$baseline,
             evalMetrics$full,by="prs_r2")
+    
+    # Also PRS plots
+    popPrs <- PRS(gwe,candidates$main,prsiceOpts$score)
+    trait <- phenotypes(gwe)[,phenotype]
+    ppl <- .plotPrsTrait(popPrs,trait,phenotype)
+    plots$prsScatter <- ppl$scatter
+    plots$prsHist <- ppl$hist
+    
+    # Display a summary of CV metrics
+    summarizeCvMetrics(cvMetrics,nrow(candidates$main))
     
     # The final output should be an object that can be used to build a
     # report but also some kind of inspection
@@ -244,14 +274,33 @@ prisma <- function(
     execTime <- .elap2human(TB)
     disp("Total processing time: ",execTime,"\n\n")
     
+    cvMetrics <- list(cvMetrics)
+    names(cvMetrics) <- as.character(nrow(candidates$main))
     return(list(
         dnResult=dnResult,
         evalMetrics=evalMetrics,
         candidates=candidates,
-        cvMetricsMain=cvMetrics,
-        cvMetricsOthers=cvMetricsOthers,
+        cvMetrics=list(cvMetrics,cvMetricsOthers),
+        #cvMetricsMain=cvMetrics,
+        #cvMetricsOthers=cvMetricsOthers,
         plots=plots
     ))
+    
+    ## Extra code for readjusting final effects - not so useful
+    #theMainPrs <- adjustPrsWeights(candidates$main,gwe,phenotype,covariates,
+    #    pcs,rc=rc)
+    #
+    ## Redo CV to see if the final effects improve R2
+    #newCvMetrics <- prsCrossValidate(
+    #    snpSelection=theMainPrs,
+    #    gwe=gwe,
+    #    response=phenotype,
+    #    covariates=covariates,
+    #    pcs=pcs,
+    #    leaveOut=cvOutSize,
+    #    times=ncvs,
+    #    rc=rc
+    #)
 }
 
 prsSelection <- function(
@@ -375,6 +424,10 @@ prsSelection <- function(
     #if (nrow(fval) == 1)
     #    fstep <- fstep[-length(fstep)]
     
+    # Here, display options
+    callArgs <- as.list(match.call())[-1]
+    .prettyLogOptions(callArgs,"select")
+    
     # Validation - selection runs
     # If continue=TRUE, prsPipeline will detect if the run is complete in the
     # workspace and return a full exResult, otherwise it will continue.
@@ -392,7 +445,7 @@ prsSelection <- function(
         currType <- ifelse(is.null(useDenovoWorkspace),"external","evaluate")
         currCont <- ifelse(.isPrismaWorkspace(currSpace,currType),TRUE,FALSE)
         
-        message("===========================================================")
+        message("\n===========================================================")
         message("-----> Frequency ",n," <-----")
         message("===========================================================")
         exResult <- prsPipeline(
@@ -473,18 +526,18 @@ prsSelection <- function(
             return(c(
                 n_snp=x$n_snp[1],
                 freq=x$freq[1],
-                mean_prs_r2=mean(x$r2p),
-                mean_full_r2=mean(x$r2m),
-                mean_reduced_r2=mean(x$r2n),
-                sd_prs_r2=sd(x$r2p),
-                sd_full_r2=sd(x$r2m),
-                sd_reduced_r2=sd(x$r2n),
-                median_prs_r2=median(x$r2p),
-                median_full_r2=median(x$r2m),
-                median_reduced_r2=median(x$r2n),
-                iqr_prs_r2=IQR(x$r2p),
-                iqr_full_r2=IQR(x$r2m),
-                iqr_reduced_r2=IQR(x$r2n),
+                mean_prs_r2=mean(x$r2p,na.rm=TRUE),
+                mean_full_r2=mean(x$r2m,na.rm=TRUE),
+                mean_reduced_r2=mean(x$r2n,na.rm=TRUE),
+                sd_prs_r2=sd(x$r2p,na.rm=TRUE),
+                sd_full_r2=sd(x$r2m,na.rm=TRUE),
+                sd_reduced_r2=sd(x$r2n,na.rm=TRUE),
+                median_prs_r2=median(x$r2p,na.rm=TRUE),
+                median_full_r2=median(x$r2m,na.rm=TRUE),
+                median_reduced_r2=median(x$r2n,na.rm=TRUE),
+                iqr_prs_r2=IQR(x$r2p,na.rm=TRUE),
+                iqr_full_r2=IQR(x$r2m,na.rm=TRUE),
+                iqr_reduced_r2=IQR(x$r2n,na.rm=TRUE),
                 mean_prs_aic=NA,
                 mean_full_aic=NA,
                 mean_reduced_aic=NA,
@@ -513,38 +566,37 @@ prsSelection <- function(
             return(c(
                 n_snp=x$n_snp[1],
                 freq=x$freq[1],
-                mean_prs_r2=mean(x$prs_r2),
-                mean_full_r2=mean(x$full_r2),
-                mean_reduced_r2=mean(x$reduced_r2),
-                sd_prs_r2=sd(x$prs_r2),
-                sd_full_r2=sd(x$full_r2),
-                sd_reduced_r2=sd(x$reduced_r2),
-                median_prs_r2=median(x$prs_r2),
-                median_full_r2=median(x$full_r2),
-                median_reduced_r2=median(x$reduced_r2),
-                iqr_prs_r2=IQR(x$prs_r2),
-                iqr_full_r2=IQR(x$full_r2),
-                iqr_reduced_r2=IQR(x$reduced_r2),
-                mean_prs_aic=mean(x$prs_aic),
-                mean_full_aic=mean(x$full_aic),
-                mean_reduced_aic=mean(x$reduced_aic),
-                sd_prs_aic=sd(x$prs_aic),
-                sd_full_aic=sd(x$full_aic),
-                sd_reduced_aic=sd(x$reduced_aic),
-                median_prs_aic=median(x$prs_aic),
-                median_full_aic=median(x$full_aic),
-                median_reduced_aic=median(x$reduced_aic),
-                iqr_prs_aic=IQR(x$prs_aic),
-                iqr_full_aic=IQR(x$full_aic),
-                iqr_reduced_aic=IQR(x$reduced_aic),
-                prs_p=max(x$prs_pvalue),
-                full_p=max(x$full_pvalue),
-                reduced_p=max(x$reduced_pvalue),
+                mean_prs_r2=mean(x$prs_r2,na.rm=TRUE),
+                mean_full_r2=mean(x$full_r2,na.rm=TRUE),
+                mean_reduced_r2=mean(x$reduced_r2,na.rm=TRUE),
+                sd_prs_r2=sd(x$prs_r2,na.rm=TRUE),
+                sd_full_r2=sd(x$full_r2,na.rm=TRUE),
+                sd_reduced_r2=sd(x$reduced_r2,na.rm=TRUE),
+                median_prs_r2=median(x$prs_r2,na.rm=TRUE),
+                median_full_r2=median(x$full_r2,na.rm=TRUE),
+                median_reduced_r2=median(x$reduced_r2,na.rm=TRUE),
+                iqr_prs_r2=IQR(x$prs_r2,na.rm=TRUE),
+                iqr_full_r2=IQR(x$full_r2,na.rm=TRUE),
+                iqr_reduced_r2=IQR(x$reduced_r2,na.rm=TRUE),
+                mean_prs_aic=mean(x$prs_aic,na.rm=TRUE),
+                mean_full_aic=mean(x$full_aic,na.rm=TRUE),
+                mean_reduced_aic=mean(x$reduced_aic,na.rm=TRUE),
+                sd_prs_aic=sd(x$prs_aic,na.rm=TRUE),
+                sd_full_aic=sd(x$full_aic,na.rm=TRUE),
+                sd_reduced_aic=sd(x$reduced_aic,na.rm=TRUE),
+                median_prs_aic=median(x$prs_aic,na.rm=TRUE),
+                median_full_aic=median(x$full_aic,na.rm=TRUE),
+                median_reduced_aic=median(x$reduced_aic,na.rm=TRUE),
+                iqr_prs_aic=IQR(x$prs_aic,na.rm=TRUE),
+                iqr_full_aic=IQR(x$full_aic,na.rm=TRUE),
+                iqr_reduced_aic=IQR(x$reduced_aic,na.rm=TRUE),
+                prs_p=max(x$prs_pvalue,na.rm=TRUE),
+                full_p=max(x$full_pvalue,na.rm=TRUE),
+                reduced_p=max(x$reduced_pvalue,na.rm=TRUE),
                 p_emp=length(which(x$prs_r2 < b))/length(b),
                 p_ttest=t.test(x$prs_r2,b,alternative="greater")$p.value,
                 p_wilcox=wilcox.test(x$prs_r2,b,alternative="greater")$p.value
             ))
-            print("THE ERROR IS HERE 2")
         })
     
     freqMetrics <- do.call("rbind",freqMetrics)
@@ -606,7 +658,6 @@ prsPipeline <- function(
     evalWith=c("vanilla","prscice"),
     rc=NULL
 ) {
-    #TODO: Log options in effect (or all), like in metaseqR
     #TODO: Check mutual exclusive or warn
     #      e.g. trainSize and niter is ignored when useDenovoWorkspace
     # snpSelection may be:
@@ -871,7 +922,11 @@ prsPipeline <- function(
             pretty=TRUE)
     }
     
-    # .prettyLogOptions(...)
+    # Here, display options, if called directly and not from prsSelection
+    # (otherwise too much screen flooding)
+    callParams2 <- callParams
+    callParams2$gwe <- gwe
+    .prettyLogOptions(callParams2,"pipeline")
     
     currResult <- .prsPipeline(gwe,phenotype,covariates,pcs,npcs,snpSelection,
         trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
@@ -1013,6 +1068,7 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
         },w)
     }
     
+    disp("Constructing output")
     out <- as.data.frame(freq[goods])
     names(out) <- c("snp","freq")
     out$effect <- avgEffs[goods]
@@ -1026,6 +1082,7 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
     if (!is.null(gwe))
         out <- .constructOutput(rownames(out),out,gwe)
     
+    disp("Done!")
     return(out[order(out$freq,decreasing=TRUE),,drop=FALSE])
 }
 
@@ -1257,260 +1314,263 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         allArgs[names(callArgs)] <- callArgs
         .prettyLogOptionsPrs(allArgs)
     }
+}
+
+.prettyLogOptionsPrisma <- function(args) {
+    disp("\nInput")
+    disp("--------------------------------------------------------------------")
+    disp("Input object (gwe) : a GWASExperiment object with ",nrow(args$gwe),
+        " markers (SNPs) and ",ncol(args$gwe)," samples")
     
-    # For upstream
-    #thisCall <- as.list(match.call())[-1]
+    disp("\nRegression parameters")
+    disp("--------------------------------------------------------------------")
+    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Regression covariates (covariates)       : ",
+        if (is.null(args$covariates)) "-" else 
+            paste(args$covariates,collapse=", "))
+    disp("Principal Components in covariates (pcs) : ",
+        ifelse(args$pcs,"Yes","No"))
+    disp("Number of Principal Components (npcs)    : ",
+        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        
+    disp("\nPreprocessing options")
+    disp("--------------------------------------------------------------------")
+    disp("Sample and genotype filtering options (filters)     :")
+    .dispListOpts(args$filters)
+    disp("Principal Components calculation method (pcaMethod) : ",
+        args$pcaMethod)
+    disp("Impute missing genotypes (imputeMissing)            : ",
+        ifelse(args$imputeMissing,"Yes","No"))
+    disp("Missing genotype imputation method (imputeMethod)   : ",
+        args$imputeMethod)
+    
+    disp("\nGWA analysis options")
+    disp("--------------------------------------------------------------------")
+    disp("Genome-Wide Association tests (gwaMethods)        : ",
+        paste(args$gwaMethods,collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+    disp("Association tests options                         : ")
+    for (g in args$gwaMethods) {
+        disp("  ",g," : ")
+        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
+    }
+    
+    disp("\nPRS candidate extraction options")
+    disp("--------------------------------------------------------------------")
+    disp("PRS extraction algorithms (prsMethods) : ",
+        paste(args$prsMethods,collapse=", "))
+    disp("PRS algorithms options (prsMethods)    : ")
+    for (p in args$prsMethods) {
+        disp("  ",p," : ")
+        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
+    }
+    
+    disp("\nPRS construction and evaluation options")
+    disp("--------------------------------------------------------------------")
+    disp("Training set size (trainSize)                               : ",
+        paste0(100*args$trainSize,"%"))
+    disp("Number of PRS selection iterations (niter)                  : ",
+        args$niter)
+    disp("PRS selection resolution method (resolution)                : ",
+        args$resolution)
+    disp("PRS selection resolution step (step)                        : ",
+        if (length(args$step) == 1) args$step else 
+            paste(args$step,collapse=", "))
+    disp("Minimum SNP frequency in PRS (minFreq)                      : ",
+        args$minFreq)
+    disp("Minimum number of SNPs in PRS (minSnps)                     : ",
+        args$minSnps)
+    disp("Drop quantiles with same number of SNPs (dropSameQuantiles) : ",
+        ifelse(args$dropSameQuantiles,"Yes","No"))
+    disp("PRS aggregation method (aggregation)                        : ",
+        args$aggregation)
+    disp("SNP effect summarization method (effectWeight)              : ",
+        args$effectWeight)
+    disp("PRS evaluation framework (evalWith)                         : ",
+        args$evalWith)
+    disp("Number of regression cross-validations using the PRS        :",
+        args$ncvs)
+    disp("Leave-out samples percentage during cross-validations       :",
+        paste0(100*args$cvOutSize,"%"))
+        
+    isp("\nPRS selection options")
+    disp("--------------------------------------------------------------------")
+    disp("PRS selection method (prsSelectMethod)           : ",prsSelectMethod)
+    disp("PRS selection criterion (prsSelectCrit)          : ",prsSelectMethod)
+    disp("PRS criterion summarization (prsSelectStat)      : ",prsSelectStat)
+    disp("R^2 type if criterion includes R^2 (prsSelectR2) : ",prsSelectR2)
+    
+    disp("\nMiscellaneous options")
+    disp("--------------------------------------------------------------------")
+    disp("Local workspace directory (prsWorkspace) : ",
+        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
+    disp("Cleanup level (cleanup)                  : ",args$cleanup)
+    disp("Output type (output)                     : ",args$output)
+    disp("Run ID (runId)                           : ",
+        ifelse(is.null(args$runId),"auto",args$runId))
+    disp("Available cores fraction (rc)            : ",
+        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
+}
+
+.prettyLogOptionsSelect <- function(args) {
+    disp("\nInput")
+    disp("--------------------------------------------------------------------")
+    disp("Input object (gwe) : a GWASExperiment object with ",nrow(args$gwe),
+        " markers (SNPs) and ",ncol(args$gwe)," samples")
+    
+    disp("\nRegression parameters")
+    disp("--------------------------------------------------------------------")
+    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Regression covariates (covariates)       : ",
+        if (is.null(args$covariates)) "-" else 
+            paste(args$covariates,collapse=", "))
+    disp("Principal Components in covariates (pcs) : ",
+        ifelse(args$pcs,"Yes","No"))
+    disp("Number of Principal Components (npcs)    : ",
+        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        
+    disp("\nPreprocessing options")
+    disp("--------------------------------------------------------------------")
+    disp("Sample and genotype filtering options (filters)     :")
+    .dispListOpts(args$filters)
+    disp("Principal Components calculation method (pcaMethod) : ",
+        args$pcaMethod)
+    disp("Impute missing genotypes (imputeMissing)            : ",
+        ifelse(args$imputeMissing,"Yes","No"))
+    disp("Missing genotype imputation method (imputeMethod)   : ",
+        args$imputeMethod)
+    
+    disp("\nGWA analysis options")
+    disp("--------------------------------------------------------------------")
+    disp("Genome-Wide Association tests (gwaMethods)        : ",
+        paste(args$gwaMethods,collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+    disp("Association tests options                         : ")
+    for (g in args$gwaMethods) {
+        disp("  ",g," : ")
+        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
+    }
+    
+    disp("\nPRS candidate extraction options")
+    disp("--------------------------------------------------------------------")
+    disp("PRS extraction algorithms (prsMethods) : ",
+        paste(args$prsMethods,collapse=", "))
+    disp("PRS algorithms options (prsMethods)    : ")
+    for (p in args$prsMethods) {
+        disp("  ",p," : ")
+        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
+    }
+    
+    disp("\nPRS construction and evaluation options")
+    disp("--------------------------------------------------------------------")
+    disp("Training set size (trainSize)                               : ",
+        paste0(100*args$trainSize,"%"))
+    disp("Number of PRS selection iterations (niter)                  : ",
+        args$niter)
+    disp("PRS selection resolution method (resolution)                : ",
+        args$resolution)
+    disp("PRS selection resolution step (step)                        : ",
+        if (length(args$step) == 1) args$step else 
+            paste(args$step,collapse=", "))
+    disp("Minimum SNP frequency in PRS (minFreq)                      : ",
+        args$minFreq)
+    disp("Minimum number of SNPs in PRS (minSnps)                     : ",
+        args$minSnps)
+    disp("Drop quantiles with same number of SNPs (dropSameQuantiles) : ",
+        ifelse(args$dropSameQuantiles,"Yes","No"))
+    disp("PRS aggregation method (aggregation)                        : ",
+        args$aggregation)
+    disp("SNP effect summarization method (effectWeight)              : ",
+        args$effectWeight)
+    disp("PRS evaluation framework (evalWith)                         : ",
+        args$evalWith)
+    
+    disp("\nMiscellaneous options")
+    disp("--------------------------------------------------------------------")
+    disp("Local workspace directory (prsWorkspace) : ",
+        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
+    disp("Cleanup level (cleanup)                  : ",args$cleanup)
+    disp("Output type (output)                     : ",args$output)
+    disp("Run ID (runId)                           : ",
+        ifelse(is.null(args$runId),"auto",args$runId))
+    disp("Available cores fraction (rc)            : ",
+        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
 }
 
 .prettyLogOptionsPrs <- function(args) {
-    disp("Input object: a GWASExperiment object with ",nrow(args$gwe),
-        " markers (SNPs) and ",ncol(args$gwe)," samples")
+    disp("\nInput")
+    disp("--------------------------------------------------------------------")
+    disp("Input pipeline list (dnList) : ",
+        if (is(args$dnList[[1]],"GWASExperiment")) 
+            "a list of GWASExperiment objects" else
+            "a list of PRS pipeline summaries")
+    disp("Input dataset object (gwe)   : a GWASExperiment object with ",
+        nrow(args$gwe)," markers (SNPs) and ",ncol(args$gwe)," samples")
     
+    disp("\nRegression parameters")
+    disp("--------------------------------------------------------------------")
+    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Regression covariates (covariates)       : ",
+        if (is.null(args$covariates)) "-" else 
+            paste(args$covariates,collapse=", "))
+    disp("Principal Components in covariates (pcs) : ",
+        ifelse(args$pcs,"Yes","No"))
+    disp("Number of Principal Components (npcs)    : ",
+        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        
+    disp("\nPreprocessing options")
+    disp("--------------------------------------------------------------------")
+    disp("Sample and genotype filtering options (filters)     :")
+    .dispListOpts(args$filters)
+    disp("Principal Components calculation method (pcaMethod) : ",
+        args$pcaMethod)
+    disp("Impute missing genotypes (imputeMissing)            : ",
+        ifelse(args$imputeMissing,"Yes","No"))
+    disp("Missing genotype imputation method (imputeMethod)   : ",
+        args$imputeMethod)
     
-    ############################################################################
-    disp("Read counts file: ",countsName)
-    disp("Conditions: ",paste(names(sampleList),collapse=", "))
-    disp("Samples to include: ",paste(unlist(sampleList),collapse=", "))
-    if (!is.null(excludeList) && !is.na(excludeList))
-        disp("Samples to exclude: ",paste(unlist(excludeList),collapse=", "))
-    else
-        disp("Samples to exclude: none")
-    if (!is.null(contrast))
-        disp("Requested contrasts: ",paste(contrast,collapse=", "))
-    else
-        disp("Requested contrasts: none")
-    if (!is.null(libsizeList)) {
-        disp("Library sizes: ")
-        for (n in names(libsizeList))
-            disp("  ",paste(n,libsizeList[[n]],sep=": "))
+    disp("\nGWA analysis options")
+    disp("--------------------------------------------------------------------")
+    disp("Genome-Wide Association tests (gwaMethods)        : ",
+        paste(args$gwaMethods,collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+    disp("Association tests options                         : ")
+    for (g in args$gwaMethods) {
+        disp("  ",g," : ")
+        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
     }
-    if (!is.null(annotation) && !is.list(annotation))
-        disp("Annotation: ",annotation)
-    if (is.list(annotation))
-        disp("Annotation: user provided GTF file")
-    disp("Organism: ",org)
-    disp("Reference source: ",refdb)
-    disp("Count type: ",countType)
-    if (countType == "utr") {
-        disp("3' UTR fraction: ",utrOpts$frac)
-        disp("3' UTR minimum length: ",utrOpts$minLength,"bps")
-        disp("3' UTR downstream: ",utrOpts$downstream,"bps")
+    
+    disp("\nPRS candidate extraction options")
+    disp("--------------------------------------------------------------------")
+    disp("PRS extraction algorithms (prsMethods) : ",
+        paste(args$prsMethods,collapse=", "))
+    disp("PRS algorithms options (prsMethods)    : ")
+    for (p in args$prsMethods) {
+        disp("  ",p," : ")
+        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
     }
-    if (!is.null(preset))
-        disp("Analysis preset: ",preset)
-    disp("Transcriptional level: ",transLevel)
-    if (!is.null(exonFilters)) {
-        disp("Exon filters: ",paste(names(exonFilters),collapse=", "))
-        for (ef in names(exonFilters)) {
-            disp("  ",ef,": ")
-            for (efp in names(exonFilters[[ef]])) {
-                if (length(exonFilters[[ef]][[efp]])==1 && 
-                    is.function(exonFilters[[ef]][[efp]]))
-                    print(exonFilters[[ef]][[efp]])
-                else if (length(exonFilters[[ef]][[efp]])==1)
-                    disp("    ",paste(efp,exonFilters[[ef]][[efp]],sep=": "))
-                else if (length(exonFilters[[ef]][[efp]])>1)
-                    disp("    ",paste(efp,paste(exonFilters[[ef]][[efp]],
-                        collapse=", "),sep=": "))
-            }
-        }
-    }
-    else
-        disp("Exon filters: none applied")
-    if (!is.null(geneFilters)) {
-        disp("Gene filters: ",paste(names(geneFilters),collapse=", "))
-        for (gf in names(geneFilters)) {
-            disp("  ",gf,": ")
-            for (gfp in names(geneFilters[[gf]])) {
-                if (length(geneFilters[[gf]][[gfp]])==1 && 
-                    is.function(geneFilters[[gf]][[gfp]]))
-                    print(geneFilters[[gf]][[gfp]])
-                else if (length(geneFilters[[gf]][[gfp]])==1)
-                    disp("    ",paste(gfp,geneFilters[[gf]][[gfp]],sep=": "))
-                else if (length(geneFilters[[gf]][[gfp]])>1)
-                    disp("    ",paste(gfp,paste(geneFilters[[gf]][[gfp]],
-                        collapse=", "),sep=": "))
-            }
-        }
-    }
-    else
-        disp("Gene filters: none applied")
-    disp("Filter application: ",whenApplyFilter)
-    disp("Normalization algorithm: ",normalization)
-    if (!is.null(normArgs)) {
-        disp("Normalization arguments: ")
-        for (na in names(normArgs)) {
-            if (length(normArgs[[na]])==1 && is.function(normArgs[[na]])) {
-                disp("  ",na,": ")
-                disp(as.character(substitute(normArgs[[na]])))
-            }
-            else if (length(normArgs[[na]])==1)
-                disp("  ",paste(na,normArgs[[na]],sep=": "))
-            else if (length(normArgs[[na]])>1)
-                disp("  ",paste(na,paste(normArgs[[na]],collapse=", "),
-                    sep=": "))
-        }
-    }
-    if (!any(is.na(statistics)))
-        disp("Statistical algorithm(s): ",paste(statistics,collapse=", "))
-    else
-        disp("Statistical algorithm(s): no testing selected")
-    if (!is.null(statArgs)) {
-        if (!any(is.na(statistics))) {
-            disp("Statistical arguments: ")
-            for (sa in names(statArgs)) {
-                if (length(statArgs[[sa]])==1 && is.function(statArgs[[sa]])) {
-                    disp("  ",sa,": ")
-                    disp(as.character(substitute(statArgs[[na]])))
-                }
-                else if (length(statArgs[[sa]])==1)
-                    disp("  ",paste(sa,statArgs[[sa]],sep=": "))
-                else if (length(statArgs[[sa]])>1)
-                    disp("  ",paste(sa,paste(statArgs[[sa]],collapse=", "),
-                        sep=": "))
-            }
-        }
-        else
-            disp("Statistical arguments: no testing selected")
-    }
-    disp("Meta-analysis method: ",metaP)
-    disp("Multiple testing correction: ",adjustMethod)
-    if (!is.na(pcut)) 
-        disp("p-value threshold: ",pcut)
-    disp("Logarithmic transformation offset: ",logOffset)
-    if (!is.null(preset)) 
-        disp("Analysis preset: ",preset)
-    disp("Quality control plots: ",paste(qcPlots,collapse=", "))
-    disp("Figure format: ",paste(figFormat,collapse=", "))
-    if (!is.na(exportWhere)) 
-        disp("Output directory: ",exportWhere)
-    disp("Output data: ",paste(exportWhat,collapse=", "))
-    disp("Output scale(s): ",paste(exportScale,collapse=", "))
-    disp("Output values: ",paste(exportValues,collapse=", "))
-    if ("stats" %in% exportWhat)
-        disp("Output statistics: ",paste(exportStats,collapse=", "),"\n")
-    ############################################################################
-}
-
-.getPrismaMainDefaults <- function() {
-    return(list(
-        covariates=NULL,
-        pcs=FALSE,
-        npcs=0,
-        trainSize=0.8,
-        niter=10,
-        resolution=c("frequency","quantile"),
-        step=if (resolution=="frequency") 1 else 
-            c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
-        minFreq=2,
-        minSnps=5,
-        dropSameQuantiles=TRUE,
-        aggregation="intersection",
-        effectWeight="mean",
-        prsSelectMethod="maxima",
-        prsSelectCrit="prs_r2",
-        prsSelectStat="mean",
-        prsSelectR2="adjusted",
-        cvOutSize=0.05,
-        ncvs=10,
-        filters=getDefaults("filters"),
-        pcaMethod="snprel",
-        imputeMissing=FALSE,
-        imputeMethod="single",
-        gwaMethods="glm",
-        gwaCombine="simes",
-        glmOpts=getDefaults("glm"),
-        rrblupOpts=getDefaults("rrblup"),
-        statgenOpts=getDefaults("statgen"),
-        snptestOpts=getDefaults("snptest"),
-        plinkOpts=getDefaults("plink"),
-        prsMethods=c("lassosum","prsice"),
-        lassosumOpts=getDefaults("lassosum"),
-        prsiceOpts=getDefaults("prsice"),
-        prsWorkspace=NULL,
-        cleanup=c("none","intermediate","all"),
-        logging=c("screen","file"),
-        output=c("gwaslist","summaries"),
-        continue=FALSE,
-        useDenovoWorkspace=NULL,
-        runId=NULL,
-        evalOnSplit="original",
-        evalWith="vanilla",
-        rc=NULL
-    ))
-}
-
-.getPrsSelectionDefaults <- function() {
-    return(list(
-        covariates=NULL,
-        pcs=FALSE,
-        npcs=0,
-        trainSize=0.8,
-        niter=10,
-        resolution=c("frequency","quantile"),
-        step=if (resolution=="frequency") 1 else 
-            c(0.1,0.2,0.3,0.4,0.5,0.75,0.8,0.9,0.95,0.99),
-        minFreq=2,
-        minSnps=5,
-        dropSameQuantiles=TRUE,
-        aggregation="intersection",
-        effectWeight="mean",
-        filters=getDefaults("filters"),
-        pcaMethod="snprel",
-        imputeMissing=FALSE,
-        imputeMethod="single",
-        gwaMethods="glm",
-        gwaCombine="simes",
-        glmOpts=getDefaults("glm"),
-        rrblupOpts=getDefaults("rrblup"),
-        statgenOpts=getDefaults("statgen"),
-        snptestOpts=getDefaults("snptest"),
-        plinkOpts=getDefaults("plink"),
-        prsMethods=c("lassosum","prsice"),
-        lassosumOpts=getDefaults("lassosum"),
-        prsiceOpts=getDefaults("prsice"),
-        prsWorkspace=NULL,
-        cleanup=c("none","intermediate","all"),
-        logging=c("screen","file"),
-        output=c("gwaslist","summaries"),
-        continue=FALSE,
-        useDenovoWorkspace=NULL,
-        runId=NULL,
-        evalWith="vanilla",
-        rc=NULL
-    ))
-}
-
-.getPrsPipelineDefaults <- function() {
-    return(list(
-        covariates=NULL,
-        pcs=FALSE,
-        npcs=0,
-        snpSelection=NULL,
-        trainSize=0.8,
-        niter=10,
-        filters=getDefaults("filters"),
-        pcaMethod="snprel",
-        imputeMissing=FALSE,
-        imputeMethod="single",
-        gwaMethods="glm",
-        gwaCombine="simes",
-        glmOpts=getDefaults("glm"),
-        rrblupOpts=getDefaults("rrblup"),
-        statgenOpts=getDefaults("statgen"),
-        snptestOpts=getDefaults("snptest"),
-        plinkOpts=getDefaults("plink"),
-        prsMethods=c("lassosum","prsice"),
-        lassosumOpts=getDefaults("lassosum"),
-        prsiceOpts=getDefaults("prsice"),
-        prsWorkspace=NULL,
-        cleanup="intermediate",
-        logging="screen",
-        output="gwaslist",
-        continue=FALSE,
-        useDenovoWorkspace=NULL,
-        runId=NULL,
-        evalWith="vanilla",
-        rc=NULL
-    ))
+    
+    disp("\nPRS construction and evaluation options")
+    disp("--------------------------------------------------------------------")
+    disp("Training set size (trainSize)              : ",
+        paste0(100*args$trainSize,"%"))
+    disp("Number of PRS selection iterations (niter) : ",
+        args$niter)
+    disp("PRS evaluation framework (evalWith)        : ",
+        args$evalWith)
+    if (!is.null(args$snpSelection))
+        disp("Provided candidate SNPs for PRS            : ",
+            if (is.data.frame(args$snpSelection)) nrow(snpSelection)
+                else length(snpSelection)," SNPs")
+    
+    disp("\nMiscellaneous options")
+    disp("--------------------------------------------------------------------")
+    disp("Local workspace directory (prsWorkspace) : ",
+        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
+    disp("Cleanup level (cleanup)                  : ",args$cleanup)
+    disp("Output type (output)                     : ",args$output)
+    disp("Run ID (runId)                           : ",
+        ifelse(is.null(args$runId),"auto",args$runId))
+    disp("Available cores fraction (rc)            : ",
+        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
 }

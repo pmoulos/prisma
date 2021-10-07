@@ -1,11 +1,19 @@
 # More arguments to come, like PRS formula like in PRSice etc.
-PRS <- function(obj,snps,response,covariates=NULL,pcs=FALSE,...) {
+PRS <- function(gwe,snpSelection,type=c("avg","sum","std")) {
     # Some validation here
+    if (!is(gwe,"GWASExperiment"))
+        stop("Input object must be a GWASExperiment object!")
+    if (!any(c("effect","effect_weight","OR") %in% colnames(snpSelection)))
+        stop("snpSelection does not seem to be an output from prisma or ",
+            "aggregatePrsMarkers functions! Please check!")
     
-    if (is(obj,"GWASExperiment"))
+    type <- type[1]
+    .checkTextArgs("PRS calculation type (type)",type,c("avg","sum","std"),
+        multiarg=FALSE)
     
-    X <- t(as(genotypes(obj),"numeric"))
-    prs <- X[,snps$variant_id] %*% snps[snps$variant_id,"effect_weight"]
+    ii <- grep("effect",colnames(snpSelection))
+    X <- t(as(genotypes(gwe[rownames(snpSelection),,drop=FALSE]),"numeric"))
+    return(.prs(X,snpSelection[,ii],type))
 }
 
 .prs <- function(g,e,s=c("avg","sum","std")) {

@@ -84,6 +84,113 @@
     return(list(r2snp=g1,ar2snp=g2,r2fr=g3))
 }
 
+.plotPrsTrait <- function(x,y,n) {
+    ggdata <- data.frame(PRS=x,Y=y)
+    
+    p1 <- ggplot(ggdata,aes(x=PRS,y=Y)) + 
+        geom_point(aes(colour=PRS),size=2) +
+        scale_colour_gradient(low="#00A000",high="#A00000") +
+        xlab("\nPolygenic Risk Score") +
+        ylab(n) +
+        theme_bw() + 
+        theme(
+            axis.title.x=element_text(size=14),
+            axis.title.y=element_text(size=14),
+            axis.text.x=element_text(size=12,face="bold"),
+            axis.text.y=element_text(size=12,face="bold")
+        )
+    
+    p2 <- ggplot(ggdata,aes(x=PRS,fill=..x..)) + 
+        geom_histogram(color="black",size=0.5) +
+        scale_fill_gradient(low="#00A000",high="#A00000",name="Risk") +
+        xlab("\nPolygenic Risk Score") +
+        ylab("Frequency\n") +
+        theme_bw() + 
+        theme(
+            axis.title.x=element_text(size=14),
+            axis.title.y=element_text(size=14),
+            axis.text.x=element_text(size=12,face="bold"),
+            axis.text.y=element_text(size=12,face="bold"),
+            legend.title=element_text(size=11,face="bold"),
+            legend.text=element_text(size=10)
+        )
+    
+    return(list(scatter=p1,hist=p2))
+}
+
+.plotCvMetrics <- function(cvm,what=c("r2","rmse","mae","pr2","crl")) {
+    # Labels etc based on What to plot
+    what <- what[1]
+    switch(what,
+        r2 = { 
+            sel <- c("full_r2","reduced_r2","prs_r2") 
+            nams <- c("Full R2","Reduced R2","PRS R2")
+            yl <- expression("Mean R"^"2")
+        },
+        rmse = { 
+            sel <- c("full_rmse","reduced_rmse")
+            nams <- c("Full RMSE","Reduced RMSE")
+            yl <- "Root Mean Square Error"
+        },
+        mae = { 
+            sel <- c("full_mae","reduced_mae")
+            nams <- c("Full MAE","Reduced MAE")
+            yl <- "Mean Absolute Error"
+        },
+        crl = {
+            sel <- c("full_pred_cor","reduced_pred_cor") 
+            nams <- c("Full R","Reduced R")
+        },
+        pr2 = {
+            sel <- c("full_pred_r2","reduced_pred_r2","prs_pred_r2") 
+            nams <- c("Full PR2","Reduced PR2","PRS PR2")
+        }
+    )
+    
+    # Numbers
+    M <- unlist(lapply(cvm,function(x,s) {
+        apply(x[,s],2,mean)
+    },sel))
+    S <- unlist(lapply(cvm,function(x,s) {
+        apply(x[,s],2,sd)
+    },sel))
+    
+    # Assemble the data
+    ggdata <- data.frame(
+        X=factor(rep(paste(names(cvm),"SNPs"),each=length(nams)),
+            levels=paste(names(cvm),"SNPs")),
+        Mean=M,
+        SD=S,
+        Source=factor(rep(nams,length(cvm)),levels=nams)
+    )
+    if (length(cvm) > 1) {
+        ggdata$Type <- c(rep("Main",length(nams)),
+            rep("Others",length(nams)*(length(cvm)-1)))
+        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source,linetype=Type))
+    }
+    else
+        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source))
+        
+    
+    g <- g + geom_bar(stat="identity",position=position_dodge(width=0.6),
+        width=0.7,colour="black") +
+        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),
+            position=position_dodge(width=0.6),width=0.3,colour="black",
+            linetype="solid") +
+        xlab("\nNumber of SNPs in PRS candidates") +
+        ylab(yl) +
+        theme_bw() + 
+        theme(
+            axis.title.x=element_text(size=14),
+            axis.title.y=element_text(size=14,face="bold"),
+            axis.text.x=element_text(size=11,face="bold",angle=45,vjust=0.9,
+                hjust=1),
+            axis.text.y=element_text(size=12,face="bold")
+        )
+    
+    return(g)
+}
+
 # Just for fun
 .plotFreqDensities <- function(base,metrics,by="prs_r2") {
     qu <- lapply(metrics,function(x) return(x[,by]))

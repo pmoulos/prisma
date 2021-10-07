@@ -101,91 +101,6 @@ createSample <- function() {
     
 }
 
-getDefaults <- function(what) {
-    allowed <- c("filters","glm","rrblup","statgen","snptest","plink",
-        "externalTools","lassosum","prsice")
-    
-    if (!(what %in% allowed))
-        stop("what must be one of ",paste(allowed,collapse=", "))
-    
-    switch(what,
-        filters = {
-            return(list(
-                snpCallRate=0.98,
-                sampleCallRate=0.95,
-                maf=0.05,
-                hwe=1e-6,
-                heteroStat="median",
-                heteroFac=3,
-                heteroHard=NA,
-                pcaOut=TRUE,
-                pcaRobust="hubert",
-                nPC=NA,
-                LD=0.2,
-                IBD=0.1,
-                inbreed=0.1
-            ))
-        },
-        glm = {
-            return(list(
-                #family="gaussian"
-                family=NULL,
-                size=1
-            ))
-        },
-        rrblup = {
-            return(list(
-                pcblup="auto",
-                npcs=NULL
-            ))
-        },
-        statgen = {
-            return(list(
-                kinship="astle",
-                reml="EMMA",
-                gls="single"
-            ))            
-        },
-        snptest = {
-            return(list(
-                test="frequentist",
-                model="additive",
-                workspace=NULL
-            ))
-        },
-        plink = {
-            return(list(
-                effect="genotypic",
-                seed=42,
-                workspace=NULL
-            ))
-        },
-        externalTools = {
-            return(list(
-                snptest="v2.5.6",
-                plink="v1.90",
-                prsice="v2.3.3"
-            ))
-        },
-        lassosum = {
-            return(list(
-                anc="eur",
-                valid="auto"
-            ))
-        },
-        prsice = {
-            return(list(
-                clump_kb=250,
-                clump_r2=0.1,
-                clump_p=1,
-                score="avg",
-                perm=10000,
-                seed=42
-            ))
-        }
-    )
-}
-
 cmclapply <- function(...,rc,setseed=FALSE) {
     if (suppressWarnings(!requireNamespace("parallel")) 
         || .Platform$OS.type!="unix")
@@ -510,6 +425,28 @@ disp <- function(...,level=c("normal","full")) {
         format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
 }
 
+.dispListOpts <- function(x,lo=1) {
+    nm <- nchar(names(x))
+    ns <- max(nm) + 1 - nm
+    names(ns) <- names(x)
+    ss <- lapply(ns,function(z) 
+        paste(paste(rep(" ",z),collapse=""),": ",sep=""))
+    
+    if (lo > 1)
+        off <- paste(rep("  ",lo),sep="")
+    else
+        off <- "  "
+        
+    for (n in names(x)) {
+        y <- x[[n]]
+        if (is.logical(y))
+            disp(off,paste(n,ifelse(y,"Yes","No"),sep=ss[[n]]))
+        else if (.isEmpty(y))
+            disp(off,paste(n,"-",sep=ss[[n]]))
+        else
+            disp(off,paste(n,y,sep=ss[[n]]))
+    }
+}
 
 #~ getAPIBase <- function() {
 #~     base <- getOption("rpgscat_base")
