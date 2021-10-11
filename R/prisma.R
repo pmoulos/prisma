@@ -18,8 +18,8 @@ prisma <- function(
     prsSelectCrit=c("prs_r2","prs_pvalue","prs_aic"),
     prsSelectStat=c("mean","median","none"),
     prsSelectR2=c("adjusted","raw"),
-    cvOutSize=0.05,
-    ncvs=10,
+    #cvOutSize=0.05,
+    #ncvs=10,
     sigTest=c("ttest","wilcoxon","empirical"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
@@ -38,7 +38,8 @@ prisma <- function(
     prsWorkspace=NULL,
     cleanup=c("none","intermediate","all"),
     logging=c("screen","file"),
-    output=c("gwaslist","summaries"),
+    dnOutput=c("gwaslist","summaries"),
+    output=c("normal","full"),
     continue=FALSE,
     useDenovoWorkspace=NULL,
     runId=NULL,
@@ -51,6 +52,7 @@ prisma <- function(
     prsSelectStat <- prsSelectStat[1]
     prsSelectR2 <- prsSelectR2[1]
     sigTest <- sigTest[1]
+    dnOutput <- dnOutput[1]
     evalOnSplit <- evalOnSplit[1]
     .checkTextArgs("PRS selection method (prsSelectMethod)",prsSelectMethod,
         c("maxima","elbow"),multiarg=FALSE)
@@ -64,6 +66,10 @@ prisma <- function(
         c("ttest","wilcoxon","empirical"),multiarg=FALSE)
     .checkTextArgs("Evaluation on initial or new split (evalOnSplit)",
         evalOnSplit,c("original","new"),multiarg=FALSE)
+    .checkTextArgs("De novo PRS extraction output (dnOutput)",dnOutput,
+        c("gwaslist","summaries"),multiarg=FALSE)
+    .checkTextArgs("PRISMA pipeline output (output)",output,c("normal","full"),
+        multiarg=FALSE)
     .checkNumArgs("Cross-validation leave-out samples fraction (cvOutSize)",
         cvOutSize,"numeric",c(0,1),"both")
     .checkNumArgs("Number of cross-validation fits (ncvs)",as.integer(ncvs),
@@ -135,7 +141,7 @@ prisma <- function(
         prsWorkspace=file.path(prsWorkspace,"baseline"),
         cleanup=cleanup,
         logging=logging,
-        output=output,
+        output=dnOutput,
         continue=continue,
         runId=runId,
         rc=rc
@@ -205,42 +211,45 @@ prisma <- function(
         base=evalMetrics$baseline
     )
     
-    # Fourth part, evaluate the candidates with the total dataset
-    disp("\n##################################################################")
-    disp("4.1. Primary PRS candidate cross-validation")
-    disp("##################################################################")
-    cvMetrics <- prsCrossValidate(
-        snpSelection=candidates$main,
-        gwe=gwe,
-        response=phenotype,
-        covariates=covariates,
-        pcs=pcs,
-        leaveOut=cvOutSize,
-        times=ncvs,
-        rc=rc
-    )
+    # We move cross-validation to another function as there's more to it and
+    # several plots to be created
     
-    # Also, cvMetrics on the rest?
-    disp("\n##################################################################")
-    disp("4.2. Secondary PRS candidate (if any) cross-validation")
-    disp("##################################################################")
-    if (!is.null(candidates$others))
-        cvMetricsOthers <- lapply(candidates$others,function(x) {
-            prsCrossValidate(
-                snpSelection=x,
-                gwe=gwe,
-                response=phenotype,
-                covariates=covariates,
-                pcs=pcs,
-                leaveOut=cvOutSize,
-                times=ncvs,
-                rc=rc
-            )
-        })
+    ## Fourth part, evaluate the candidates with the total dataset
+    #disp("\n##################################################################")
+    #disp("4.1. Primary PRS candidate cross-validation")
+    #disp("##################################################################")
+    #cvMetrics <- prsCrossValidate(
+    #    snpSelection=candidates$main,
+    #    gwe=gwe,
+    #    response=phenotype,
+    #    covariates=covariates,
+    #    pcs=pcs,
+    #    leaveOut=cvOutSize,
+    #    times=ncvs,
+    #    rc=rc
+    #)
+    #
+    ## Also, cvMetrics on the rest?
+    #disp("\n##################################################################")
+    #disp("4.2. Secondary PRS candidate (if any) cross-validation")
+    #disp("##################################################################")
+    #if (!is.null(candidates$others))
+    #    cvMetricsOthers <- lapply(candidates$others,function(x) {
+    #        prsCrossValidate(
+    #            snpSelection=x,
+    #            gwe=gwe,
+    #            response=phenotype,
+    #            covariates=covariates,
+    #            pcs=pcs,
+    #            leaveOut=cvOutSize,
+    #            times=ncvs,
+    #            rc=rc
+    #        )
+    #    })
     
     # Make the plots and pass them to the report object later
     disp("\n##################################################################")
-    disp("5. Wrap-up and graphics")
+    disp("4. Wrap-up and graphics")
     disp("##################################################################\n")
     plStat <- prsSelectStat
     if (prsSelectStat == "none")
@@ -274,17 +283,30 @@ prisma <- function(
     execTime <- .elap2human(TB)
     disp("Total processing time: ",execTime,"\n\n")
     
-    cvMetrics <- list(cvMetrics)
-    names(cvMetrics) <- as.character(nrow(candidates$main))
-    return(list(
-        dnResult=dnResult,
-        evalMetrics=evalMetrics,
-        candidates=candidates,
-        cvMetrics=list(cvMetrics,cvMetricsOthers),
-        #cvMetricsMain=cvMetrics,
-        #cvMetricsOthers=cvMetricsOthers,
-        plots=plots
-    ))
+    #cvMetrics <- list(cvMetrics)
+    #names(cvMetrics) <- as.character(nrow(candidates$main))
+    #return(list(
+    #    dnResult=dnResult,
+    #    evalMetrics=evalMetrics,
+    #    candidates=candidates,
+    #    cvMetrics=list(cvMetrics,cvMetricsOthers),
+    #    plots=plots
+    #))
+    
+    mainPrs <- list(candidates$main)
+    names(mainPrs) <- as.character(nrows(candidates$main))
+    outList <- list(
+        candidates=c(mainPrs,candidates$others),
+        iterations=NULL,
+        reportData=list(
+            evalMetrics=evalMetrics,
+            plots=plots
+        )
+    )
+    if (output == "full")
+        outList$iterations = dnResult
+    
+    return(outList)
     
     ## Extra code for readjusting final effects - not so useful
     #theMainPrs <- adjustPrsWeights(candidates$main,gwe,phenotype,covariates,
@@ -1388,10 +1410,10 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         args$effectWeight)
     disp("PRS evaluation framework (evalWith)                         : ",
         args$evalWith)
-    disp("Number of regression cross-validations using the PRS        :",
-        args$ncvs)
-    disp("Leave-out samples percentage during cross-validations       :",
-        paste0(100*args$cvOutSize,"%"))
+    #disp("Number of regression cross-validations using the PRS        :",
+    #    args$ncvs)
+    #disp("Leave-out samples percentage during cross-validations       :",
+    #    paste0(100*args$cvOutSize,"%"))
         
     isp("\nPRS selection options")
     disp("--------------------------------------------------------------------")
@@ -1405,7 +1427,8 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     disp("Local workspace directory (prsWorkspace) : ",
         ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
     disp("Cleanup level (cleanup)                  : ",args$cleanup)
-    disp("Output type (output)                     : ",args$output)
+    disp("PRS pipeline output type (dnOutput)      : ",args$output)
+    disp("Output level (output)                    : ",args$output)
     disp("Run ID (runId)                           : ",
         ifelse(is.null(args$runId),"auto",args$runId))
     disp("Available cores fraction (rc)            : ",

@@ -1,3 +1,128 @@
+plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl")) {
+    gcv <- .plotCvMetricsCv(cvo,what)
+    gpr <- .plotCvMetricsCv(.cvToPrsForPlot(cvo),what)
+    return(list(cvBased=gcv,prsBased=gpr))
+}
+
+.plotCvMetricsCv <- function(cvo,what=c("r2","rmse","mae","pr2","crl")) {
+    what <- what[1]
+    labs <- .getPlotColsLabs(what)
+    sel <- labs$sel
+    nams <- labs$nams
+    yl <- labs$yl
+    
+    # The numbers
+    M <- unlist(lapply(cvo,function(x) {
+        tmp <- lapply(x,function(y) {
+            apply(y[,sel],2,mean) 
+        })
+        return(as.numeric(do.call("rbind",tmp)))
+    }))
+    SD <- unlist(lapply(cvo,function(x) {
+        tmp <- lapply(x,function(y) {
+            apply(y[,sel],2,sd) 
+        })
+        return(as.numeric(do.call("rbind",tmp)))
+    }))
+    
+    # The labels
+    nsnpLab <- rep(names(cvo),each=length(cvo[[1]])*length(sel))
+    nsnpLab <- paste(nsnpLab,"SNPs")
+    nsnpLab <- factor(nsnpLab,levels=paste(names(cvo),"SNPs"))
+    
+    metricLab <- rep(rep(nams,each=length(cvo[[1]])),length(cvo))
+    metricLab <- factor(metricLab,levels=nams)
+    
+    index <- rep(rep(seq_along(cvo[[1]]),length(sel)),length(cvo))
+    
+    # The data
+    ggdata <- data.frame(
+        Mean=M,
+        SD=SD,
+        Metric=metricLab,
+        NSNP=nsnpLab,
+        Index=index
+    )
+    
+    nc <- ifelse(length(cvMetrics[[1]]) > 5,2,3)
+    
+    g <- ggplot(ggdata,aes(x=Index,y=Mean,colour=Metric)) +
+        geom_line() + 
+        geom_point(size=2) +
+        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.2,size=0.25) +
+        facet_wrap(. ~ NSNP,ncol=nc) +
+        scale_x_continuous(breaks=seq_along(cvo[[1]]),
+            labels=paste0(100*as.numeric(names(cvo[[1]])),"%")) +
+        xlab("\nPercentage of leave-out samples in cross-validation") +
+        ylab(yl) +
+        theme_bw() +
+        theme(
+            axis.title.x=element_text(size=14),
+            axis.title.y=element_text(size=14),
+            axis.text.x=element_text(size=11,face="bold"),
+            axis.text.y=element_text(size=12),
+            strip.text.x=element_text(size=10,face="bold"),
+            legend.position="bottom",
+            legend.text=element_text(size=10),
+            legend.title=element_text(size=12)
+        )
+    
+    return(g)
+}
+
+.plotCvMetricsPrs <- function(cvm,what=c("r2","rmse","mae","pr2","crl")) {
+    # Labels etc based on What to plot
+    what <- what[1]
+    labs <- .getPlotColsLabs(what)
+    sel <- labs$sel
+    nams <- labs$nams
+    yl <- labs$yl
+    
+    # Numbers
+    M <- unlist(lapply(cvm,function(x,s) {
+        apply(x[,s],2,mean)
+    },sel))
+    S <- unlist(lapply(cvm,function(x,s) {
+        apply(x[,s],2,sd)
+    },sel))
+    
+    # Assemble the data
+    ggdata <- data.frame(
+        X=factor(rep(paste(names(cvm),"SNPs"),each=length(nams)),
+            levels=paste(names(cvm),"SNPs")),
+        Mean=M,
+        SD=S,
+        Source=factor(rep(nams,length(cvm)),levels=nams)
+    )
+    if (length(cvm) > 1) {
+        ggdata$Type <- c(rep("Main",length(nams)),
+            rep("Others",length(nams)*(length(cvm)-1)))
+        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source,linetype=Type))
+    }
+    else
+        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source))
+        
+    
+    g <- g + geom_bar(stat="identity",position=position_dodge(width=0.6),
+        width=0.7,colour="black") +
+        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),
+            position=position_dodge(width=0.6),width=0.3,colour="black",
+            linetype="solid") +
+        xlab("\nNumber of SNPs in PRS candidates") +
+        ylab(yl) +
+        theme_bw() + 
+        theme(
+            axis.title.x=element_text(size=14),
+            axis.title.y=element_text(size=14),
+            axis.text.x=element_text(size=11,face="bold",angle=45,vjust=0.9,
+                hjust=1),
+            axis.text.y=element_text(size=12,face="bold")
+        ) +
+        guides(linetype=guide_legend(override.aes=list(fill=NA,col="black")))
+    
+    return(g)
+}
+
 .plotPrsEvaluation <- function(base,metrics,by="prs_r2",pval="p_ttest",
     stat="mean") {
     r2 <- metrics[,paste0(stat,"_",by)]
@@ -118,79 +243,6 @@
     return(list(scatter=p1,hist=p2))
 }
 
-.plotCvMetrics <- function(cvm,what=c("r2","rmse","mae","pr2","crl")) {
-    # Labels etc based on What to plot
-    what <- what[1]
-    switch(what,
-        r2 = { 
-            sel <- c("full_r2","reduced_r2","prs_r2") 
-            nams <- c("Full R2","Reduced R2","PRS R2")
-            yl <- expression("Mean R"^"2")
-        },
-        rmse = { 
-            sel <- c("full_rmse","reduced_rmse")
-            nams <- c("Full RMSE","Reduced RMSE")
-            yl <- "Root Mean Square Error"
-        },
-        mae = { 
-            sel <- c("full_mae","reduced_mae")
-            nams <- c("Full MAE","Reduced MAE")
-            yl <- "Mean Absolute Error"
-        },
-        crl = {
-            sel <- c("full_pred_cor","reduced_pred_cor") 
-            nams <- c("Full R","Reduced R")
-        },
-        pr2 = {
-            sel <- c("full_pred_r2","reduced_pred_r2","prs_pred_r2") 
-            nams <- c("Full PR2","Reduced PR2","PRS PR2")
-        }
-    )
-    
-    # Numbers
-    M <- unlist(lapply(cvm,function(x,s) {
-        apply(x[,s],2,mean)
-    },sel))
-    S <- unlist(lapply(cvm,function(x,s) {
-        apply(x[,s],2,sd)
-    },sel))
-    
-    # Assemble the data
-    ggdata <- data.frame(
-        X=factor(rep(paste(names(cvm),"SNPs"),each=length(nams)),
-            levels=paste(names(cvm),"SNPs")),
-        Mean=M,
-        SD=S,
-        Source=factor(rep(nams,length(cvm)),levels=nams)
-    )
-    if (length(cvm) > 1) {
-        ggdata$Type <- c(rep("Main",length(nams)),
-            rep("Others",length(nams)*(length(cvm)-1)))
-        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source,linetype=Type))
-    }
-    else
-        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source))
-        
-    
-    g <- g + geom_bar(stat="identity",position=position_dodge(width=0.6),
-        width=0.7,colour="black") +
-        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),
-            position=position_dodge(width=0.6),width=0.3,colour="black",
-            linetype="solid") +
-        xlab("\nNumber of SNPs in PRS candidates") +
-        ylab(yl) +
-        theme_bw() + 
-        theme(
-            axis.title.x=element_text(size=14),
-            axis.title.y=element_text(size=14,face="bold"),
-            axis.text.x=element_text(size=11,face="bold",angle=45,vjust=0.9,
-                hjust=1),
-            axis.text.y=element_text(size=12,face="bold")
-        )
-    
-    return(g)
-}
-
 # Just for fun
 .plotFreqDensities <- function(base,metrics,by="prs_r2") {
     qu <- lapply(metrics,function(x) return(x[,by]))
@@ -222,6 +274,37 @@
             axis.text.y=element_text(size=12,face="bold")
         )
     return(g)
+}
+
+.getPlotColsLabs <- function(what) {
+    switch(what,
+        r2 = { 
+            sel <- c("full_r2","reduced_r2","prs_r2") 
+            nams <- c("Full R2","Reduced R2","PRS R2")
+            yl <- expression("Mean R"^"2")
+        },
+        rmse = { 
+            sel <- c("full_rmse","reduced_rmse")
+            nams <- c("Full RMSE","Reduced RMSE")
+            yl <- "Root Mean Square Error"
+        },
+        mae = { 
+            sel <- c("full_mae","reduced_mae")
+            nams <- c("Full MAE","Reduced MAE")
+            yl <- "Mean Absolute Error"
+        },
+        crl = {
+            sel <- c("full_pred_cor","reduced_pred_cor") 
+            nams <- c("Full R","Reduced R")
+            yl <- "Correlation"
+        },
+        pr2 = {
+            sel <- c("full_pred_r2","reduced_pred_r2","prs_pred_r2") 
+            nams <- c("Full PR2","Reduced PR2","PRS PR2")
+            yl <- "Adjusted correlation"
+        }
+    )
+    return(list(sel=sel,nams=nams,yl=yl))
 }
 
 .subsampleBase <- function(x,b) {
