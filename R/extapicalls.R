@@ -1,3 +1,73 @@
+prismaLookup <- function(selections) {
+    # Required packages
+    if (!requireNamespace("gwasrapidd"))
+        stop("R package gwasrapidd is required!")
+    
+    # Check the format of the input list
+    selections <- .checkPrismaSelectionsOutput(selections)
+    
+    # Empty trait data frame
+    ..emptyLookupDf <- function() {
+        nil <- data.frame(association_id="1",variant_id="v",risk_allele="N",
+            gene_name="N",efo_id="E",trait="T")
+        return(nil[-1,])
+    }
+    
+    # Find the largest and get SNP names
+    size <- as.numeric(names(selections))
+    forLook <- rownames(selections[[which(size == max(size))]])
+    
+    # Make the API call - turn off warnings when SNP not found
+    disp("Querying GWAS Catalog with the largest PRS")
+    A <- gwasrapidd::get_associations(variant_id=forLook,warnings=FALSE)
+    
+    # We need to create a data frame which summarizes the findings... Then we
+    # attach them to each smaller size PRS candidate by intersecting
+    if (nrow(A@associations) > 0) {
+        # Need to collapse gene names per association id
+        ge <- as.data.frame(A@genes)
+        ge <- split(ge,factor(ge$association_id,
+            levels=unique(ge$association_id)))
+        ge <- unlist(lapply(ge,function(x) {
+            paste0(x$gene_name,collapse=", ")
+        }))
+        
+        # For each association, we need to run get_traits...
+        disp("Querying GWAS Catalog with the largest PRS")
+        tmpT <- tmpE <- vector("list",length(A@associations$association_id))
+        names(tmpT) <- names(tmpE) <- A@associations$association_id
+        for (a in A@associations$association_id) {
+            disp("  Querying association ",a)
+            tmp <- gwasrapidd::get_traits(association_id=a)
+            tmpE[[a]] <- paste0(tmp@traits$efo_id,collapse=", ")
+            tmpT[[a]] <- paste0(tmp@traits$trait,collapse=", ")
+        }
+        
+        # The found hits
+        hits <- data.frame(
+            association_id=A@associations$association_id,
+            variant_id=A@risk_alleles$variant_id,
+            risk_allele=A@risk_alleles$risk_allele,
+            gene_name=ge,
+            efo_id=unlist(tmpE,use.names=FALSE),
+            trait=unlist(tmpT,use.names=FALSE)
+        )
+        
+        # Now we have to split the hits according to each candidate PRS
+        partHits <- lapply(selections,function(x) {
+            m <- which(hits$variant_id %in% rownames(x))
+            if (length(m) == 0)
+                return(..emptyLookupDf())
+            else
+                return(hits[m,,drop=FALSE])
+        })
+        
+        return(partHits)
+    }
+    else
+        return(..emptyLookupDf())
+}
+
 getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
     retries=5) {
     # Package checking, meaningless to continue
