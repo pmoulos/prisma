@@ -47,6 +47,9 @@ prisma <- function(
     evalWith=c("vanilla","prscice"),
     rc=NULL
 ) {
+    # To be attached to output object
+    FUN_CALL <- deparse(sys.call())
+    
     prsSelectMethod <- prsSelectMethod[1]
     prsSelectCrit <- prsSelectCrit[1]
     prsSelectStat <- prsSelectStat[1]
@@ -70,6 +73,8 @@ prisma <- function(
         c("gwaslist","summaries"),multiarg=FALSE)
     .checkTextArgs("PRISMA pipeline output (output)",output,c("normal","full"),
         multiarg=FALSE)
+    .checkTextArgs("GWA methods to test (gwaMethods)",gwaMethods,
+        c("glm","rrblup","statgen","snptest","plink"),multiarg=TRUE)
     .checkNumArgs("Cross-validation leave-out samples fraction (cvOutSize)",
         cvOutSize,"numeric",c(0,1),"both")
     .checkNumArgs("Number of cross-validation fits (ncvs)",as.integer(ncvs),
@@ -81,14 +86,6 @@ prisma <- function(
         stop("Evaluation with R internal functions with a new dataset split ",
             "is not yet implemented!\nPlease use evalWith = \"prsice\" or ",
             "evalOnSplit = \"original\".",call.=FALSE)
-    
-    # Only one used for now, until we run linear optimization in effects
-    gwaMethods <- gwaMethods[1]
-    #
-    
-    # If a run id is not provided, construct one   
-    if (is.null(runId))
-        runId <- .randomString(1,11)
     
     # If a workspace is not provided, we should pick one, but not in /tmp like
     # the other cases, as this process is more sensitive
@@ -106,207 +103,184 @@ prisma <- function(
     
     # Here, display options
     callArgs <- as.list(match.call())[-1]
-    .prettyLogOptions(callArgs,"prisma") 
+    .prettyLogOptions(callArgs,"prisma")
     
-    # First part - PRS candidate SNPs. prsPipeline takes care for the collection
-    # of thw whole dnResult list, whether that run has failed or not. When
-    # continue=TRUE, prsPipeline will continue from this point and the dnResult
-    # goinf to the next part will be intact. Also, the work is split to two
-    # directories in the workspace, baseline and selection
-    disp("\n##################################################################")
-    disp("1. Discovery of de novo PRS candidates")
-    disp("##################################################################\n")
-    dnResult <- prsPipeline(
-        gwe=gwe,
-        phenotype=phenotype,
-        covariates=covariates,
-        pcs=pcs,
-        npcs=npcs,
-        trainSize=trainSize,
-        niter=niter,
-        filters=filters,
-        pcaMethod=pcaMethod,
-        imputeMissing=imputeMissing,
-        imputeMethod=imputeMethod,
-        gwaMethods=gwaMethods,
-        gwaCombine=gwaCombine,
-        glmOpts=glmOpts,
-        rrblupOpts=rrblupOpts,
-        statgenOpts=statgenOpts,
-        snptestOpts=snptestOpts,
-        plinkOpts=plinkOpts,
-        prsMethods=prsMethods,
-        lassosumOpts=lassosumOpts,
-        prsiceOpts=prsiceOpts,
-        prsWorkspace=file.path(prsWorkspace,"baseline"),
-        cleanup=cleanup,
-        logging=logging,
-        output=dnOutput,
-        continue=continue,
-        runId=runId,
-        rc=rc
-    )
+    ## Only one used for now, until we run linear optimization in effects
+    #gwaMethods <- gwaMethods[1]
+    # Use them all in a loop, and later some combination
+    outList <- vector("list",length(gwaMethods))
+    names(outList) <- gwaMethods
     
-    # Second part collect evaluation metrics - if continue=TRUE, dnResult will 
-    # be collected from the previous step and passed here.
-    disp("\n##################################################################")
-    disp("2. Calculation of PRS evaluation metrics")
-    disp("##################################################################\n")
-    uDnS <- NULL
-    if (evalOnSplit == "original")
-        uDnS <- dnResult
-    evalMetrics <- prsSelection(
-        dnList=dnResult,
-        gwe=gwe,
-        phenotype=phenotype,
-        covariates=covariates,
-        pcs=pcs,
-        npcs=npcs,
-        trainSize=trainSize,
-        niter=niter,
-        resolution=resolution,
-        step=step,
-        minFreq=minFreq,
-        minSnps=minSnps,
-        dropSameQuantile=dropSameQuantile,
-        aggregation=aggregation,
-        effectWeight=effectWeight,
-        filters=filters,
-        pcaMethod=pcaMethod,
-        imputeMissing=imputeMissing,
-        imputeMethod=imputeMethod,
-        gwaMethods=gwaMethods,
-        gwaCombine=gwaCombine,
-        glmOpts=glmOpts,
-        rrblupOpts=rrblupOpts,
-        statgenOpts=statgenOpts,
-        snptestOpts=snptestOpts,
-        plinkOpts=plinkOpts,
-        prsMethods=prsMethods,
-        lassosumOpts=lassosumOpts,
-        prsiceOpts=prsiceOpts,
-        prsWorkspace=file.path(prsWorkspace,"selection"),
-        cleanup=cleanup,
-        logging=logging,
-        output="summary", # If full, run prsSelection directly
-        continue=continue,
-        runId=runId,
-        evalWith=evalWith,
-        useDenovoWorkspace=uDnS,
-        rc=rc
-    )
+    # If a run id is not provided, construct one - careful, it will be the same
+    # TODO: Think of something about unique run ids...
+    if (is.null(runId))
+        runId <- .randomString(1,11)
     
-    # Third part, suggest PRS
-    disp("\n##################################################################")
-    disp("3. Selection of best PRS candidate markers")
-    disp("##################################################################\n")
-    candidates <- selectPrs(
-        metrics=evalMetrics$metrics,
-        snpSelection=evalMetrics$pgs,
-        gwe=gwe,
-        method=prsSelectMethod,
-        crit=prsSelectCrit,
-        stat=prsSelectStat,
-        r2type=prsSelectR2,
-        base=evalMetrics$baseline
-    )
-    
-    # We move cross-validation to another function as there's more to it and
-    # several plots to be created
-    
-    ## Fourth part, evaluate the candidates with the total dataset
-    #disp("\n##################################################################")
-    #disp("4.1. Primary PRS candidate cross-validation")
-    #disp("##################################################################")
-    #cvMetrics <- prsCrossValidate(
-    #    snpSelection=candidates$main,
-    #    gwe=gwe,
-    #    response=phenotype,
-    #    covariates=covariates,
-    #    pcs=pcs,
-    #    leaveOut=cvOutSize,
-    #    times=ncvs,
-    #    rc=rc
-    #)
-    #
-    ## Also, cvMetrics on the rest?
-    #disp("\n##################################################################")
-    #disp("4.2. Secondary PRS candidate (if any) cross-validation")
-    #disp("##################################################################")
-    #if (!is.null(candidates$others))
-    #    cvMetricsOthers <- lapply(candidates$others,function(x) {
-    #        prsCrossValidate(
-    #            snpSelection=x,
-    #            gwe=gwe,
-    #            response=phenotype,
-    #            covariates=covariates,
-    #            pcs=pcs,
-    #            leaveOut=cvOutSize,
-    #            times=ncvs,
-    #            rc=rc
-    #        )
-    #    })
-    
-    # Make the plots and pass them to the report object later
-    disp("\n##################################################################")
-    disp("4. Wrap-up and graphics")
-    disp("##################################################################\n")
-    plStat <- prsSelectStat
-    if (prsSelectStat == "none")
-        plStat <- "mean"
-    plval <- ifelse(sigTest=="ttest","p_ttest",ifelse(sigTest=="wilcoxon",
-        "p_wilcox","p_emp"))
-    plots <- .plotPrsEvaluation(evalMetrics$baseline,evalMetrics$metrics,
-        by=prsSelectCrit,pval=plval,stat=plStat)
-    if (!is.null(evalMetrics$full))
-        plots$frden <- .plotFreqDensities(evalMetrics$baseline,
-            evalMetrics$full,by="prs_r2")
-    
-    # Also PRS plots
-    popPrs <- PRS(gwe,candidates$main,prsiceOpts$score)
-    trait <- phenotypes(gwe)[,phenotype]
-    ppl <- .plotPrsTrait(popPrs,trait,phenotype)
-    plots$prsScatter <- ppl$scatter
-    plots$prsHist <- ppl$hist
-    
-    # Display a summary of CV metrics
-    summarizeCvMetrics(cvMetrics,nrow(candidates$main))
-    
-    # The final output should be an object that can be used to build a
-    # report but also some kind of inspection
-    # .report(dnList,evalMetrics)
-    # or even better construct an environment/list with all inputs (for logging)
-    # and pass to a reporting function
-    # .report(env)
+    # Run discovery and evaluation loop for each selected method
+    for (m in gwaMethods) {    
+        # First part - PRS candidate SNPs. prsPipeline takes care for the 
+        # collection of the whole dnResult list, whether that run has failed or 
+        # not. When continue=TRUE, prsPipeline will continue from this point and
+        # the dnResult going to the next part will be intact. Also, the work is 
+        # split to two directories in the workspace, baseline and selection
+        disp("\n##############################################################")
+        disp("1. Discovery of de novo PRS candidates")
+        disp("##############################################################\n")
+        dnResult <- prsPipeline(
+            gwe=gwe,
+            phenotype=phenotype,
+            covariates=covariates,
+            pcs=pcs,
+            npcs=npcs,
+            trainSize=trainSize,
+            niter=niter,
+            filters=filters,
+            pcaMethod=pcaMethod,
+            imputeMissing=imputeMissing,
+            imputeMethod=imputeMethod,
+            gwaMethods=m,
+            gwaCombine=gwaCombine,
+            glmOpts=glmOpts,
+            rrblupOpts=rrblupOpts,
+            statgenOpts=statgenOpts,
+            snptestOpts=snptestOpts,
+            plinkOpts=plinkOpts,
+            prsMethods=prsMethods,
+            lassosumOpts=lassosumOpts,
+            prsiceOpts=prsiceOpts,
+            prsWorkspace=file.path(prsWorkspace,m,"baseline"),
+            cleanup=cleanup,
+            logging=logging,
+            output=dnOutput,
+            continue=continue,
+            runId=runId,
+            rc=rc
+        )
+        
+        # Second part collect evaluation metrics - if continue=TRUE, dnResult 
+        # will be collected from the previous step and passed here.
+        disp("\n##############################################################")
+        disp("2. Calculation of PRS evaluation metrics")
+        disp("##############################################################\n")
+        uDnS <- NULL
+        if (evalOnSplit == "original")
+            uDnS <- dnResult
+        evalMetrics <- prsSelection(
+            dnList=dnResult,
+            gwe=gwe,
+            phenotype=phenotype,
+            covariates=covariates,
+            pcs=pcs,
+            npcs=npcs,
+            trainSize=trainSize,
+            niter=niter,
+            resolution=resolution,
+            step=step,
+            minFreq=minFreq,
+            minSnps=minSnps,
+            dropSameQuantile=dropSameQuantile,
+            aggregation=aggregation,
+            effectWeight=effectWeight,
+            filters=filters,
+            pcaMethod=pcaMethod,
+            imputeMissing=imputeMissing,
+            imputeMethod=imputeMethod,
+            gwaMethods=m,
+            gwaCombine=gwaCombine,
+            glmOpts=glmOpts,
+            rrblupOpts=rrblupOpts,
+            statgenOpts=statgenOpts,
+            snptestOpts=snptestOpts,
+            plinkOpts=plinkOpts,
+            prsMethods=prsMethods,
+            lassosumOpts=lassosumOpts,
+            prsiceOpts=prsiceOpts,
+            prsWorkspace=file.path(prsWorkspace,"selection"),
+            cleanup=cleanup,
+            logging=logging,
+            output="summary", # If full, run prsSelection directly
+            continue=continue,
+            runId=runId,
+            evalWith=evalWith,
+            useDenovoWorkspace=uDnS,
+            rc=rc
+        )
+        
+        # Third part, suggest PRS
+        disp("\n##############################################################")
+        disp("3. Selection of best PRS candidate markers")
+        disp("##############################################################\n")
+        candidates <- selectPrs(
+            metrics=evalMetrics$metrics,
+            snpSelection=evalMetrics$pgs,
+            gwe=gwe,
+            method=prsSelectMethod,
+            crit=prsSelectCrit,
+            stat=prsSelectStat,
+            r2type=prsSelectR2,
+            base=evalMetrics$baseline
+        )
+        
+        # Make the plots and pass them to the report object later
+        disp("\n##############################################################")
+        disp("4. Wrap-up and graphics")
+        disp("##############################################################\n")
+        plStat <- prsSelectStat
+        if (prsSelectStat == "none")
+            plStat <- "mean"
+        plval <- ifelse(sigTest=="ttest","p_ttest",ifelse(sigTest=="wilcoxon",
+            "p_wilcox","p_emp"))
+        plots <- .plotPrsEvaluation(evalMetrics$baseline,evalMetrics$metrics,
+            by=prsSelectCrit,pval=plval,stat=plStat)
+        if (!is.null(evalMetrics$full))
+            plots$frden <- .plotFreqDensities(evalMetrics$baseline,
+                evalMetrics$full,by="prs_r2")
+        
+        # Also PRS plots
+        popPrs <- PRS(gwe,candidates$main,prsiceOpts$score)
+        trait <- phenotypes(gwe)[,phenotype]
+        ppl <- .plotPrsTrait(popPrs,trait,phenotype)
+        plots$prsScatter <- ppl$scatter
+        plots$prsHist <- ppl$hist
+        
+        ## Display a summary of CV metrics
+        #summarizeCvMetrics(cvMetrics,nrow(candidates$main))
+        
+        # The final output should be an object that can be used to build a
+        # report but also some kind of inspection
+        # .report(dnList,evalMetrics)
+        # or even better construct an environment/list with all inputs (for 
+        # logging) and pass to a reporting function .report(env)
+        
+        mainPrs <- list(candidates$main)
+        names(mainPrs) <- as.character(nrows(candidates$main))
+        outList[[m]] <- list(
+            candidates=c(mainPrs,candidates$others),
+            iterations=NULL,
+            reportData=list(
+                evalMetrics=evalMetrics,
+                plots=plots
+            )
+        )
+        if (output == "full")
+            outList[[m]]$iterations = dnResult
+    }
     
     disp("\n",strftime(Sys.time()),": Data processing finished!\n")
     execTime <- .elap2human(TB)
     disp("Total processing time: ",execTime,"\n\n")
     
-    #cvMetrics <- list(cvMetrics)
-    #names(cvMetrics) <- as.character(nrow(candidates$main))
-    #return(list(
-    #    dnResult=dnResult,
-    #    evalMetrics=evalMetrics,
-    #    candidates=candidates,
-    #    cvMetrics=list(cvMetrics,cvMetricsOthers),
-    #    plots=plots
-    #))
+    # Record call args
+    allArgs <- .getPrismaMainDefaults()
+    allArgs[names(callArgs)] <- callArgs
     
-    mainPrs <- list(candidates$main)
-    names(mainPrs) <- as.character(nrows(candidates$main))
-    outList <- list(
-        candidates=c(mainPrs,candidates$others),
-        iterations=NULL,
-        reportData=list(
-            evalMetrics=evalMetrics,
-            plots=plots
-        )
-    )
-    if (output == "full")
-        outList$iterations = dnResult
-    
-    return(outList)
+    return(list(
+        params=list(
+            call=FUN_CALL,
+            args=allArgs
+        ),
+        results=outList
+    ))
     
     ## Extra code for readjusting final effects - not so useful
     #theMainPrs <- adjustPrsWeights(candidates$main,gwe,phenotype,covariates,
@@ -1305,6 +1279,17 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     }
     else
         return(furtherCheck)
+}
+
+.makeReportEnv <- function(gwe,prismaOut,cvMetricsOut,lookupOut) {
+    re <- new.env(parent=globalenv())
+    
+    re$gwe <- gwe
+    re$prismaOut <- prismaOut
+    re$cvMetricsOut <- cvMetricsOut
+    re$lookupOut <- lookupOut
+    
+    return(re)
 }
 
 .isPreviousDenovoList <- function(x) {

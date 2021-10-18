@@ -158,21 +158,43 @@ selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
     }
 }
 
-prismaCrossValidate <- function(selections,gwe,response,covariates=NULL,
+prismaCrossValidate <- function(prismaOut,gwe,response,covariates=NULL,
     pcs=FALSE,leaveOut=seq(0.05,0.5,0.05),times=10,prsCalc=c("avg","sum","std"),
     family=NULL,rc=NULL,...) {
-    # gwe is checked downstream
-    selections <- .checkPrismaSelectionsOutput(selections)
-    
+    # Basic checks
     prsCalc <- prsCalc[1]
     .checkTextArgs("PRS calculation type (prsCalc)",prsCalc,
         c("avg","sum","std"),multiarg=FALSE)
     
-    disp("####################################################################")
-    disp("Running cross-validations for ",length(leaveOut)," leave-out cases ",
-        "across ",length(selections)," PRS candidates")
-    disp("####################################################################")
+    # Determine if we have a prisma output complete object or a list of 
+    # candidate PRSs
+    isPrismaOut <- is.list(prismaOut) 
+        && all(c("params","results") %in% names(prismaOut))
+    if (!isPrismaOut) # Check the list of PRSs as it may be manual
+        prismaOut <- .checkPrismaSelectionsOutput(prismaOut)
     
+    if (isPrismaOut) {
+        # TODO - WIP
+    }
+    else {
+        disp("################################################################")
+        disp("Running cross-validations for ",length(leaveOut),
+            " leave-out cases across ",length(selections)," PRS candidates")
+        disp("################################################################")
+        cvMetrics <- .prismaCrossValidateWorker(selections,gwe,response,
+            covariates,pcs,leaveOut,times,prsCalc,family,rc,...)
+    }
+    
+    disp("################################################################")
+    disp("Done! Use summarizeCvMetrics() and plotCvMetrics() to summarize and ",
+        "inspect the results.")
+    disp("################################################################")
+    
+    return(cvMetrics)
+}
+
+.prismaCrossValidateWorker <- function(selections,gwe,response,covariates,
+    pcs,leaveOut,times,prsCalc,family,rc,...) {
     cvMetrics <- vector("list",length(selections))
     for (i in seq_along(selections)) {
         pd <- selections[[i]]
@@ -197,14 +219,9 @@ prismaCrossValidate <- function(selections,gwe,response,covariates=NULL,
         names(cvMetrics[[i]]) <- as.character(leaveOut)
     }
     names(cvMetrics) <- names(selections)
-    
-    disp("####################################################################")
-    disp("Done! Use summarizeCvMetrics() and plotCvMetrics() to summarize and ",
-        "inspect the results.")
-    disp("####################################################################")
-    
     return(cvMetrics)
 }
+
 
 prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     pcs=FALSE,leaveOut=0.05,times=10,prsCalc=c("avg","sum","std"),family=NULL,

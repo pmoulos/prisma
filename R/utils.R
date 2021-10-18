@@ -448,6 +448,182 @@ disp <- function(...,level=c("normal","full")) {
     }
 }
 
+.makeReportMessages <- function(lang) {
+    switch(lang,
+        en = {
+            messages <- list(
+                stat=list(
+                    glm="GLM",
+                    snptest="SNPTEST",
+                    rrblup="rrBLUP",
+                    statgen="statgenGWAS",
+                    plink="PLINK"
+                ),
+                prs=list(
+                    lassosum="lassosum",
+                    prsice="PRSice-2"
+                ),
+                meta=list(
+                    intersection="intersection of individual results",
+                    union="union of individual results",
+                    fisher="Fisher's method",
+                    minp="minimum p-value across results",
+                    maxp="maximum p-value across results",
+                    pandora="PANDORA weighted p-value across results",
+                    simes="Simes correction and combination method",
+                    whitlock=paste("Whitlock's Z-transformation method",
+                        "(Bioconductor package survcomp)"),
+                    harmonic="Wilson's Harmonic mean of p-values",
+                    none=paste("no meta-analysis, reported p-values from the",
+                        "first supplied statistical algorithm")
+                ),
+                adjust=list(
+                    holm="Holm FWER",
+                    hochberg="Hochberg DFR",
+                    hommel="Hommel FWER",
+                    bonferroni="Bonferroni FWER",
+                    bh="Benjamini-Hochberg FDR",
+                    by="Benjamini-Yekutiely FDR",
+                    fdr="Benjamini-Hochberg FDR",
+                    none="no multiple test correction",
+                    qvalue="Storey-Tibshirani FDR"
+                ),
+                plots=list(
+                    mds="multidimensional scaling",
+                    biodetection="biotype detection",
+                    countsbio="biotype counts",
+                    saturation="sample and biotype saturation",
+                    rnacomp="RNA composition",
+                    boxplot="boxplots",
+                    gcbias="GC-content bias",
+                    lengthbias="transcript length bias",
+                    meandiff="mean-difference plot",
+                    meanvar="mean-variance plot",
+                    deheatmap="DEG heatmap",
+                    volcano="volcano plot",
+                    biodist="DEG biotype detection",
+                    filtered="filtered biotypes",
+                    correl="correlation heatmap and correlogram",
+                    pairwise="pairwise scatterplots between samples",
+                    statvenn="statistical algorithm Venn diagrams",
+                    foldvenn="fold change Venn diagrams",
+                    deregulogram="deregulogram",
+                    mastat="staistical significance MA plot"
+                ),
+                export=list(
+                    annotation="Annotation",
+                    p_value="p-value"
+                ),
+                explain=list(
+                    mds=paste(
+                "Multidimensional Scaling (MDS) plots constitute a means",
+                "of visualizing the level of similarity of individual cases",
+                "of a dataset. It is similar to Principal Component Analysis",
+                "(PCA), but instead of using the covariance matrix to find",
+                "similarities between cases, MDS uses absolute distance",
+                "metrics such as the classical Euclidean distance. Because",
+                "of the relative linear relations between sequencing samples,",
+                "it provides a more realistic clustering of samples. MDS",
+                "serves quality control and it can be interpreted as follows:",
+                "when the distance between samples of the same biological",
+                "condition in the MDS space is small, this is an indication",
+                "of high correlation and reproducibility between them. When",
+                "this distance is larger or heterogeneous (e.g. the 3rd",
+                "sample of a triplicate set is further from the other 2),",
+                "this constitutes an indication of low correlation and",
+                "reproducibility between samples. It can help exclude poor",
+                "samples from further analysis.",collapse=" "
+                    )
+                ),
+                references=list(
+                    qc=paste("Moulos, P., Hatzis, P. (2015). Systematic",
+                        "integration of RNA-Seq statistical algorithms for",
+                        "accurate detection of differential gene expression",
+                        "patterns. Nucleic Acids Research 43(4), e25."),
+                    prs=list(
+                        edaseq=paste("Risso, D., Schwartz, K., Sherlock, G.,",
+                            "and Dudoit, S. (2011). GC-content normalization",
+                            "for RNA-Seq data. BMC Bioinformatics 12, 480.")
+                    ),
+                    stat=list(
+                        deseq=paste("Anders, S., and Huber, W. (2010).",
+                            "Differential expression analysis for sequence",
+                            "count data. Genome Biol 11, R106.")
+                    ),
+                    meta=list(
+                        fisher=paste("Fisher, R.A. (1932). Statistical",
+                            "Methods for Research Workers (Edinburgh, Oliver",
+                            "and Boyd)."),
+                        fperm=paste("Fisher, R.A. (1932). Statistical",
+                            "Methods for Research Workers (Edinburgh, Oliver",
+                            "and Boyd)."),
+                        whitlock=c(
+                            paste("Whitlock, M.C. (2005). Combining",
+                                "probability from independent tests:",
+                                "the weighted Z-method is superior to Fisher's",
+                                "approach. J Evol Biol 18, 1368-1373."),
+                            paste("Schroder, M.S., Culhane, A.C., Quackenbush,",
+                                "J., and Haibe-Kains, B. (2011). survcomp:",
+                                "an R/Bioconductor package for performance",
+                                "assessment and comparison of survival",
+                                "models. Bioinformatics 27, 3206-3208.")
+                        ),
+                        weight=paste("Genovese, C.R., Roeder, K., Wasserman,",
+                            "L. (2006). False discovery control with p-value",
+                            "weighting. Biometrika 93 (3): 509-524."),
+                        simes=paste("Simes, R. J. (1986). An improved",
+                            "Bonferroni procedure for multiple tests of",
+                            "significance. Biometrika 73 (3): 751-754."),
+                        harmonic=paste("Wilson, D. J. (2019). The harmonic",
+                            "mean p-value for combining dependent tests.",
+                            "PNAS 116 (4): 1995-1200."),
+                        none=NULL
+                    ),
+                    multiple=list(
+                        BH=paste("Benjamini, Y., and Hochberg, Y. (1995). ",
+                            "Controlling the False Discovery Rate: A Practical",
+                            "and Powerful Approach to Multiple Testing.",
+                            "Journal of the Royal Statistical Society Series",
+                            "B (Methodological) 57, 289-300."),
+                        fdr=paste("Benjamini, Y., and Hochberg, Y. (1995). ",
+                            "Controlling the False Discovery Rate: A Practical",
+                            "and Powerful Approach to Multiple Testing.",
+                            "Journal of the Royal Statistical Society Series",
+                            "B (Methodological) 57, 289-300."),
+                        BY=paste("Benjamini, Y., and Yekutieli, D. (2001). The",
+                            "control of the false discovery rate in multiple",
+                            "testing under dependency. Annals of Statistics",
+                            "26, 1165-1188."),
+                        bonferroni=paste("Shaffer, J.P. (1995). Multiple",
+                            "hypothesis testing. Annual Review of",
+                            "Psychology 46, 561-576."),
+                        holm=paste("Holm, S. (1979). A simple sequentially",
+                            "rejective multiple test procedure. Scandinavian",
+                            "Journal of Statistics 6, 65-70."),
+                        hommel=paste("Hommel, G. (1988). A stagewise rejective",
+                            "multiple test procedure based on a modified",
+                            "Bonferroni test. Biometrika 75, 383-386."),
+                        hochberg=paste("Hochberg, Y. (1988). A sharper",
+                            "Bonferroni procedure for multiple tests of",
+                            "significance. Biometrika 75, 800-803."),
+                        qvalue=paste("Storey, J.D., and Tibshirani, R. (2003).",
+                            "Statistical significance for genomewide studies.",
+                            "Proc Natl Acad Sci U S A 100, 9440-9445.")
+                    ),
+                    figure=list(
+                        mds=paste("Planet, E., Attolini, C.S., Reina, O.,",
+                            "Flores, O., and Rossell, D. (2012). htSeqTools:",
+                            "high-throughput sequencing quality control,",
+                            "processing and visualization in R. Bioinformatics",
+                            "28, 589-590.")
+                    )
+                )
+            )
+        }
+    )
+    return(messages)
+}
+
 #~ getAPIBase <- function() {
 #~     base <- getOption("rpgscat_base")
 #~     if (!is.null(base) && .isValidUrl(base))
