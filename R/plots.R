@@ -1,6 +1,14 @@
 plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl")) {
+    disp("Creating cross-validation percentage plots for ",what)
     gcv <- .plotCvMetricsCv(cvo,what)
-    gpr <- .plotCvMetricsCv(.cvToPrsForPlot(cvo),what)
+    cvmList <- .cvToPrsForPlot(cvo)
+    gpr <- vector("list",length(cvmList))
+    names(gpr) <- names(cvmList)
+    disp("Creating cross-validation SNP plots for ",what)
+    for (n in names(cvmList)) {
+        disp("  for ",n," leave out samples fraction")
+        gpr[[n]] <- .plotCvMetricsPrs(cvmList[[n]],what)
+    }
     return(list(cvBased=gcv,prsBased=gpr))
 }
 
@@ -44,7 +52,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl")) {
         Index=index
     )
     
-    nc <- ifelse(length(cvMetrics[[1]]) > 5,2,3)
+    nc <- ifelse(length(cvo[[1]]) > 5,2,3)
     
     g <- ggplot(ggdata,aes(x=Index,y=Mean,colour=Metric)) +
         geom_line() + 

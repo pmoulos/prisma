@@ -448,6 +448,10 @@ disp <- function(...,level=c("normal","full")) {
     }
 }
 
+.symbolBar <- function(sym,len) {
+    return(paste(rep(sym,len),collapse=""))
+}
+
 .makeReportMessages <- function(lang) {
     switch(lang,
         en = {
@@ -490,25 +494,6 @@ disp <- function(...,level=c("normal","full")) {
                 ),
                 plots=list(
                     mds="multidimensional scaling",
-                    biodetection="biotype detection",
-                    countsbio="biotype counts",
-                    saturation="sample and biotype saturation",
-                    rnacomp="RNA composition",
-                    boxplot="boxplots",
-                    gcbias="GC-content bias",
-                    lengthbias="transcript length bias",
-                    meandiff="mean-difference plot",
-                    meanvar="mean-variance plot",
-                    deheatmap="DEG heatmap",
-                    volcano="volcano plot",
-                    biodist="DEG biotype detection",
-                    filtered="filtered biotypes",
-                    correl="correlation heatmap and correlogram",
-                    pairwise="pairwise scatterplots between samples",
-                    statvenn="statistical algorithm Venn diagrams",
-                    foldvenn="fold change Venn diagrams",
-                    deregulogram="deregulogram",
-                    mastat="staistical significance MA plot"
                 ),
                 export=list(
                     annotation="Annotation",

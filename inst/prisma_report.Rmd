@@ -65,13 +65,75 @@ library(htmltools)
 library(magrittr)
 library(pander)
 
-makeReportMessages <- 
-
 args <- prismaOut$params$args
 funCall <- prismaOut$params$call
 
 msgs <- .makeReportMessages("en")
 #msgs <- prisma:::.makeReportMessages("en")
+
+theCvMetrics <- list(
+    `PRS R<sup>2</sup>`="r2",
+    `RMSE`="rmse",
+    `MAE`="mae",
+    `Predicted R<sup>2</sup>`="pr2",
+    `Correlation`="crl"
+)
+
+cvMetExpl <- list(
+    `PRS R<sup>2</sup>`=paste0(
+        "The plots depict the following R2 measurements: ",
+        "<ul>",
+        "<li>Full regression model R<sup>2</sup>: the R<sup>2</sup> of a ",
+            "model including the PRS.</li>",
+        "<li>Reduced model R<sup>2</sup>: the R<sup>2</sup> of a model ",
+            "without  the PRS (only covariates against the phenotype under ",
+            "interrogation).</li>",
+        "<li>Adjusted PRS R<sup>2</sup>: Full R<sup>2</sup> – Reduced ",
+            "R<sup>2</sup>.</li>",
+        "</ul>"
+    ),
+    `RMSE`=paste0(
+        "The plots depict the following RMSE measurements:",
+        "<ul>",
+        "<li>Full model RMSE (including the covariates and the PRS).</li>",
+        "<li>Reduced model RMSE (including only the covariates).</li>",
+        "</ul>"
+    ),
+    `MAE`=paste0(
+        "The plots depict the following MAE measurements:",
+        "<ul>",
+        "<li>Full model MAE (including the covariates and the PRS).</li>",
+        "<li>Reduced model MAE (including only the covariates).</li>",
+        "</ul>"
+    ),
+    `Predicted R<sup>2</sup>`=paste0(
+        "The plots depict the following R2 measurements:",
+        "<ul>",
+        "<li>R<sup>2</sup> from prediction using the full model (including ",
+            "the PRS).</li>"
+        "<li>R<sup>2</sup> from prediction using the reduced model (excluding ",
+            "the PRS).</li>",
+        "<li>Adjusted R<sup>2</sup>: Full R<sup>2</sup> – Reduced ",
+            "R<sup>2</sup>.</li>",
+        "</ul>"
+    ),
+    `Correlation`=paste0(
+        "The plots depict the following R measurements:",
+        "<ul>",
+        "<li>R from prediction using the full model (including the PRS).</li>",
+        "<li>R from prediction using the reduced model (excluding the PRS).",
+            "</li>",
+        "</ul>"
+    )
+)
+
+metDir <- list(
+    `PRS R<sup>2</sup>`="higher",
+    `RMSE`="lower",
+    `MAE`="lower",
+    `Predicted R<sup>2</sup>`="higher",
+    `Correlation`="higher"
+)
 ```
 
 # Summary {.tabset .tabset-pills}
@@ -421,7 +483,7 @@ cat(paste(funCall,collapse="<br/>"))
 cat("</code></pre>")
 ```
 
-# Evaluation {.tabset .tabset-pills}
+# Selection {.tabset .tabset-pills}
 
 The **Evaluation** section summarizes the performance of one or more performed
 GWA tests with respect to the associative power of the derived PRS as extracted 
@@ -485,10 +547,10 @@ if (length(prismaOut$results) > 1) { # Plot of baselines
 
 The following tabs contain evaluation plots for each performed GWA test.
 
-```{r evaluation_basic, fig.width=14, fig.height=6}
+```{r selection_basic, fig.width=14, fig.height=6}
 cat("<h3>Evaluation of <em>de novo</em> extracted PRSs</h3>")
 for (m in names(prismaOut$results)) {
-    pandoc.header(msgs$stat[[m]],level=2)
+    pandoc.header(paste0(msgs$stat[[m]]," {.tabset .tabset-pills}"),level=2)
     
     # De novo extraction part
     cat("<div class='figure-hint'>")
@@ -539,44 +601,119 @@ for (m in names(prismaOut$results)) {
     cat("<div>")
     print(prismaOut$results[[m]]$reportData$plots$r2fr)
     cat("</div>")
-
-    # Cross-validation part
-    cat("<h4>Cross-validation using the best PRS candidates</h3>")
 }
 ```
 
+```{r cv_basic, fig.width=14, fig.height=6}
+if (!is.null(cvMetricsOut)) {
+    pandoc.header("Cross validation {.tabset .tabset-pills}",level=1)
+    
+    for (m in names(prismaOut$results)) {
+        if (!is.null(cvMetricsOut[[m]])) {
+            cat("<h4>Cross-validation using the best PRS candidates for ",
+                msgs$stat[[m]],"</h3>")
+            
+            cat(
+                "Each of the following tabs contains evaluation plots produced",
+                "after model cross-validations with (<strong>full)</strong>",
+                "or without (<strong>reduced</strong>) the PRS across",
+                nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
+                "iterations. The cross-validation iterations are performed",
+                "with different percentages of withheld samples, and namely,",
+                "leaving out, ",
+                paste(paste(100*as.numeric(names(cvMetricsOut[[m]][[1]])),"%",
+                    sep=""),collapse=", "),
+                " of the samples. Each time, the rest of the samples are used",
+                "to build the regression model including or excluding the PRS.",
+                "The following model evaluation metrics are collected:"
+            )
+            
+            cat("<ul>")
+            cat("<li>Model fit as depicted by the R<sup>2</sup> coefficient",
+                "(<strong>PRS R2</strong>).</li>")
+            cat("<li>Root Mean Square Error (<strong>RMSE</strong>). The RMSE",
+                "is the standard deviation of the residuals (prediction",
+                "errors). The predictions are performed by applying the model",
+                "to the leave-out samples and RMSE measures how concentrated",
+                "the data are around the line of best fit and is robust to", 
+                "outliers.</li>")
+            cat("<li>Mean Absolute Error (<strong>MAE</strong>). The MAE is",
+                "a measure of errors between paired observations (here",
+                "original values and predictions) and is simply the mean",
+                "difference between observed and predicted phenotype",
+                "values.</li>")
+            cat("<li>Squared correlation coefficient (R<sup>2</sup>) of the",
+                "observed versus the predicted phenotype values.</li>")
+            cat("<li>Correlation coefficient (R<sup>2</sup>) of the",
+                "observed versus the predicted phenotype values.</li>")
+            cat("</ul>")
+            
+            cvPlots <- vector("list",length(theCvMetrics))
+            names(cvPlots) <- names(theCvMetrics)
+            for (e in names(theCvMetrics)) {
+                pandoc.header(paste0(e," {.tabset .tabset-pills}"),level=3)
+                
+                # Create CV plots
+                cvPlots <- plotCvMetrics(cvMetricsOut[[m]],theCvMetrics[[e]])
+                
+                # What we see
+                cat(cvMetExpl[[e]])
+            
+                # A plot across leave-out percentages, if performed
+                if (length(cvMetricsOut[[m]][[1]]) > 1) {
+                    cat("<div class='figure-hint'>")
+                    cat("The following plot depicts the average values of",e,
+                        "and their standard deviations across",
+                        length(cvMetricsOut[[m]][[1]]),
+                        "different leave-out sample percentages. Its purpose",
+                        "is to evaluate the stability of the model based on", 
+                        "different number of samples used for fit and",
+                        "prediction, with or without the PRS. Each panel",
+                        "corresponds to a PRS candidate with its number of",
+                        "SNPs displayed on the top. A good PRS should also", 
+                        "result in a stable model.")
+                    cat("</div>")
+                    cat("<div>")
+                    print(cvPlots$cvBased)
+                    cat("</div>")
+                }
+                
+                # Detailed plots for each CV percentage
+                for (pct in names(cvPlots$prsBased)) {
+                    pctp <- paste0(100*as.numeric(pct),"%")
+                    pandoc.header(pctp,level=4)
+                    
+                    cat("<div class='figure-hint'>")
+                    cat("The following plot depicts the average values of",e,
+                        "and their standard deviations across the PRS",
+                        "candidates while leaving out",pctp,"samples. The",
+                        "best candidate should show",metDir[[e]],e)
+                    cat("</div>")
+                    
+                    cat("<div>")
+                    print(cvPlots$prsBased[[pct]])
+                    cat("</div>")
+                }
+            }
+            
+        }
+    }
+}
+
+```
+
+<!--
+- For across %
+The following plot depicts the average values of … and their standard deviations across … different leave-out sample percentages. Its purpose is to evaluate the stability of the model based on different number of samples used for fit and prediction, with or without the PRS. Each panel corresponds to a PRS candidate with … SNPs. A good PRS should also result in a stable model.
+
+- For each metric
+The following plot depicts the average values of … and their standard deviations across … PRS candidates while leaving out … % samples. The best candidate should show higher/lower …
+-->
 
 
 
 
 
 
+# Results {.tabset .tabset-pills}
 
-
-
-
-
-
-
-
-
-
-# Test {.tabset .tabset-pills}
-
-## Test
-
-### Test
-
-### Analysis sub-summary {.tabset .tabset-pills}
-
-#### Sub1
-
-##### Sub1
-
-This is a sub-summary
-
-#### Sub2
-
-##### Sub2
-
-This is a sub-summary 2

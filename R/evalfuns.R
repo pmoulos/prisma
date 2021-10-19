@@ -168,29 +168,42 @@ prismaCrossValidate <- function(prismaOut,gwe,response,covariates=NULL,
     
     # Determine if we have a prisma output complete object or a list of 
     # candidate PRSs
-    isPrismaOut <- is.list(prismaOut) 
-        && all(c("params","results") %in% names(prismaOut))
+    isPrismaOut <- is.list(prismaOut) && 
+        all(c("params","results") %in% names(prismaOut))
     if (!isPrismaOut) # Check the list of PRSs as it may be manual
         prismaOut <- .checkPrismaSelectionsOutput(prismaOut)
     
     if (isPrismaOut) {
-        # TODO - WIP
+        cvMetrics <- vector("list",length(prismaOut$results))
+        names(cvMetrics) <- names(prismaOut$results)
+        for (m in names(prismaOut$results)) {
+            selections <- prismaOut$results[[m]]$candidates
+            disp("\n",.symbolBar("#",64))
+            disp("Running cross-validations for ",m," with ",length(leaveOut),
+                " leave-out cases across ",length(selections)," PRS candidates")
+            disp(.symbolBar("#",64))
+            cvMetrics[[m]] <- .prismaCrossValidateWorker(selections,gwe,
+                response,covariates,pcs,leaveOut,times,prsCalc,family,rc,...)
+        }
     }
     else {
-        disp("################################################################")
+        disp("\n",.symbolBar("#",64))
         disp("Running cross-validations for ",length(leaveOut),
             " leave-out cases across ",length(selections)," PRS candidates")
-        disp("################################################################")
+        disp(.symbolBar("#",64))
         cvMetrics <- .prismaCrossValidateWorker(selections,gwe,response,
             covariates,pcs,leaveOut,times,prsCalc,family,rc,...)
     }
     
-    disp("################################################################")
+    disp(.symbolBar("#",64))
     disp("Done! Use summarizeCvMetrics() and plotCvMetrics() to summarize and ",
         "inspect the results.")
-    disp("################################################################")
+    disp(.symbolBar("#",64))
     
-    return(cvMetrics)
+    if (isPrismaOut)
+        return(cvMetrics)
+    else
+        return(list(cvMetrics))
 }
 
 .prismaCrossValidateWorker <- function(selections,gwe,response,covariates,
@@ -198,9 +211,9 @@ prismaCrossValidate <- function(prismaOut,gwe,response,covariates=NULL,
     cvMetrics <- vector("list",length(selections))
     for (i in seq_along(selections)) {
         pd <- selections[[i]]
-        disp("==============================================================")
+        disp("\n",.symbolBar("=",64))
         disp("-----> Cross-validating PRS candidate with ",nrow(pd)," markers")
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         cvMetrics[[i]] <- lapply(leaveOut,function(s) {
             disp("\n----- Leave-out percentage ",paste0(100*s,"%")," -----")
             return(prsCrossValidate(
@@ -283,9 +296,9 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     metrics <- cmclapply(seq_len(times),function(i) {
         if (is.null(rc)) {
             silent <- FALSE
-            disp("\n==========================================================")
+            disp("\n",.symbolBar("=",64))
             disp("-----> Cross-validation iteration ",i)
-            disp("==========================================================\n")
+            disp(.symbolBar("=",64),"\n")
         }
         else {
             disp("Running cross-validation iteration ",i)
@@ -506,15 +519,15 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
     )
     
     if (scr) {
-        disp("\n==================================================")
+        disp("\n",.symbolBar("=",64))
         disp("PRISMA PRS cross-validation report")
-        disp("==================================================\n")
+        disp(.symbolBar("=",64),"\n")
         
         disp("Number of SNPs in PRS                                 : ",nsnp)
         disp("Number of cross-validations                           : ",nrow(M))
         disp("Statistical significance of PRS in model              : ",
             formatC(theStats["max_prs_pvalue"],format="e",digits=3))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("R^2 summary statistics")
         disp("R^2 of the full regression model including the PRS    : ",
@@ -526,7 +539,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("Adjusted R^2 of the PRS full model contribution       : ",
             round(theStats["mean_prs_r2"],4)," +/- ",
             round(theStats["sd_prs_r2"],4))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Statistical significance of full R^2 against reduced R^2")
         disp("t-test         : ",formatC(theStats["ttest_full_reduced_r2"],
@@ -534,7 +547,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("Wilcoxon test  : ",formatC(theStats["wilcox_full_reduced_r2"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_r2"])
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("RMSE summary statistics")
         disp("RMSE of the full regression model including the PRS    : ",
@@ -543,7 +556,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("RMSE of the reduced regression model excluding the PRS : ",
             round(theStats["mean_reduced_rmse"],4)," +/- ",
             round(theStats["sd_reduced_rmse"],4))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Statistical significance of full RMSE against reduced RMSE")
         disp("t-test         : ",formatC(theStats["ttest_full_reduced_rmse"],
@@ -551,7 +564,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("Wilcoxon test  : ",formatC(theStats["wilcox_full_reduced_rmse"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_rmse"])
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("MAE summary statistics")
         disp("MAE of the full regression model including the PRS    : ",
@@ -560,7 +573,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("MAE of the reduced regression model excluding the PRS : ",
             round(theStats["mean_reduced_mae"],4)," +/- ",
             round(theStats["sd_reduced_mae"],4))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Statistical significance of full MAE against reduced MAE")
         disp("t-test         : ",formatC(theStats["ttest_full_reduced_mae"],
@@ -568,7 +581,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("Wilcoxon test  : ",formatC(theStats["wilcox_full_reduced_mae"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_mae"])
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Correlation summary statistics")
         disp("R between observed & predicted values with the full model    : ",
@@ -577,7 +590,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("R between observed & predicted values with the reduced model : ",
             round(theStats["mean_reduced_pred_cor"],4)," +/- ",
             round(theStats["sd_reduced_pred_cor"],4))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Statistical significance of full R against reduced R")
         disp("t-test         : ",
@@ -587,7 +600,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
             formatC(theStats["ttest_full_reduced_pred_cor"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_pred_cor"])
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("R^2 summary statistics for the predicted test values")
         disp("R^2 from the full regression model including the PRS    : ",
@@ -599,7 +612,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
         disp("Adjusted R^2 from the PRS full model contribution       : ",
             round(theStats["mean_prs_pred_r2"],4)," +/- ",
             round(theStats["sd_prs_pred_r2"],4))
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
         
         disp("Significance of full R^2 against reduced R^2 (predicted)")
         disp("t-test         : ",formatC(theStats["ttest_full_reduced_pred_r2"],
@@ -608,7 +621,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
             formatC(theStats["wilcox_full_reduced_pred_r2"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_pred_r2"])
-        disp("--------------------------------------------------\n")
+        disp(.symbolBar("-",64),"\n")
     }
     
     if (out)
