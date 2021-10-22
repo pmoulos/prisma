@@ -493,7 +493,7 @@ disp <- function(...,level=c("normal","full")) {
                     qvalue="Storey-Tibshirani FDR"
                 ),
                 plots=list(
-                    mds="multidimensional scaling",
+                    mds="multidimensional scaling"
                 ),
                 export=list(
                     annotation="Annotation",

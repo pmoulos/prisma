@@ -1,15 +1,37 @@
-prismaLookup <- function(selections) {
+# I think that for large queries we must download and cache the raw tab
+# delimited file... maybe not... takes some but gwasrapidd works!
+prismaLookup <- function(prismaOut) {
     # Required packages
     if (!requireNamespace("gwasrapidd"))
         stop("R package gwasrapidd is required!")
     
+    # Determine if we have a prisma output complete object or a list of 
+    # candidate PRSs
+    isPrismaOut <- is.list(prismaOut) && 
+        all(c("params","results") %in% names(prismaOut))
+    if (!isPrismaOut) # Check the list of PRSs as it may be manual
+        prismaOut <- .checkPrismaSelectionsOutput(prismaOut)
+    
+    if (isPrismaOut) {
+        lookupOut <- vector("list",length(prismaOut$results))
+        names(lookupOut) <- names(prismaOut$results)
+        for (m in names(prismaOut$results))
+            lookupOut[[m]] <- 
+                .prismaLookupWorker(prismaOut$results[[m]]$candidates)
+        return(lookupOut)
+    }
+    else
+        return(list(.prismaLookupWorker(prismaOut)))
+}
+
+.prismaLookupWorker <- function(selections) {
     # Check the format of the input list
     selections <- .checkPrismaSelectionsOutput(selections)
     
     # Empty trait data frame
     ..emptyLookupDf <- function() {
-        nil <- data.frame(association_id="1",variant_id="v",risk_allele="N",
-            gene_name="N",efo_id="E",trait="T")
+        nil <- data.frame(variant_id="v",risk_allele="N",association_id="1",
+            gene_name="N",efo_id="E",trait="T",freq="1")
         return(nil[-1,])
     }
     
@@ -28,12 +50,19 @@ prismaLookup <- function(selections) {
         ge <- as.data.frame(A@genes)
         ge <- split(ge,factor(ge$association_id,
             levels=unique(ge$association_id)))
-        ge <- unlist(lapply(ge,function(x) {
-            paste0(x$gene_name,collapse=", ")
-        }))
+        #ge <- unlist(lapply(ge,function(x) {
+        #    paste0(x$gene_name,collapse=", ")
+        #}))
+        ge <- lapply(ge,function(x) {
+            if (all(is.na(x$gene_name)))
+                return(NA)
+            else if (any(is.na(x$gene_name)))
+                return(paste0(x$gene_name[!is.na(gene_name)],collapse=", "))
+            else
+                return(paste0(x$gene_name,collapse=", "))
+        })
         
         # For each association, we need to run get_traits...
-        disp("Querying GWAS Catalog with the largest PRS")
         tmpT <- tmpE <- vector("list",length(A@associations$association_id))
         names(tmpT) <- names(tmpE) <- A@associations$association_id
         for (a in A@associations$association_id) {
@@ -44,22 +73,54 @@ prismaLookup <- function(selections) {
         }
         
         # The found hits
-        hits <- data.frame(
-            association_id=A@associations$association_id,
+        #hits <- data.frame(
+        #    association_id=A@associations$association_id,
+        #    variant_id=A@risk_alleles$variant_id,
+        #    risk_allele=A@risk_alleles$risk_allele,
+        #    gene_name=ge,
+        #    efo_id=unlist(tmpE,use.names=FALSE),
+        #    trait=unlist(tmpT,use.names=FALSE)
+        #)
+        
+        tmpdf <- data.frame(
             variant_id=A@risk_alleles$variant_id,
             risk_allele=A@risk_alleles$risk_allele,
-            gene_name=ge,
-            efo_id=unlist(tmpE,use.names=FALSE),
-            trait=unlist(tmpT,use.names=FALSE)
+            association_id=A@risk_alleles$association_id
         )
+        tmps <- split(tmpdf,factor(tmpdf$association_id,
+            levels=unique(tmpdf$association_id)))
+        tmps <- lapply(names(tmps),function(n,D) {
+            if (!is.null(ge[[n]]))
+                D[[n]]$gene_name <- rep(ge[[n]],nrow(D[[n]]))
+            else
+                D[[n]]$gene_name <- rep(NA,nrow(D[[n]]))
+            
+            if (!is.null(tmpE[[n]]))
+                D[[n]]$efo_id <- rep(tmpE[[n]],nrow(D[[n]]))
+            else
+                D[[n]]$efo_id <- rep(NA,nrow(D[[n]]))
+            
+            if (!is.null(tmpE[[n]]))
+                D[[n]]$trait <- rep(tmpT[[n]],nrow(D[[n]]))
+            else
+                D[[n]]$trait <- rep(NA,nrow(D[[n]]))
+            
+            return(D[[n]])
+        },tmps)
+        
+        hits <- do.call("rbind",tmps)
         
         # Now we have to split the hits according to each candidate PRS
         partHits <- lapply(selections,function(x) {
             m <- which(hits$variant_id %in% rownames(x))
             if (length(m) == 0)
                 return(..emptyLookupDf())
-            else
-                return(hits[m,,drop=FALSE])
+            else {
+                y <- hits[m,,drop=FALSE]
+                z <- x[y$variant_id,"freq"]
+                y$freq <- z[!is.na(z)]
+                return(y)
+            }
         })
         
         return(partHits)

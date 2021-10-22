@@ -28,6 +28,16 @@ output:
     font-size: 0.9em;
 }
 
+.selector-label {
+    color: #0D47A1;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.prs_selector_helper {
+    display: none;
+}
+
 #opts_container {
     font-size: 0.9em;
     height: 400px;
@@ -35,6 +45,11 @@ output:
     overflow-x: hidden;
     overflow-wrap: normal;
 }
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: #333333 !important;
+}
+
 </style>
 
 ```{r knitr_init, echo=FALSE, cache=FALSE}
@@ -43,6 +58,7 @@ library(rmdformats)
 
 # Global options
 options(max.print="75")
+opts_knit$set(progress=FALSE,verbose=FALSE)
 opts_chunk$set(
     echo=FALSE,
     cache=FALSE,
@@ -64,6 +80,9 @@ library(ggplot2)
 library(htmltools)
 library(magrittr)
 library(pander)
+library(grid)
+library(DT)
+library(htmltools)
 
 args <- prismaOut$params$args
 funCall <- prismaOut$params$call
@@ -81,7 +100,7 @@ theCvMetrics <- list(
 
 cvMetExpl <- list(
     `PRS R<sup>2</sup>`=paste0(
-        "The plots depict the following R2 measurements: ",
+        "The plots depict the following R<sup>2</sup> measurements:",
         "<ul>",
         "<li>Full regression model R<sup>2</sup>: the R<sup>2</sup> of a ",
             "model including the PRS.</li>",
@@ -110,7 +129,7 @@ cvMetExpl <- list(
         "The plots depict the following R2 measurements:",
         "<ul>",
         "<li>R<sup>2</sup> from prediction using the full model (including ",
-            "the PRS).</li>"
+            "the PRS).</li>",
         "<li>R<sup>2</sup> from prediction using the reduced model (excluding ",
             "the PRS).</li>",
         "<li>Adjusted R<sup>2</sup>: Full R<sup>2</sup> – Reduced ",
@@ -134,6 +153,23 @@ metDir <- list(
     `Predicted R<sup>2</sup>`="higher",
     `Correlation`="higher"
 )
+
+subchunkify <- function(g, fig_height=7, fig_width=5) {
+  g_deparsed <- paste0(deparse(
+    function() {g}
+  ), collapse = '')
+
+  sub_chunk <- paste0("
+  `","``{r sub_chunk_", floor(runif(1) * 10000), ", fig.height=",
+   fig_height, ", fig.width=", fig_width, ", echo=FALSE}",
+  "\n(", 
+    g_deparsed
+    , ")()",
+  "\n`","``
+  ")
+
+  cat(trimws(knitr::knit(text = knitr::knit_expand(text = sub_chunk), quiet = TRUE)))
+}
 ```
 
 # Summary {.tabset .tabset-pills}
@@ -547,7 +583,7 @@ if (length(prismaOut$results) > 1) { # Plot of baselines
 
 The following tabs contain evaluation plots for each performed GWA test.
 
-```{r selection_basic, fig.width=14, fig.height=6}
+```{r selection_basic, fig.width=14, fig.height=6, eval=FALSE}
 cat("<h3>Evaluation of <em>de novo</em> extracted PRSs</h3>")
 for (m in names(prismaOut$results)) {
     pandoc.header(paste0(msgs$stat[[m]]," {.tabset .tabset-pills}"),level=2)
@@ -604,57 +640,66 @@ for (m in names(prismaOut$results)) {
 }
 ```
 
-```{r cv_basic, fig.width=14, fig.height=6}
+```{r cv_basic_pct, fig.width=14, fig.height=8, eval=FALSE}
 if (!is.null(cvMetricsOut)) {
     pandoc.header("Cross validation {.tabset .tabset-pills}",level=1)
     
+    cat("The cross-validation section summarizes the performance and",
+        "potential validity of the PRS by iteratively fitting regression",
+        "models using the examined phenotype as response variable and the",
+        "rest of the covariates (other phenotypes and/or principal components)",
+        "with (<strong>full</strong>) and without (<strong>reduced</strong>)",
+        "the PRS as covariate. The models are iteratively fitted by excluding",
+        "each time a percentage of the samples and using these samples to",
+        "then assess the performance of the model with various metrics. These",
+        "metrics are:")
+    cat("<ul>")
+    cat("<li>Model fit as depicted by the R<sup>2</sup> coefficient",
+        "(<strong>PRS R<sup>2</sup></strong>).</li>")
+    cat("<li>Root Mean Square Error (<strong>RMSE</strong>). The RMSE is the",
+        "standard deviation of the residuals (prediction errors). The",
+        "predictions are performed by applying the model to the leave-out",
+        "samples and RMSE measures how concentrated the data are around the",
+        "line of best fit and is robust to outliers.</li>")
+    cat("<li>Mean Absolute Error (<strong>MAE</strong>). The MAE is a measure",
+        "of errors between paired observations (here original values and",
+        "predictions) and is simply the mean difference between observed",
+        "and predicted phenotype values.</li>")
+    cat("<li>Squared correlation coefficient (R<sup>2</sup>) of the observed",
+        "versus the predicted phenotype values.</li>")
+    cat("<li>Correlation coefficient (R<sup>2</sup>) of the observed versus",
+        "the predicted phenotype values.</li>")
+    cat("</ul>")
+    
     for (m in names(prismaOut$results)) {
         if (!is.null(cvMetricsOut[[m]])) {
-            cat("<h4>Cross-validation using the best PRS candidates for ",
-                msgs$stat[[m]],"</h3>")
+            pandoc.header(paste0(msgs$stat[[m]]," {.tabset .tabset-pills}"),
+                level=2)
             
             cat(
-                "Each of the following tabs contains evaluation plots produced",
-                "after model cross-validations with (<strong>full)</strong>",
+                "<div>Each of the following tabs contains evaluation plots produced",
+                "after model cross-validations with (<strong>full</strong>)",
                 "or without (<strong>reduced</strong>) the PRS across",
                 nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
                 "iterations. The cross-validation iterations are performed",
                 "with different percentages of withheld samples, and namely,",
-                "leaving out, ",
+                "leaving out",
                 paste(paste(100*as.numeric(names(cvMetricsOut[[m]][[1]])),"%",
                     sep=""),collapse=", "),
-                " of the samples. Each time, the rest of the samples are used",
+                "of the samples. Each time, the rest of the samples are used",
                 "to build the regression model including or excluding the PRS.",
-                "The following model evaluation metrics are collected:"
+                "The following model evaluation metrics are collected:</div>"
             )
-            
-            cat("<ul>")
-            cat("<li>Model fit as depicted by the R<sup>2</sup> coefficient",
-                "(<strong>PRS R2</strong>).</li>")
-            cat("<li>Root Mean Square Error (<strong>RMSE</strong>). The RMSE",
-                "is the standard deviation of the residuals (prediction",
-                "errors). The predictions are performed by applying the model",
-                "to the leave-out samples and RMSE measures how concentrated",
-                "the data are around the line of best fit and is robust to", 
-                "outliers.</li>")
-            cat("<li>Mean Absolute Error (<strong>MAE</strong>). The MAE is",
-                "a measure of errors between paired observations (here",
-                "original values and predictions) and is simply the mean",
-                "difference between observed and predicted phenotype",
-                "values.</li>")
-            cat("<li>Squared correlation coefficient (R<sup>2</sup>) of the",
-                "observed versus the predicted phenotype values.</li>")
-            cat("<li>Correlation coefficient (R<sup>2</sup>) of the",
-                "observed versus the predicted phenotype values.</li>")
-            cat("</ul>")
             
             cvPlots <- vector("list",length(theCvMetrics))
             names(cvPlots) <- names(theCvMetrics)
+            
             for (e in names(theCvMetrics)) {
-                pandoc.header(paste0(e," {.tabset .tabset-pills}"),level=3)
-                
                 # Create CV plots
-                cvPlots <- plotCvMetrics(cvMetricsOut[[m]],theCvMetrics[[e]])
+                cvPlots <- plotCvMetrics(cvMetricsOut[[m]],theCvMetrics[[e]],
+                    silent=TRUE)
+                
+                pandoc.header(paste0(e," {.tabset .tabset-pills}"),level=3)
                 
                 # What we see
                 cat(cvMetExpl[[e]])
@@ -675,9 +720,99 @@ if (!is.null(cvMetricsOut)) {
                     cat("</div>")
                     cat("<div>")
                     print(cvPlots$cvBased)
+                    #subchunkify(cvPlots$cvBased,14,14)
                     cat("</div>")
                 }
                 
+                # Detailed plots for each CV percentage
+                for (pct in names(cvPlots$prsBased)) {
+                    pctp <- paste0(100*as.numeric(pct),"%")
+                    pandoc.header(pctp,level=4)
+                    
+                    cat("<div class='figure-hint'>")
+                    cat("The following plot depicts the average values of",e,
+                        "and their standard deviations across the PRS",
+                        "candidates while leaving out",pctp,"samples. The",
+                        "best candidate should show",metDir[[e]],e)
+                    cat("</div>")
+                    
+                    cat("<div>")
+                    #subchunkify(cvPlots$prsBased[[pct]],8,6)
+                    print(cvPlots$prsBased[[pct]])
+                    cat("</div>")
+                }
+            }
+            
+        }
+    }
+}
+
+```
+
+```{r cv_basic_prs, eval=FALSE}
+if (!is.null(cvMetricsOut)) {
+    pandoc.header("Cross validation - PRS {.tabset .tabset-pills}",level=1)
+    
+    cat("The cross-validation section summarizes the performance and",
+        "potential validity of the PRS by iteratively fitting regression",
+        "models using the examined phenotype as response variable and the",
+        "rest of the covariates (other phenotypes and/or principal components)",
+        "with (<strong>full</strong>) and without (<strong>reduced</strong>)",
+        "the PRS as covariate. The models are iteratively fitted by excluding",
+        "each time a percentage of the samples and using these samples to",
+        "then assess the performance of the model with various metrics. These",
+        "metrics are:")
+    cat("<ul>")
+    cat("<li>Model fit as depicted by the R<sup>2</sup> coefficient",
+        "(<strong>PRS R2</strong>).</li>")
+    cat("<li>Root Mean Square Error (<strong>RMSE</strong>). The RMSE is the",
+        "standard deviation of the residuals (prediction errors). The",
+        "predictions are performed by applying the model to the leave-out",
+        "samples and RMSE measures how concentrated the data are around the",
+        "line of best fit and is robust to outliers.</li>")
+    cat("<li>Mean Absolute Error (<strong>MAE</strong>). The MAE is a measure",
+        "of errors between paired observations (here original values and",
+        "predictions) and is simply the mean difference between observed",
+        "and predicted phenotype values.</li>")
+    cat("<li>Squared correlation coefficient (R<sup>2</sup>) of the observed",
+        "versus the predicted phenotype values.</li>")
+    cat("<li>Correlation coefficient (R<sup>2</sup>) of the observed versus",
+        "the predicted phenotype values.</li>")
+    cat("</ul>")
+    
+    for (m in names(prismaOut$results)) {
+        if (!is.null(cvMetricsOut[[m]])) {
+            pandoc.header(paste0(msgs$stat[[m]]," {.tabset .tabset-pills}"),
+                level=2)
+            
+            cat(
+                "<div>Each of the following tabs contains evaluation plots produced",
+                "after model cross-validations with (<strong>full</strong>)",
+                "or without (<strong>reduced</strong>) the PRS across",
+                nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
+                "iterations. The cross-validation iterations are performed",
+                "with different percentages of withheld samples, and namely,",
+                "leaving out",
+                paste(paste(100*as.numeric(names(cvMetricsOut[[m]][[1]])),"%",
+                    sep=""),collapse=", "),
+                "of the samples. Each time, the rest of the samples are used",
+                "to build the regression model including or excluding the PRS.",
+                "The following model evaluation metrics are collected:</div>"
+            )
+            
+            cvPlots <- vector("list",length(theCvMetrics))
+            names(cvPlots) <- names(theCvMetrics)
+            
+            for (e in names(theCvMetrics)) {
+                # Create CV plots
+                cvPlots <- plotCvMetrics(cvMetricsOut[[m]],theCvMetrics[[e]],
+                    pl="prs",silent=TRUE)
+                
+                pandoc.header(paste0(e," {.tabset .tabset-pills}"),level=3)
+                
+                # What we see
+                cat(cvMetExpl[[e]])
+            
                 # Detailed plots for each CV percentage
                 for (pct in names(cvPlots$prsBased)) {
                     pctp <- paste0(100*as.numeric(pct),"%")
@@ -699,21 +834,144 @@ if (!is.null(cvMetricsOut)) {
         }
     }
 }
-
 ```
 
-<!--
-- For across %
-The following plot depicts the average values of … and their standard deviations across … different leave-out sample percentages. Its purpose is to evaluate the stability of the model based on different number of samples used for fit and prediction, with or without the PRS. Each panel corresponds to a PRS candidate with … SNPs. A good PRS should also result in a stable model.
-
-- For each metric
-The following plot depicts the average values of … and their standard deviations across … PRS candidates while leaving out … % samples. The best candidate should show higher/lower …
--->
+# Results
 
 
+```{r dt_hack, include=FALSE}
+DT::datatable(NULL)
+```
+
+```{r results_basic_prs}
+# Create the selectors
+cat("<hr style='height: 2px;'>")
+cat("<div class=\"row\"><div class=\"col-sm-6\">")
+cat("<div class=\"selector-label\">Select a GWA test to display ",
+    "PRS tables for </div>",sep="")
+# Create a selector for each GWA algorithm
+algs <- unlist(msgs$stat[names(prismaOut$results)],use.names=FALSE)
+itemsGwa <- paste("<option value=",names(prismaOut$results),">",algs,
+    "</option>",sep="")
+cat("<select id=\"prsgwa_table_selector\">",itemsGwa,"</select>",sep="")
+cat("</div><div class=\"col-sm-6\">")
+# Create the sub-selectors for each PRS candidate - start as hidden
+for (m in names(prismaOut$results)) {
+    items <- paste("<option value=",
+        paste(m,names(prismaOut$results[[m]]$candidates),sep="_"),">",
+        paste(names(prismaOut$results[[m]]$candidates),"SNPs"),"</option>",
+        sep="")
+    #cat("<div class=\"prs_selector_container\" style='display:none'>")
+    
+    cat("<div id=\"prstable_",m,"_label\" class=\"selector-label",
+        " prs_selector_helper\">Select a PRS candidate to display</div>",sep="")
+    cat("<select id=\"prstable_",m,"_selector\" class=\"prs_selector_helper ",
+        "main_prs_selector\">",items,"</select>",sep="")
+    #cat("</div><br/>")
+}
+cat("</div></div><br/>")
+
+cat("The following tables present the respective PRS cadidates in summary. Use",
+    "the selectors above to inspect the tables and the links below to download",
+    "the respective PRS candidate in text-tab delimited format (can be opened",
+    "in a spreadsheet like Excel.")
+
+# The tables?
+for (m in names(prismaOut$results)) {
+    for (n in names(prismaOut$results[[m]]$candidates)) {
+        #pandoc.header(paste0(n," SNPs"),level=3)
+        
+        snps <- prismaOut$results[[m]]$candidates[[n]]
+        snps <- snps[,-c(6,8,9)]
+        snps[,"effect_weight"] <- round(snps[,"effect_weight"],5)
+        snps[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
+            "/snp/",snps[,"variant_id"],"' target='_blank'>",
+            snps[,"variant_id"],"</a>",sep="")
+        colnames(snps)[5] <- "ref_allele"
+        
+        lkp <- lookupOut[[m]][[n]]
+        if (nrow(lkp) > 0) {
+            lkp[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
+                "/snp/",lkp[,"variant_id"],"' target='_blank'>",
+                lkp[,"variant_id"],"</a>",sep="")
+            lkp[,"trait"] <- paste("<a href='http://www.ebi.ac.uk/efo/",
+                lkp[,"efo_id"],"' target='_blank'>",lkp[,"trait"],"</a>",sep="")
+        }
+        lkp <- lkp[,-5]
+        
+        cat("<div class='prstable-helper-wrapper' id='prstable_",m,"_",n,"'>",
+            sep="")
+        cat("<h4>PRS with ",n," SNPs derived with ",m," effect estimations",
+            "</h4>",sep="")
+        thePrsTable <- DT::datatable(
+            snps,
+            rownames=FALSE,
+            width="95%",
+            height=460,
+            style="bootstrap",
+            class="table-condensed table-striped table-responsive",
+            elementId=paste("prstable_",m,"_",n,"_",sep=""),
+            escape=FALSE,
+            options=list(
+                scrollX=TRUE,
+                dom='Bfrtip'
+            )
+        )        
+        print(htmltools::tagList(tags$div(class="prstable-container",
+            thePrsTable)))
+        cat("</div>")
+        
+        cat("<div class='prstable-helper-wrapper' id='efotable_",m,"_",n,"'>",
+            sep="")
+        cat("<h4>GWAS Catalog associations with SNPs in PRS</h4>")
+        theEfoTable <- DT::datatable(
+            lkp,
+            rownames=FALSE,
+            width="95%",
+            height=460,
+            style="bootstrap",
+            class="table-condensed table-striped table-responsive",
+            elementId=paste("efotable_",m,"_",n,"_",sep=""),
+            escape=FALSE,
+            options=list(
+                scrollX=TRUE,
+                dom='Bfrtip'
+            )
+        )        
+        print(htmltools::tagList(tags$div(class="efotable-container",
+            theEfoTable)))
+        cat("</div>")
+    }
+}
+```
 
 
+```{js bind_event_changes}
+$("#prsgwa_table_selector").on('change',function() {
+    var name = this.value;
+    $(".prs_selector_helper").hide(0);
+    $("#prstable_"+name+"_label").show();
+    $("#prstable_"+name+"_selector").show();
+    
+    // Trigger the change of the other selector too
+    $(".main_prs_selector").trigger('change');
+});
 
+$(".main_prs_selector").on('change',function() {
+    var name = this.value;
+    
+    $(".prstable-helper-wrapper").hide(0);
+    $("#prstable_"+name).show();
+    $("#efotable_"+name).show();
+    
+    // Hack to make the table visible (htmlwidget known issue)
+    window.dispatchEvent(new Event('resize'));
+    // Hack to align the column headers
+    var id = $('#prstable_'+name+"_").find("table")[1].id;
+    $('#'+id).DataTable().columns.adjust();
+    var id = $('#efotable_'+name+"_").find("table")[1].id;
+    $('#'+id).DataTable().columns.adjust();
+});
 
-# Results {.tabset .tabset-pills}
-
+$("#prsgwa_table_selector").trigger('change');
+```

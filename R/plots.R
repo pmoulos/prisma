@@ -1,14 +1,28 @@
-plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl")) {
-    disp("Creating cross-validation percentage plots for ",what)
-    gcv <- .plotCvMetricsCv(cvo,what)
-    cvmList <- .cvToPrsForPlot(cvo)
-    gpr <- vector("list",length(cvmList))
-    names(gpr) <- names(cvmList)
-    disp("Creating cross-validation SNP plots for ",what)
-    for (n in names(cvmList)) {
-        disp("  for ",n," leave out samples fraction")
-        gpr[[n]] <- .plotCvMetricsPrs(cvmList[[n]],what)
+plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
+    pl=c("pct","prs"),silent=FALSE) {
+    if ("pct" %in% pl) {
+        if (!silent)
+            disp("Creating cross-validation percentage plots for ",what)
+        gcv <- .plotCvMetricsCv(cvo,what)
     }
+    else
+        gcv <- NULL
+    
+    if ("prs" %in% pl) {
+        cvmList <- .cvToPrsForPlot(cvo)
+        gpr <- vector("list",length(cvmList))
+        names(gpr) <- names(cvmList)
+        if (!silent)
+            disp("Creating cross-validation SNP plots for ",what)
+        for (n in names(cvmList)) {
+            if (!silent)
+                disp("  for ",n," leave out samples fraction")
+            gpr[[n]] <- .plotCvMetricsPrs(cvmList[[n]],what)
+        }
+    }
+    else
+        gpr <- NULL
+    
     return(list(cvBased=gcv,prsBased=gpr))
 }
 
