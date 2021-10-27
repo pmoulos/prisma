@@ -49,9 +49,9 @@
         else
             disp("\n")
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         disp("-----> Denovo pipeline iteration ",i)
-        disp("==============================================================\n")
+        disp(.symbolBar("=",64),"\n")
         
         # Partition the object
         splitResult <- .denovoDatasetPartition(gwe,phenotype,trainSize,output,
@@ -127,7 +127,7 @@
         disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
         save(result,file=saveFile)
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         
         if (logging == "file") {
             sink(type="message")
@@ -190,9 +190,9 @@
         else
             disp("\n")
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         disp("-----> External pipeline iteration ",i)
-        disp("==============================================================\n")
+        disp(.symbolBar("=",64),"\n")
         
         # Partition the object
         splitRes <- .externalDatasetPartition(gwe,phenotype,trainSize,logging)
@@ -266,7 +266,7 @@
         disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
         save(result,file=saveFile)
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         
         if (logging == "file") {
             sink(type="message")
@@ -319,9 +319,9 @@
         else
             disp("\n")
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         disp("-----> Evaluation pipeline iteration ",i)
-        disp("==============================================================\n")
+        disp(.symbolBar("=",64),"\n")
         
         # Run PRS with a safeguard for possibly filtered SNPs
         dnTmp <- D[[i]]
@@ -419,7 +419,7 @@
         disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
         save(result,file=saveFile)
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         
         if (logging == "file") {
             sink(type="message")
@@ -479,9 +479,9 @@
         else
             disp("\n")
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         disp("-----> Evaluation pipeline iteration ",i)
-        disp("==============================================================\n")
+        disp(.symbolBar("=",64),"\n")
         
         # Run PRS with a safeguard for possibly filtered SNPs
         dnTmp <- D[[i]]
@@ -526,8 +526,8 @@
         
         # The expected call is
         result <- tryCatch({
-            prsRegressionMetrics(snpSelection,subObj,response,covariates,
-                pcs,step=nrow(snpSelection))
+            prsRegressionMetrics(snpSelection[safeguard,,drop=FALSE],subObj,
+                response,covariates,pcs,step=nrow(snpSelection))
         },error=function(e) {
             .exitFromSink(logging)
             stop("Caught error during target PRS evaluation: ",e$message,
@@ -545,7 +545,7 @@
         disp("\n----- Saving iteration ",i," result to ",saveFile,"-----\n")
         save(result,file=saveFile)
         
-        disp("==============================================================")
+        disp(.symbolBar("=",64))
         
         if (logging == "file") {
             sink(type="message")

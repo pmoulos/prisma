@@ -18,6 +18,10 @@ output:
 ---
 
 <style>
+body {
+    text-align: justify;
+}
+
 .lightbold {
     font-weight: 500;
 }
@@ -38,6 +42,24 @@ output:
     display: none;
 }
 
+.link-box {
+    background-color: #E1E4FF; 
+    border-style: solid; 
+    border-color: #000C88; 
+    border-width: 1px; 
+    width: 80%; 
+    padding: 10px;
+    margin-top: 20px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: #333333 !important;
+}
+
 #opts_container {
     font-size: 0.9em;
     height: 400px;
@@ -45,11 +67,6 @@ output:
     overflow-x: hidden;
     overflow-wrap: normal;
 }
-
-.dataTables_paginate .paginate_button:hover {
-    background-color: #333333 !important;
-}
-
 </style>
 
 ```{r knitr_init, echo=FALSE, cache=FALSE}
@@ -154,25 +171,70 @@ metDir <- list(
     `Correlation`="higher"
 )
 
-subchunkify <- function(g, fig_height=7, fig_width=5) {
-  g_deparsed <- paste0(deparse(
-    function() {g}
-  ), collapse = '')
+subchunkify <- function(g,fig_height=7,fig_width=5) {
+    g_deparsed <- paste0(deparse(
+        function() {g}
+    ), collapse = '')
 
-  sub_chunk <- paste0("
-  `","``{r sub_chunk_", floor(runif(1) * 10000), ", fig.height=",
-   fig_height, ", fig.width=", fig_width, ", echo=FALSE}",
-  "\n(", 
-    g_deparsed
-    , ")()",
-  "\n`","``
-  ")
+    sub_chunk <- paste0("
+        `","``{r sub_chunk_",floor(runif(1)*10000), ", fig.height=",
+        fig_height, ", fig.width=",fig_width, ", echo=FALSE}",
+        "\n(",g_deparsed, ")()","\n`","``
+    ")
+    cat(trimws(knitr::knit(text=knitr::knit_expand(text=sub_chunk),quiet=TRUE)))
+}
 
-  cat(trimws(knitr::knit(text = knitr::knit_expand(text = sub_chunk), quiet = TRUE)))
+nosci <- function(x,d) {
+    format(round(x,d),scientific=FALSE)
 }
 ```
 
 # Summary {.tabset .tabset-pills}
+
+## General
+
+### PRS candidates summary {.tabset .tabset-pills}
+
+```{r summary general_1}
+cat("<p>The queried phenotype for PRS extraction was <strong>",args$phenotype,
+    "</strong>. ",sep="")
+if (!is.null(args$covariates))
+    cat("<strong>",paste(args$covariates,collapse=", "),"</strong> were used ",
+    "as regression covariates. ",sep="")
+if (args$pcs)
+    cat("A number of principal components was also included in the covariates",
+        "set to capture potential population-based genotypic structure. ")
+cat("The following GWA tests were used to extract summary statistics for SNP ",
+    "markers included in PRS candidates: <strong>",
+    paste(msgs$stat,collapse=", "),"</strong>. Each method yielded the ",
+    "following candidates, when compared to the baseline evaluation metric ", 
+    "over ",args$niter," PRS extraction iterations:</p>",sep="")
+for (m in names(prismaOut$results)) {
+    ns <- names(prismaOut$results[[m]]$candidates)
+    fm <- prismaOut$results[[m]]$reportData$evalMetrics$metrics[ns,c(2,3,6,31)]
+    
+    pandoc.header(msgs$stat[[m]],level=4)
+    
+    cat("The optimal number of markers for PRS based on adjusted PRS ",
+        "R<sup>2</sup> is <strong>",ns[1],"</strong> at adjusted PRS <strong>",
+        "R<sup>2</sup> = ",nosci(fm[ns[1],2],5)," &plusmn; ",
+        nosci(fm[ns[1],3],5)," (p = ",nosci(fm[ns[1],4],6),") </strong> with ",
+        "SNPs appearing  at least <strong>",fm[ns[1],1],"</strong> times over ",
+        args$niter," iterations.",sep="")
+    if (length(ns) > 1) {
+        cat("Other possible options include:")
+        cat("<ul>")
+        for (i in 2:length(ns))
+            cat("<li><strong>",ns[i],"</strong> markers for PRS with adjusted ",
+                "PRS <strong>R<sup>2</sup> = ",nosci(fm[ns[i],2],5)," &plusmn;",
+                " ",nosci(fm[ns[i],3],5)," (p = ",nosci(fm[ns[i],4],6),
+                ")</strong> with SNPs appearing at least <strong>",fm[ns[i],1],
+                "</strong> over <strong>",args$niter,"</strong> iterations.",
+                "</li>",sep="")
+        cat("</ul>")
+    }
+}
+```
 
 ## Input options
 
@@ -677,10 +739,10 @@ if (!is.null(cvMetricsOut)) {
                 level=2)
             
             cat(
-                "<div>Each of the following tabs contains evaluation plots produced",
-                "after model cross-validations with (<strong>full</strong>)",
-                "or without (<strong>reduced</strong>) the PRS across",
-                nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
+                "<div>Each of the following tabs contains evaluation plots",
+                "produced after model cross-validations with (<strong>full",
+                "</strong>) or without (<strong>reduced</strong>) the PRS",
+                "across",nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
                 "iterations. The cross-validation iterations are performed",
                 "with different percentages of withheld samples, and namely,",
                 "leaving out",
@@ -786,10 +848,10 @@ if (!is.null(cvMetricsOut)) {
                 level=2)
             
             cat(
-                "<div>Each of the following tabs contains evaluation plots produced",
-                "after model cross-validations with (<strong>full</strong>)",
-                "or without (<strong>reduced</strong>) the PRS across",
-                nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
+                "<p>Each of the following tabs contains evaluation plots",
+                "produced after model cross-validations with (<strong>full",
+                "</strong>) or without (<strong>reduced</strong>) the PRS",
+                "across",nrow(cvMetricsOut[[m]][[1]][[1]]),"cross-validation",
                 "iterations. The cross-validation iterations are performed",
                 "with different percentages of withheld samples, and namely,",
                 "leaving out",
@@ -797,7 +859,7 @@ if (!is.null(cvMetricsOut)) {
                     sep=""),collapse=", "),
                 "of the samples. Each time, the rest of the samples are used",
                 "to build the regression model including or excluding the PRS.",
-                "The following model evaluation metrics are collected:</div>"
+                "The following model evaluation metrics are collected:</p>"
             )
             
             cvPlots <- vector("list",length(theCvMetrics))
@@ -846,6 +908,40 @@ DT::datatable(NULL)
 ```{r results_basic_prs}
 # Create the selectors
 cat("<hr style='height: 2px;'>")
+cat("<p>The following tables present a summary of the respective PRS",
+    "cadidates. Use the selectors below to inspect the tables and the links",
+    "below the tables to download the respective PRS candidate(s) as well as", 
+    "evidence for the markers derived from GWAS catalog. The files are in", 
+    "Excel format.</p>")
+cat("The PRS candidate tables contain the following columns:")
+cat("<div style='font-size: 0.9em'><ul>")
+cat("<li><em>chrom</em>: The human chromosome the SNP is located</li>")
+cat("<li><em>position</em>: The chromosomal start position of the SNP</li>")
+cat("<li><em>variant_id</em>: The dbSNP ID of the marker where available</li>")
+cat("<li><em>risk_allele</em>: The risk (minor) allele as defined in the",
+    "input PLINK fileset</li>")
+cat("<li><em>ref_allele</em>: The major allele as defined in the input PLINK",
+    "fileset</li>")
+cat("<li><em>effect_weight</em>: The effect of each SNP as derived by the",
+    "respective GWA test and summarized from the",args$niter,"iterations</li>")
+cat("<li><em>freq</em>: The number of times the marker appears in the PRS over",
+    args$niter,"iterations</li>")
+cat("</ul></div>")
+
+cat("The GWAS Catalog association tables contain the following columns:")
+cat("<div style='font-size: 0.9em'><ul>")
+cat("<li><em>variant_id</em>: The dbSNP ID of the marker where available</li>")
+cat("<li><em>risk_allele</em>: The risk (minor) allele as recorded in GWAS",
+    "Catalog</li>")
+cat("<li><em>association_id</em>: The GWAS Catalog association id</li>")
+cat("<li><em>gene_name</em>: The associated gene name as recorded in GWAS",
+    "Catalog</li>")
+cat("<li><em>trait</em>: The associated trait as recorded in GWAS Catalog</li>")
+cat("<li><em>freq</em>: The number of times the marker appears in the PRS over",
+    args$niter,"iterations</li>")
+cat("</ul></div>")
+
+cat("<hr style='height: 2px;'>")
 cat("<div class=\"row\"><div class=\"col-sm-6\">")
 cat("<div class=\"selector-label\">Select a GWA test to display ",
     "PRS tables for </div>",sep="")
@@ -861,48 +957,42 @@ for (m in names(prismaOut$results)) {
         paste(m,names(prismaOut$results[[m]]$candidates),sep="_"),">",
         paste(names(prismaOut$results[[m]]$candidates),"SNPs"),"</option>",
         sep="")
-    #cat("<div class=\"prs_selector_container\" style='display:none'>")
-    
     cat("<div id=\"prstable_",m,"_label\" class=\"selector-label",
         " prs_selector_helper\">Select a PRS candidate to display</div>",sep="")
     cat("<select id=\"prstable_",m,"_selector\" class=\"prs_selector_helper ",
         "main_prs_selector\">",items,"</select>",sep="")
-    #cat("</div><br/>")
 }
 cat("</div></div><br/>")
-
-cat("The following tables present the respective PRS cadidates in summary. Use",
-    "the selectors above to inspect the tables and the links below to download",
-    "the respective PRS candidate in text-tab delimited format (can be opened",
-    "in a spreadsheet like Excel.")
 
 # The tables?
 for (m in names(prismaOut$results)) {
     for (n in names(prismaOut$results[[m]]$candidates)) {
-        #pandoc.header(paste0(n," SNPs"),level=3)
-        
         snps <- prismaOut$results[[m]]$candidates[[n]]
         snps <- snps[,-c(6,8,9)]
         snps[,"effect_weight"] <- round(snps[,"effect_weight"],5)
         snps[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
             "/snp/",snps[,"variant_id"],"' target='_blank'>",
             snps[,"variant_id"],"</a>",sep="")
+        colnames(snps)[1] <- "chrom"
         colnames(snps)[5] <- "ref_allele"
-        
-        lkp <- lookupOut[[m]][[n]]
-        if (nrow(lkp) > 0) {
-            lkp[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
-                "/snp/",lkp[,"variant_id"],"' target='_blank'>",
-                lkp[,"variant_id"],"</a>",sep="")
-            lkp[,"trait"] <- paste("<a href='http://www.ebi.ac.uk/efo/",
-                lkp[,"efo_id"],"' target='_blank'>",lkp[,"trait"],"</a>",sep="")
-        }
-        lkp <- lkp[,-5]
         
         cat("<div class='prstable-helper-wrapper' id='prstable_",m,"_",n,"'>",
             sep="")
-        cat("<h4>PRS with ",n," SNPs derived with ",m," effect estimations",
-            "</h4>",sep="")
+        
+        cat("<h4>PRS with ",n," SNPs derived with ",msgs$stat[[m]]," effect ",
+            " estimations</h4>",sep="")
+        
+        cat("<div class='row'><div class='col-sm-6'>")
+        cat("<span style='text-align: center'><h5>Correlation of PRS with ",
+            "phenotype</h5></span>")
+        print(prismaOut$results[[m]]$reportData$plots$prsScatter[[n]])
+        cat("</div><div class='col-sm-6'>")
+        cat("<span style='text-align: center'><h5>PRS distribution</h5></span>")
+        print(prismaOut$results[[m]]$reportData$plots$prsHist[[n]])
+        cat("</div></div>")
+        
+        cat("<h4>SNPs and effect weights in PRS</h4>")
+        cat("<div style='overflow-y: auto;'>")
         thePrsTable <- DT::datatable(
             snps,
             rownames=FALSE,
@@ -914,37 +1004,67 @@ for (m in names(prismaOut$results)) {
             escape=FALSE,
             options=list(
                 scrollX=TRUE,
-                dom='Bfrtip'
+                scrollY=TRUE,
+                dom='lfrtip'
             )
-        )        
+        )
         print(htmltools::tagList(tags$div(class="prstable-container",
             thePrsTable)))
         cat("</div>")
         
-        cat("<div class='prstable-helper-wrapper' id='efotable_",m,"_",n,"'>",
+        cat("<div class='figure-hint link-box'>")
+        cat("<strong><a href='candidates/",m,"_candidates.xlsx'",
+            " download>Download</a> the PRS candidates list.</strong><br/>",
             sep="")
-        cat("<h4>GWAS Catalog associations with SNPs in PRS</h4>")
-        theEfoTable <- DT::datatable(
-            lkp,
-            rownames=FALSE,
-            width="95%",
-            height=460,
-            style="bootstrap",
-            class="table-condensed table-striped table-responsive",
-            elementId=paste("efotable_",m,"_",n,"_",sep=""),
-            escape=FALSE,
-            options=list(
-                scrollX=TRUE,
-                dom='Bfrtip'
-            )
-        )        
-        print(htmltools::tagList(tags$div(class="efotable-container",
-            theEfoTable)))
-        cat("</div>")
+        cat("</div></div>")
+        
+        if (!is.null(lookupOut[[m]])) {
+            lkp <- lookupOut[[m]][[n]]
+            if (nrow(lkp) > 0) {
+                lkp[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih",
+                    ".gov/snp/",lkp[,"variant_id"],"' target='_blank'>",
+                    lkp[,"variant_id"],"</a>",sep="")
+                lkp[,"trait"] <- paste("<a href='http://www.ebi.ac.uk/efo/",
+                    lkp[,"efo_id"],"' target='_blank'>",lkp[,"trait"],"</a>",
+                    sep="")
+            }
+            lkp <- lkp[,-5]
+            
+            cat("<div class='prstable-helper-wrapper' id='efotable_",m,"_",n,
+                "' style='margin-top: 50px;'>",sep="")
+            cat("<h4>GWAS Catalog associations with SNPs in PRS</h4>")
+            cat("<div style='overflow-y: auto;'>")
+            theEfoTable <- DT::datatable(
+                lkp,
+                rownames=FALSE,
+                width="95%",
+                height=460,
+                style="bootstrap",
+                class="table-condensed table-striped table-responsive",
+                elementId=paste("efotable_",m,"_",n,"_",sep=""),
+                escape=FALSE,
+                options=list(
+                    scrollX=TRUE,
+                    scrollY=TRUE,
+                    dom='lfrtip'
+                )
+            )        
+            print(htmltools::tagList(tags$div(class="efotable-container",
+                theEfoTable)))
+            cat("</div>")
+            
+            cat("<div class='figure-hint link-box'>")
+            cat("<strong><a href='candidates/",m,"_evidence.xlsx'",
+                " download>Download</a> the evidence list.</strong><br/>",
+                sep="")
+            cat("</div>")
+            
+            cat("</div>")
+        }
+        
     }
 }
 ```
-
 
 ```{js bind_event_changes}
 $("#prsgwa_table_selector").on('change',function() {

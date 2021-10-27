@@ -18,8 +18,6 @@ prisma <- function(
     prsSelectCrit=c("prs_r2","prs_pvalue","prs_aic"),
     prsSelectStat=c("mean","median","none"),
     prsSelectR2=c("adjusted","raw"),
-    #cvOutSize=0.05,
-    #ncvs=10,
     sigTest=c("ttest","wilcoxon","empirical"),
     filters=getDefaults("filters"),
     pcaMethod=c("auto","snprel","grid","hubert"),
@@ -75,10 +73,14 @@ prisma <- function(
         multiarg=FALSE)
     .checkTextArgs("GWA methods to test (gwaMethods)",gwaMethods,
         c("glm","rrblup","statgen","snptest","plink"),multiarg=TRUE)
-    .checkNumArgs("Cross-validation leave-out samples fraction (cvOutSize)",
-        cvOutSize,"numeric",c(0,1),"both")
-    .checkNumArgs("Number of cross-validation fits (ncvs)",as.integer(ncvs),
-        "integer",1L,"gte")
+    
+    glmOpts <- .checkGwaArgs(glmOpts,"glm")
+    rrblupOpts <- .checkGwaArgs(rrblupOpts,"rrblup")
+    #statgenOpts <- .checkGwaArgs(statgenOpts,"statgen")
+    snptesOpts <- .checkGwaArgs(snptestOpts,"snptest")
+    plinkOpts <- .checkGwaArgs(plinkOpts,"plink")
+    lassosumOpts <- .checkPrsArgs(lassosumOpts,"lassosum")
+    prsiceOpts <- .checkPrsArgs(prsiceOpts,"prsice")
     # Rest arguments are checked downstream
     
     # For the time being, vanilla evaluation with new splits is not implemented!
@@ -117,15 +119,19 @@ prisma <- function(
         runId <- .randomString(1,11)
     
     # Run discovery and evaluation loop for each selected method
-    for (m in gwaMethods) {    
+    for (m in gwaMethods) {
+        disp("\n",.symbolBar("*",64))
+        disp("Executing PRISMA pipeline with ",m)
+        disp(.symbolBar("*",64))
+        
         # First part - PRS candidate SNPs. prsPipeline takes care for the 
         # collection of the whole dnResult list, whether that run has failed or 
         # not. When continue=TRUE, prsPipeline will continue from this point and
         # the dnResult going to the next part will be intact. Also, the work is 
         # split to two directories in the workspace, baseline and selection
-        disp("\n##############################################################")
+        disp("\n",.symbolBar("#",64))
         disp("1. Discovery of de novo PRS candidates")
-        disp("##############################################################\n")
+        disp(.symbolBar("#",64),"\n")
         dnResult <- prsPipeline(
             gwe=gwe,
             phenotype=phenotype,
@@ -159,9 +165,9 @@ prisma <- function(
         
         # Second part collect evaluation metrics - if continue=TRUE, dnResult 
         # will be collected from the previous step and passed here.
-        disp("\n##############################################################")
+        disp("\n",.symbolBar("#",64))
         disp("2. Calculation of PRS evaluation metrics")
-        disp("##############################################################\n")
+        disp(.symbolBar("#",64),"\n")
         uDnS <- NULL
         if (evalOnSplit == "original")
             uDnS <- dnResult
@@ -195,7 +201,7 @@ prisma <- function(
             prsMethods=prsMethods,
             lassosumOpts=lassosumOpts,
             prsiceOpts=prsiceOpts,
-            prsWorkspace=file.path(prsWorkspace,"selection"),
+            prsWorkspace=file.path(prsWorkspace,m,"selection"),
             cleanup=cleanup,
             logging=logging,
             output="summary", # If full, run prsSelection directly
@@ -207,9 +213,9 @@ prisma <- function(
         )
         
         # Third part, suggest PRS
-        disp("\n##############################################################")
+        disp("\n",.symbolBar("#",64))
         disp("3. Selection of best PRS candidate markers")
-        disp("##############################################################\n")
+        disp(.symbolBar("#",64),"\n")
         candidates <- selectPrs(
             metrics=evalMetrics$metrics,
             snpSelection=evalMetrics$pgs,
@@ -222,9 +228,9 @@ prisma <- function(
         )
         
         # Make the plots and pass them to the report object later
-        disp("\n##############################################################")
+        disp("\n",.symbolBar("#",64))
         disp("4. Wrap-up and graphics")
-        disp("##############################################################\n")
+        disp(.symbolBar("#",64),"\n")
         plStat <- prsSelectStat
         if (prsSelectStat == "none")
             plStat <- "mean"
@@ -236,12 +242,24 @@ prisma <- function(
             plots$frden <- .plotFreqDensities(evalMetrics$baseline,
                 evalMetrics$full,by="prs_r2")
         
-        # Also PRS plots
-        popPrs <- PRS(gwe,candidates$main,prsiceOpts$score)
+        # Also PRS plots for each candidate
+        plots$prsScatter <- plots$prsHist <- 
+            vector("list",length(candidates$others)+1)
+        names(plots$prsScatter) <- names(plots$prsHist) <- 
+            c(as.character(nrow(candidates$main)),names(candidates$others))
         trait <- phenotypes(gwe)[,phenotype]
+        # The first
+        popPrs <- PRS(gwe,candidates$main,prsiceOpts$score)
         ppl <- .plotPrsTrait(popPrs,trait,phenotype)
-        plots$prsScatter <- ppl$scatter
-        plots$prsHist <- ppl$hist
+        plots$prsScatter[[1]] <- ppl$scatter
+        plots$prsHist[[1]] <- ppl$hist
+        # The rest
+        for (na in names(candidates$others)) {
+            popPrs <- PRS(gwe,candidates$others[[na]],prsiceOpts$score)
+            ppl <- .plotPrsTrait(popPrs,trait,phenotype)
+            plots$prsScatter[[na]] <- ppl$scatter
+            plots$prsHist[[na]] <- ppl$hist
+        }
         
         ## Display a summary of CV metrics
         #summarizeCvMetrics(cvMetrics,nrow(candidates$main))
@@ -253,7 +271,7 @@ prisma <- function(
         # logging) and pass to a reporting function .report(env)
         
         mainPrs <- list(candidates$main)
-        names(mainPrs) <- as.character(nrows(candidates$main))
+        names(mainPrs) <- as.character(nrow(candidates$main))
         outList[[m]] <- list(
             candidates=c(mainPrs,candidates$others),
             iterations=NULL,
@@ -420,9 +438,11 @@ prsSelection <- function(
     #if (nrow(fval) == 1)
     #    fstep <- fstep[-length(fstep)]
     
-    # Here, display options
-    callArgs <- as.list(match.call())[-1]
-    .prettyLogOptions(callArgs,"select")
+    # Here, display options if called independently 
+    if (!(grepl("prisma\\(",deparse(sys.calls()[sys.nframe()-1])[1]))) {
+        callArgs <- as.list(match.call())[-1]
+        .prettyLogOptions(callArgs,"select")
+    }
     
     # Validation - selection runs
     # If continue=TRUE, prsPipeline will detect if the run is complete in the
@@ -441,9 +461,9 @@ prsSelection <- function(
         currType <- ifelse(is.null(useDenovoWorkspace),"external","evaluate")
         currCont <- ifelse(.isPrismaWorkspace(currSpace,currType),TRUE,FALSE)
         
-        message("\n===========================================================")
+        message("\n",.symbolBar("=",64))
         message("-----> Frequency ",n," <-----")
-        message("===========================================================")
+        message(.symbolBar("=",64))
         exResult <- prsPipeline(
             gwe=gwe,
             phenotype=phenotype,
@@ -920,9 +940,13 @@ prsPipeline <- function(
     
     # Here, display options, if called directly and not from prsSelection
     # (otherwise too much screen flooding)
-    callParams2 <- callParams
-    callParams2$gwe <- gwe
-    .prettyLogOptions(callParams2,"pipeline")
+    clr <- deparse(sys.calls()[sys.nframe()-1])[1]
+    if (!(grepl("prisma\\(",clr) || grepl("prsSelection\\(",clr))) {
+        callParams2 <- callParams
+        callParams2$gwe <- gwe
+        .prettyLogOptions(callParams2,"pipeline")
+    }
+    disp(" ")
     
     currResult <- .prsPipeline(gwe,phenotype,covariates,pcs,npcs,snpSelection,
         trainSize,niter,filters,pcaMethod,imputeMissing,imputeMethod,
@@ -933,7 +957,7 @@ prsPipeline <- function(
     #if (evalWith == "vanilla")
     #    return(do.call("rbind",currResult))
     #else
-        return(c(prevResult,currResult))
+    return(c(prevResult,currResult))
 }
 
 # TODO: Average effects! - Add one more column to out with averaged effect for
@@ -1326,259 +1350,278 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
 .prettyLogOptionsPrisma <- function(args) {
     disp("\nInput")
     disp("--------------------------------------------------------------------")
-    disp("Input object (gwe) : a GWASExperiment object with ",nrow(args$gwe),
-        " markers (SNPs) and ",ncol(args$gwe)," samples")
+    disp("Input object (gwe) : a GWASExperiment object with ",
+        nrow(eval(args$gwe))," markers (SNPs) and ",ncol(eval(args$gwe)),
+        " samples")
     
     disp("\nRegression parameters")
     disp("--------------------------------------------------------------------")
-    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Phenotypic response (phenotype)          : ",eval(args$phenotype))
     disp("Regression covariates (covariates)       : ",
-        if (is.null(args$covariates)) "-" else 
-            paste(args$covariates,collapse=", "))
+        if (is.null(eval(args$covariates))) "-" else 
+            paste(eval(args$covariates),collapse=", "))
     disp("Principal Components in covariates (pcs) : ",
-        ifelse(args$pcs,"Yes","No"))
+        ifelse(eval(args$pcs),"Yes","No"))
     disp("Number of Principal Components (npcs)    : ",
-        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        ifelse(eval(args$pcs),ifelse(eval(args$npcs)==0,"Auto",
+            eval(args$npcs)),"-"))
         
     disp("\nPreprocessing options")
     disp("--------------------------------------------------------------------")
     disp("Sample and genotype filtering options (filters)     :")
-    .dispListOpts(args$filters)
+    .dispListOpts(eval(args$filters))
     disp("Principal Components calculation method (pcaMethod) : ",
-        args$pcaMethod)
+        eval(args$pcaMethod))
     disp("Impute missing genotypes (imputeMissing)            : ",
-        ifelse(args$imputeMissing,"Yes","No"))
+        ifelse(eval(args$imputeMissing),"Yes","No"))
     disp("Missing genotype imputation method (imputeMethod)   : ",
-        args$imputeMethod)
+        eval(args$imputeMethod))
     
     disp("\nGWA analysis options")
     disp("--------------------------------------------------------------------")
     disp("Genome-Wide Association tests (gwaMethods)        : ",
-        paste(args$gwaMethods,collapse=", "))
-    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+        paste(eval(args$gwaMethods),collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",
+        eval(args$gwaCombine))
     disp("Association tests options                         : ")
-    for (g in args$gwaMethods) {
+    for (g in eval(args$gwaMethods)) {
         disp("  ",g," : ")
-        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",g,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS candidate extraction options")
     disp("--------------------------------------------------------------------")
     disp("PRS extraction algorithms (prsMethods) : ",
-        paste(args$prsMethods,collapse=", "))
+        paste(eval(args$prsMethods),collapse=", "))
     disp("PRS algorithms options (prsMethods)    : ")
-    for (p in args$prsMethods) {
+    for (p in eval(args$prsMethods)) {
         disp("  ",p," : ")
-        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",p,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS construction and evaluation options")
     disp("--------------------------------------------------------------------")
     disp("Training set size (trainSize)                               : ",
-        paste0(100*args$trainSize,"%"))
+        paste0(100*eval(args$trainSize),"%"))
     disp("Number of PRS selection iterations (niter)                  : ",
-        args$niter)
+        eval(args$niter))
     disp("PRS selection resolution method (resolution)                : ",
-        args$resolution)
+        eval(args$resolution))
     disp("PRS selection resolution step (step)                        : ",
-        if (length(args$step) == 1) args$step else 
-            paste(args$step,collapse=", "))
+        if (length(eval(args$step)) == 1) eval(args$step) else 
+            paste(eval(args$step),collapse=", "))
     disp("Minimum SNP frequency in PRS (minFreq)                      : ",
-        args$minFreq)
+        eval(args$minFreq))
     disp("Minimum number of SNPs in PRS (minSnps)                     : ",
-        args$minSnps)
+        eval(args$minSnps))
     disp("Drop quantiles with same number of SNPs (dropSameQuantiles) : ",
-        ifelse(args$dropSameQuantiles,"Yes","No"))
+        ifelse(eval(args$dropSameQuantiles),"Yes","No"))
     disp("PRS aggregation method (aggregation)                        : ",
-        args$aggregation)
+        eval(args$aggregation))
     disp("SNP effect summarization method (effectWeight)              : ",
-        args$effectWeight)
+        eval(args$effectWeight))
     disp("PRS evaluation framework (evalWith)                         : ",
-        args$evalWith)
-    #disp("Number of regression cross-validations using the PRS        :",
-    #    args$ncvs)
-    #disp("Leave-out samples percentage during cross-validations       :",
-    #    paste0(100*args$cvOutSize,"%"))
+        eval(args$evalWith))
         
-    isp("\nPRS selection options")
+    disp("\nPRS selection options")
     disp("--------------------------------------------------------------------")
-    disp("PRS selection method (prsSelectMethod)           : ",prsSelectMethod)
-    disp("PRS selection criterion (prsSelectCrit)          : ",prsSelectMethod)
-    disp("PRS criterion summarization (prsSelectStat)      : ",prsSelectStat)
-    disp("R^2 type if criterion includes R^2 (prsSelectR2) : ",prsSelectR2)
+    disp("PRS selection method (prsSelectMethod)           : ",
+        eval(args$prsSelectMethod))
+    disp("PRS selection criterion (prsSelectCrit)          : ",
+        eval(args$prsSelectCrit))
+    disp("PRS criterion summarization (prsSelectStat)      : ",
+        eval(args$prsSelectStat))
+    disp("R^2 type if criterion includes R^2 (prsSelectR2) : ",
+        eval(args$prsSelectR2))
     
     disp("\nMiscellaneous options")
     disp("--------------------------------------------------------------------")
     disp("Local workspace directory (prsWorkspace) : ",
-        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
-    disp("Cleanup level (cleanup)                  : ",args$cleanup)
-    disp("PRS pipeline output type (dnOutput)      : ",args$output)
-    disp("Output level (output)                    : ",args$output)
+        ifelse(is.null(eval(args$prsWorkspace)),"auto",eval(args$prsWorkspace)))
+    disp("Cleanup level (cleanup)                  : ",eval(args$cleanup))
+    disp("PRS pipeline output type (dnOutput)      : ",eval(args$output))
+    disp("Output level (output)                    : ",eval(args$output))
     disp("Run ID (runId)                           : ",
-        ifelse(is.null(args$runId),"auto",args$runId))
+        ifelse(is.null(eval(args$runId)),"auto",eval(args$runId)))
     disp("Available cores fraction (rc)            : ",
-        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
+        ifelse(is.null(eval(args$rc)),"single core",
+            paste0(100*eval(args$rc),"%")))
 }
 
 .prettyLogOptionsSelect <- function(args) {
     disp("\nInput")
     disp("--------------------------------------------------------------------")
-    disp("Input object (gwe) : a GWASExperiment object with ",nrow(args$gwe),
-        " markers (SNPs) and ",ncol(args$gwe)," samples")
+    disp("Input object (gwe) : a GWASExperiment object with ",
+        nrow(eval(args$gwe))," markers (SNPs) and ",ncol(eval(args$gwe)),
+        " samples")
     
     disp("\nRegression parameters")
     disp("--------------------------------------------------------------------")
-    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Phenotypic response (phenotype)          : ",eval(args$phenotype))
     disp("Regression covariates (covariates)       : ",
-        if (is.null(args$covariates)) "-" else 
-            paste(args$covariates,collapse=", "))
+        if (is.null(eval(args$covariates))) "-" else 
+            paste(eval(args$covariates),collapse=", "))
     disp("Principal Components in covariates (pcs) : ",
-        ifelse(args$pcs,"Yes","No"))
+        ifelse(eval(args$pcs),"Yes","No"))
     disp("Number of Principal Components (npcs)    : ",
-        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        ifelse(eval(args$pcs),ifelse(eval(args$npcs)==0,"Auto",
+        eval(args$npcs)),"-"))
         
     disp("\nPreprocessing options")
     disp("--------------------------------------------------------------------")
     disp("Sample and genotype filtering options (filters)     :")
-    .dispListOpts(args$filters)
+    .dispListOpts(eval(args$filters))
     disp("Principal Components calculation method (pcaMethod) : ",
-        args$pcaMethod)
+        eval(args$pcaMethod))
     disp("Impute missing genotypes (imputeMissing)            : ",
-        ifelse(args$imputeMissing,"Yes","No"))
+        ifelse(eval(args$imputeMissing),"Yes","No"))
     disp("Missing genotype imputation method (imputeMethod)   : ",
-        args$imputeMethod)
+        eval(args$imputeMethod))
     
     disp("\nGWA analysis options")
     disp("--------------------------------------------------------------------")
     disp("Genome-Wide Association tests (gwaMethods)        : ",
-        paste(args$gwaMethods,collapse=", "))
-    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+        paste(eval(args$gwaMethods),collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",
+        eval(args$gwaCombine))
     disp("Association tests options                         : ")
-    for (g in args$gwaMethods) {
+    for (g in eval(args$gwaMethods)) {
         disp("  ",g," : ")
-        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",g,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS candidate extraction options")
     disp("--------------------------------------------------------------------")
     disp("PRS extraction algorithms (prsMethods) : ",
-        paste(args$prsMethods,collapse=", "))
+        paste(eval(args$prsMethods),collapse=", "))
     disp("PRS algorithms options (prsMethods)    : ")
-    for (p in args$prsMethods) {
+    for (p in eval(args$prsMethods)) {
         disp("  ",p," : ")
-        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",p,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS construction and evaluation options")
     disp("--------------------------------------------------------------------")
     disp("Training set size (trainSize)                               : ",
-        paste0(100*args$trainSize,"%"))
+        paste0(100*eval(args$trainSize),"%"))
     disp("Number of PRS selection iterations (niter)                  : ",
-        args$niter)
+        eval(args$niter))
     disp("PRS selection resolution method (resolution)                : ",
-        args$resolution)
+        eval(args$resolution))
     disp("PRS selection resolution step (step)                        : ",
-        if (length(args$step) == 1) args$step else 
-            paste(args$step,collapse=", "))
+        if (length(eval(args$step)) == 1) eval(args$step) else 
+            paste(eval(args$step),collapse=", "))
     disp("Minimum SNP frequency in PRS (minFreq)                      : ",
-        args$minFreq)
+        eval(args$minFreq))
     disp("Minimum number of SNPs in PRS (minSnps)                     : ",
-        args$minSnps)
+        eval(args$minSnps))
     disp("Drop quantiles with same number of SNPs (dropSameQuantiles) : ",
-        ifelse(args$dropSameQuantiles,"Yes","No"))
+        ifelse(eval(args$dropSameQuantiles),"Yes","No"))
     disp("PRS aggregation method (aggregation)                        : ",
-        args$aggregation)
+        eval(args$aggregation))
     disp("SNP effect summarization method (effectWeight)              : ",
-        args$effectWeight)
+        eval(args$effectWeight))
     disp("PRS evaluation framework (evalWith)                         : ",
-        args$evalWith)
+        eval(args$evalWith))
     
     disp("\nMiscellaneous options")
     disp("--------------------------------------------------------------------")
     disp("Local workspace directory (prsWorkspace) : ",
-        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
-    disp("Cleanup level (cleanup)                  : ",args$cleanup)
-    disp("Output type (output)                     : ",args$output)
+        ifelse(is.null(eval(args$prsWorkspace)),"auto",eval(args$prsWorkspace)))
+    disp("Cleanup level (cleanup)                  : ",eval(args$cleanup))
+    disp("Output type (output)                     : ",eval(args$output))
     disp("Run ID (runId)                           : ",
-        ifelse(is.null(args$runId),"auto",args$runId))
+        ifelse(is.null(eval(args$runId)),"auto",eval(args$runId)))
     disp("Available cores fraction (rc)            : ",
-        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
+        ifelse(is.null(eval(args$rc)),"single core",
+            paste0(100*eval(args$rc),"%")))
 }
 
 .prettyLogOptionsPrs <- function(args) {
     disp("\nInput")
     disp("--------------------------------------------------------------------")
     disp("Input pipeline list (dnList) : ",
-        if (is(args$dnList[[1]],"GWASExperiment")) 
+        if (is(eval(args$dnList[[1]]),"GWASExperiment")) 
             "a list of GWASExperiment objects" else
             "a list of PRS pipeline summaries")
     disp("Input dataset object (gwe)   : a GWASExperiment object with ",
-        nrow(args$gwe)," markers (SNPs) and ",ncol(args$gwe)," samples")
+        nrow(eval(args$gwe))," markers (SNPs) and ",
+        ncol(eval(args$gwe))," samples")
     
     disp("\nRegression parameters")
     disp("--------------------------------------------------------------------")
-    disp("Phenotypic response (phenotype)          : ",args$phenotype)
+    disp("Phenotypic response (phenotype)          : ",eval(args$phenotype))
     disp("Regression covariates (covariates)       : ",
-        if (is.null(args$covariates)) "-" else 
-            paste(args$covariates,collapse=", "))
+        if (is.null(eval(args$covariates))) "-" else 
+            paste(eval(args$covariates),collapse=", "))
     disp("Principal Components in covariates (pcs) : ",
-        ifelse(args$pcs,"Yes","No"))
+        ifelse(eval(args$pcs),"Yes","No"))
     disp("Number of Principal Components (npcs)    : ",
-        ifelse(args$pcs,ifelse(args$npcs==0,"Auto",args$npcs),"-"))
+        ifelse(eval(args$pcs),ifelse(eval(args$npcs)==0,"Auto",
+            eval(args$npcs)),"-"))
         
     disp("\nPreprocessing options")
     disp("--------------------------------------------------------------------")
     disp("Sample and genotype filtering options (filters)     :")
-    .dispListOpts(args$filters)
+    .dispListOpts(eval(args$filters))
     disp("Principal Components calculation method (pcaMethod) : ",
-        args$pcaMethod)
+        eval(args$pcaMethod))
     disp("Impute missing genotypes (imputeMissing)            : ",
-        ifelse(args$imputeMissing,"Yes","No"))
+        ifelse(eval(args$imputeMissing),"Yes","No"))
     disp("Missing genotype imputation method (imputeMethod)   : ",
-        args$imputeMethod)
+        eval(args$imputeMethod))
     
     disp("\nGWA analysis options")
     disp("--------------------------------------------------------------------")
     disp("Genome-Wide Association tests (gwaMethods)        : ",
-        paste(args$gwaMethods,collapse=", "))
-    disp("Association tests combination method (gwaCombine) : ",args$gwaCombine)
+        paste(eval(args$gwaMethods),collapse=", "))
+    disp("Association tests combination method (gwaCombine) : ",
+        eval(args$gwaCombine))
     disp("Association tests options                         : ")
-    for (g in args$gwaMethods) {
+    for (g in eval(args$gwaMethods)) {
         disp("  ",g," : ")
-        eval(parse(text=paste(".dispListOpts(args$",g,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",g,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS candidate extraction options")
     disp("--------------------------------------------------------------------")
     disp("PRS extraction algorithms (prsMethods) : ",
-        paste(args$prsMethods,collapse=", "))
+        paste(eval(args$prsMethods),collapse=", "))
     disp("PRS algorithms options (prsMethods)    : ")
-    for (p in args$prsMethods) {
+    for (p in eval(args$prsMethods)) {
         disp("  ",p," : ")
-        eval(parse(text=paste(".dispListOpts(args$",p,"Opts,lo=2)",sep="")))
+        eval(parse(text=paste(".dispListOpts(eval(args$",p,"Opts),lo=2)",
+            sep="")))
     }
     
     disp("\nPRS construction and evaluation options")
     disp("--------------------------------------------------------------------")
     disp("Training set size (trainSize)              : ",
-        paste0(100*args$trainSize,"%"))
+        paste0(100*eval(args$trainSize),"%"))
     disp("Number of PRS selection iterations (niter) : ",
-        args$niter)
+        eval(args$niter))
     disp("PRS evaluation framework (evalWith)        : ",
-        args$evalWith)
-    if (!is.null(args$snpSelection))
+        eval(args$evalWith))
+    if (!is.null(eval(args$snpSelection)))
         disp("Provided candidate SNPs for PRS            : ",
-            if (is.data.frame(args$snpSelection)) nrow(snpSelection)
-                else length(snpSelection)," SNPs")
+            if (is.data.frame(eval(args$snpSelection))) nrow(eval(
+                args$snpSelection)) else length(eval(
+                args$snpSelection))," SNPs")
     
     disp("\nMiscellaneous options")
     disp("--------------------------------------------------------------------")
     disp("Local workspace directory (prsWorkspace) : ",
-        ifelse(is.null(args$prsWorkspace),"auto",args$prsWorkspace))
-    disp("Cleanup level (cleanup)                  : ",args$cleanup)
-    disp("Output type (output)                     : ",args$output)
+        ifelse(is.null(eval(args$prsWorkspace)),"auto",eval(args$prsWorkspace)))
+    disp("Cleanup level (cleanup)                  : ",eval(args$cleanup))
+    disp("Output type (output)                     : ",eval(args$output))
     disp("Run ID (runId)                           : ",
-        ifelse(is.null(args$runId),"auto",args$runId))
+        ifelse(is.null(eval(args$runId)),"auto",eval(args$runId)))
     disp("Available cores fraction (rc)            : ",
-        ifelse(is.null(args$rc),"single core",paste0(100*args$rc,"%")))
+        ifelse(is.null(eval(args$rc)),"single core",
+            paste0(100*eval(args$rc),"%")))
 }

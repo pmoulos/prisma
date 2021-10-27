@@ -15,9 +15,11 @@ prismaLookup <- function(prismaOut) {
     if (isPrismaOut) {
         lookupOut <- vector("list",length(prismaOut$results))
         names(lookupOut) <- names(prismaOut$results)
-        for (m in names(prismaOut$results))
+        for (m in names(prismaOut$results)) {
+            disp("-----> Querying for ",m)
             lookupOut[[m]] <- 
                 .prismaLookupWorker(prismaOut$results[[m]]$candidates)
+        }
         return(lookupOut)
     }
     else

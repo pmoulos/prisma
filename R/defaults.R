@@ -85,6 +85,8 @@ getDefaults <- function(what) {
 
 .getPrismaMainDefaults <- function() {
     return(list(
+        gwe=NULL,
+        phenotype=NULL,
         covariates=NULL,
         pcs=FALSE,
         npcs=0,
@@ -101,8 +103,6 @@ getDefaults <- function(what) {
         prsSelectCrit="prs_r2",
         prsSelectStat="mean",
         prsSelectR2="adjusted",
-        #cvOutSize=0.05,
-        #ncvs=10,
         filters=getDefaults("filters"),
         pcaMethod="snprel",
         imputeMissing=FALSE,
@@ -133,6 +133,9 @@ getDefaults <- function(what) {
 
 .getPrsSelectionDefaults <- function() {
     return(list(
+        dnList=NULL,
+        gwe=NULL,
+        phenotype=NULL,
         covariates=NULL,
         pcs=FALSE,
         npcs=0,
@@ -173,6 +176,8 @@ getDefaults <- function(what) {
 
 .getPrsPipelineDefaults <- function() {
     return(list(
+        gwe=NULL,
+        phenotype=NULL,
         covariates=NULL,
         pcs=FALSE,
         npcs=0,
