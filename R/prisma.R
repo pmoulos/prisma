@@ -1305,17 +1305,6 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         return(furtherCheck)
 }
 
-.makeReportEnv <- function(gwe,prismaOut,cvMetricsOut,lookupOut) {
-    re <- new.env(parent=globalenv())
-    
-    re$gwe <- gwe
-    re$prismaOut <- prismaOut
-    re$cvMetricsOut <- cvMetricsOut
-    re$lookupOut <- lookupOut
-    
-    return(re)
-}
-
 .isPreviousDenovoList <- function(x) {
     if (!is.list(x))
         return(FALSE)   
