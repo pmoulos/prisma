@@ -195,7 +195,7 @@ prismaCrossValidate <- function(prismaOut,gwe,response,covariates=NULL,
             covariates,pcs,leaveOut,times,prsCalc,family,rc,...)
     }
     
-    disp(.symbolBar("#",64))
+    disp("\n",.symbolBar("#",64))
     disp("Done! Use summarizeCvMetrics() and plotCvMetrics() to summarize and ",
         "inspect the results.")
     disp(.symbolBar("#",64))

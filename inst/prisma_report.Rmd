@@ -125,7 +125,6 @@ funCall <- prismaOut$params$call
 msgs <- .makeReportMessages("en")
 #msgs <- prisma:::.makeReportMessages("en")
 
-
 theCvMetrics <- list(
     `PRS R<sup>2</sup>`="r2",
     `RMSE`="rmse",
@@ -300,7 +299,7 @@ cat("<p>The queried phenotype for PRS extraction was <strong>",args$phenotype,
     "</strong>. ",sep="")
 if (!is.null(args$covariates))
     cat("<strong>",paste(args$covariates,collapse=", "),"</strong> were used ",
-    "as regression covariates. ",sep="")
+        "as regression covariates. ",sep="")
 if (args$pcs)
     cat("A number of principal components was also included in the covariates",
         "set to capture potential population-based genotypic structure. ")
@@ -311,7 +310,8 @@ cat("The following GWA tests were used to extract summary statistics for SNP ",
     "over ",args$niter," PRS extraction iterations:</p>",sep="")
 for (m in names(prismaOut$results)) {
     ns <- names(prismaOut$results[[m]]$candidates)
-    fm <- prismaOut$results[[m]]$reportData$evalMetrics$metrics[ns,c(2,3,6,31)]
+    fm <- prismaOut$results[[m]]$reportData$evalMetrics$metrics[ns,c(2,3,6,31),
+        drop=FALSE]
     
     pandoc.header(msgs$stat[[m]],level=4)
     
@@ -321,6 +321,7 @@ for (m in names(prismaOut$results)) {
         nosci(fm[ns[1],3],5)," (p = ",nosci(fm[ns[1],4],6),") </strong> with ",
         "SNPs appearing  at least <strong>",fm[ns[1],1],"</strong> times over ",
         args$niter," iterations.",sep="")
+        cat("\n") # Otherwise breaks headers
     if (length(ns) > 1) {
         cat("Other possible options include:")
         cat("<ul>")
@@ -372,142 +373,75 @@ cat(ifelse(args$pcs,"Yes","No"))
 cat(ifelse(args$npcs==0,"Automatic (Tracy-Widom test)",as.character(args$npcs)))
 ```
 
+**General PCA method:** 
+```{r summary_input_options_6}
+cat(args$pcaMethod)
+```
+
 #### Preprocessing options
 
-**Training set split size:** 
-```{r summary_input_options_6}
-cat(paste0(100*args$trainSize,"%"))
-```
-
-**Number of PRS extraction iterations:** 
-```{r summary_input_options_7}
-cat(args$niter)
-```
-
-**Best PRS resolution method:** 
-```{r summary_input_options_8}
-cat(args$resolution)
-```
-
-**Number of PRS resolution step:** 
-```{r summary_input_options_9}
-cat(paste(args$step,collapse=", "))
-```
-
-**Minimum SNP frequency for PRS inclusion:** 
-```{r summary_input_options_10}
-cat(args$minFreq)
-```
-
-**Minimum number of SNPs in PRS:** 
-```{r summary_input_options_11}
-cat(args$minSnps)
-```
-
-**Drop quantiles with same SNPs:** 
-```{r summary_input_options_12}
-cat(ifelse(args$dropSameQuantiles,"Yes","No"))
-```
-
-**PRS marker (SNP) aggregation method:** 
-```{r summary_input_options_13}
-cat(args$aggregation)
-```
-
-**SNP effect weighting method:** 
-```{r summary_input_options_14}
-cat(args$effectWeight)
-```
-
-**PRS selection method:** 
-```{r summary_input_options_15}
-cat(args$prsSelectMethod)
-```
-
-**PRS selection criterion:** 
-```{r summary_input_options_16}
-cat(args$prsSelectCrit)
-```
-
-**PRS selection averaging method:** 
-```{r summary_input_options_17}
-cat(args$prsSelectStat)
-```
-
-**PRS selection adjusted R<sup>2</sup> type:** 
-```{r summary_input_options_18}
-cat(args$prsSelectR2)
-```
-
 **Genotype quality controls:** 
-```{r summary_input_options_19}
+```{r summary_input_options_7}
+filts <- eval(args$filters)
 cat("<ul>")
-cat("<li><em class=lightbold>SNP call rate:</em> ",args$filters$snpCallRate,
-    "</li>")
+cat("<li><em class=lightbold>SNP call rate:</em> ",
+    filts$snpCallRate,"</li>")
 cat("<li><em class=lightbold>Sample call rate:</em> ",
-    args$filters$sampleCallRate,"</li>")
-cat("<li><em class=lightbold>Minor allele frequency:</em> ",args$filters$maf,
-    "</li>")
+    filts$sampleCallRate,"</li>")
+cat("<li><em class=lightbold>Minor allele frequency:</em> ",
+    filts$maf,"</li>")
 cat("<li><em class=lightbold>Hardy-Weinberg equilibrium:</em> ",
-    args$filters$hwe,"</li>")
+    filts$hwe,"</li>")
 cat("<li><em class=lightbold>Heterozygosity cutoff statistic:</em> ",
-    args$filters$heteroStat,"</li>")
+    filts$heteroStat,"</li>")
 cat("<li><em class=lightbold>Heterozygosity cutoff scale factor:</em> ",
-    args$filters$heteroFac,"</li>")
+    filts$heteroFac,"</li>")
 cat("<li><em class=lightbold>Heterozygosity hard cutoff:</em> ",
-    args$filters$heteroHard,"</li>")
+    filts$heteroHard,"</li>")
 cat("<li><em class=lightbold>Automatic sample removal with robust PCA:</em> ",
-    ifelse(args$filters$pcaOut,"Yes","No"),"</li>")
-cat("<li><em class=lightbold>Robust PCA method:</em> ",args$filters$pcaRobust,
-    "</li>")
+    ifelse(filts$pcaOut,"Yes","No"),"</li>")
+cat("<li><em class=lightbold>Robust PCA method:</em> ",
+    filts$pcaRobust,"</li>")
 cat("<li><em class=lightbold>Number of PCs for robust PCA:</em> ",
-    ifelse(is.na(args$filters$nPC),"auto",args$filters$nPC),"</li>")
+    ifelse(is.na(filts$nPC),"auto",filts$nPC),"</li>")
 cat("<li><em class=lightbold>Linkage Disequilibrium (LD) cutoff:</em> ",
-    ifelse(is.na(args$filters$LD),"none",args$filters$LD),"</li>")
+    ifelse(is.na(filts$LD),"none",filts$LD),"</li>")
 cat("<li><em class=lightbold>Identity by descent (IBD) cutoff:</em> ",
-    ifelse(is.na(args$filters$IBD),"none",args$filters$IBD),"</li>")
+    ifelse(is.na(filts$IBD),"none",filts$IBD),"</li>")
 cat("<li><em class=lightbold>Inbreed coefficient cutoff:</em> ",
-    ifelse(is.na(args$filters$IBD),"none",args$filters$LD),"</li>")
+    ifelse(is.na(filts$IBD),"none",filts$LD),"</li>")
 cat("</ul>")
 ```
 
 **General PCA method:** 
-```{r summary_input_options_20}
+```{r summary_input_options_8}
 cat(args$pcaMethod)
 ```
 
 **Impute missing genotypes:** 
-```{r summary_input_options_21}
+```{r summary_input_options_9}
 cat(ifelse(args$imputeMissing,"Yes","No"))
 ```
 
 **Missing genotype imputation strategy:** 
-```{r summary_input_options_22}
+```{r summary_input_options_10}
 cat(args$imputeMethod)
 ```
 
-**General PCA method:** 
-```{r summary_input_options_23}
-cat(args$pcaMethod)
-```
+#### GWA analysis options
 
 **GWA test(s) for summary statistics:** 
-```{r summary_input_options_24}
-cat(paste(args$gwaMethods,collapse=", "))
-```
-
-**GWA test(s) for summary statistics:** 
-```{r summary_input_options_25}
+```{r summary_input_options_11}
 cat(paste(args$gwaMethods,collapse=", "))
 ```
 
 **GWA test(s) p-value combination method:** 
-```{r summary_input_options_26}
+```{r summary_input_options_12}
 cat(args$gwaCombine)
 ```
 
 **General Linear Model options:** 
-```{r summary_input_options_27}
+```{r summary_input_options_13}
 cat("<ul>")
 cat("<li><em class=lightbold>Model family:</em> ",
     ifelse(is.null(args$glmOpts$family),"automatic selection",
@@ -518,7 +452,7 @@ cat("</ul>")
 ```
 
 **rrBLUP (ridge regression) options:** 
-```{r summary_input_options_28}
+```{r summary_input_options_14}
 cat("<ul>")
 cat("<li><em class=lightbold>Principal Components method:</em> ",
     args$rrblupOpts$pcblup,"</li>")
@@ -529,7 +463,7 @@ cat("</ul>")
 ```
 
 **statgenGWAS options:** 
-```{r summary_input_options_29}
+```{r summary_input_options_15}
 cat("<ul>")
 cat("<li><em class=lightbold>Kinship estimation method:</em> ",
     args$statgenOpts$kinship,"</li>")
@@ -541,7 +475,7 @@ cat("</ul>")
 ```
 
 **SNPTEST options:** 
-```{r summary_input_options_30}
+```{r summary_input_options_16}
 cat("<ul>")
 cat("<li><em class=lightbold>Basic association test type:</em> ",
     args$snptestOpts$test,"</li>")
@@ -554,7 +488,7 @@ cat("</ul>")
 ```
 
 **PLINK options:** 
-```{r summary_input_options_31}
+```{r summary_input_options_17}
 cat("<ul>")
 cat("<li><em class=lightbold>Effect estimation type:</em> ",
     args$plinkOpts$effect,"</li>")
@@ -565,13 +499,15 @@ cat("<li><em class=lightbold>PLINK workspace:</em> ",
 cat("</ul>")
 ```
 
+#### PRS candidate extraction options
+
 **PRS extraction method(s):** 
-```{r summary_input_options_32}
+```{r summary_input_options_18}
 cat(paste(args$prsMethods,collapse=", "))
 ```
 
 **lassosum options:** 
-```{r summary_input_options_33}
+```{r summary_input_options_19}
 cat("<ul>")
 cat("<li><em class=lightbold>Ancestry for LD regions:</em> ",
     args$lassosumOpts$anc,"</li>")
@@ -581,7 +517,7 @@ cat("</ul>")
 ```
 
 **PRSice-2 options:** 
-```{r summary_input_options_34}
+```{r summary_input_options_20}
 cat("<ul>")
 cat("<li><em class=lightbold>Clumping window size (kb):</em> ",
     args$prsiceOpts$clump_kb,"</li>")
@@ -598,6 +534,82 @@ cat("<li><em class=lightbold>Number of permutations:</em> ",
 cat("<li><em class=lightbold>Random seed:</em> ",args$prsiceOpts$seed,"</li>")
 cat("</ul>")
 ```
+
+#### PRS construction and evaluation options
+
+**Training set split size:** 
+```{r summary_input_options_21}
+cat(paste0(100*args$trainSize,"%"))
+```
+
+**Number of PRS extraction iterations:** 
+```{r summary_input_options_22}
+cat(args$niter)
+```
+
+**Best PRS resolution method:** 
+```{r summary_input_options_23}
+cat(args$resolution)
+```
+
+**Number of PRS resolution step:** 
+```{r summary_input_options_24}
+cat(paste(args$step,collapse=", "))
+```
+
+**Minimum SNP frequency for PRS inclusion:** 
+```{r summary_input_options_25}
+cat(args$minFreq)
+```
+
+**Minimum number of SNPs in PRS:** 
+```{r summary_input_options_26}
+cat(args$minSnps)
+```
+
+**Drop quantiles with same SNPs:** 
+```{r summary_input_options_27}
+cat(ifelse(args$dropSameQuantiles,"Yes","No"))
+```
+
+**PRS marker (SNP) aggregation method:** 
+```{r summary_input_options_28}
+cat(args$aggregation)
+```
+
+**SNP effect weighting method:** 
+```{r summary_input_options_29}
+cat(args$effectWeight)
+```
+
+**Evaluation framework:** 
+```{r summary_input_options_30}
+cat(args$evalWith)
+```
+
+#### PRS selection options
+
+**PRS selection method:** 
+```{r summary_input_options_31}
+cat(args$prsSelectMethod)
+```
+
+**PRS selection criterion:** 
+```{r summary_input_options_32}
+cat(args$prsSelectCrit)
+```
+
+**PRS selection averaging method:** 
+```{r summary_input_options_33}
+cat(args$prsSelectStat)
+```
+
+**PRS selection adjusted R<sup>2</sup> type:** 
+```{r summary_input_options_34}
+cat(args$prsSelectR2)
+```
+
+#### Miscellaneous options
 
 **Main workspace:** 
 ```{r summary_input_options_35}
@@ -646,13 +658,8 @@ cat(ifelse(is.null(args$runId),"auto",args$runId))
 cat(args$evalOnSplit)
 ```
 
-**Evaluation framework:** 
-```{r summary_input_options_44}
-cat(args$evalWith)
-```
-
 **Cores percentage for parallel run:** 
-```{r summary_input_options_45}
+```{r summary_input_options_44}
 cat(ifelse(is.null(args$rc),"none",paste0(100*args$rc,"%")))
 ```
 

@@ -452,6 +452,11 @@ prsSelection <- function(
     # initial command with the initial arguments - the workspace must exist!
     # Some tweaking per selection threshold is required.
     metrics <- vector("list",length(fstep))
+    # onsnp holds the number of SNPs in each PRS candidate for evaluation. It is
+    # necessary to hold it because when evalWith="vanilla", the number of SNPs
+    # in each evaluation iteration may be reduced because of QC, therefore,
+    # n_snp as returned in the metrics data frame is not constant.
+    onsnp <- numeric(length(fstep))
     counter <- 0
     for (n in fstep) {
         counter <- counter + 1
@@ -503,8 +508,10 @@ prsSelection <- function(
             nsnp <- attr(exResult[[1]],"nsnp")
             metrics[[counter]]$n_snp <- rep(nsnp,nrow(metrics[[counter]]))
         }
-        else if (evalWith == "vanilla")
+        else if (evalWith == "vanilla") {
             metrics[[counter]] <- do.call("rbind",exResult)
+            onsnp[[counter]] <- nrow(snpSelection)
+        }
     }
 
     # The PRS selection function never does denovo. So there are 3 cases of
@@ -575,12 +582,16 @@ prsSelection <- function(
             ))
         })
     else if (evalWith == "vanilla")
-        freqMetrics <- lapply(metrics,function(x) {
+        freqMetrics <- lapply(seq_along(metrics),function(i) {
+            x <- metrics[[i]]
             # for p-values
             b <- .subsampleBase(x$prs_r2,baseline)
             
+            # Using x$n_snp[1] is not correct... SNPs may be missing from QC
+            # in each iteration
             return(c(
-                n_snp=x$n_snp[1],
+                n_snp=onsnp[i], 
+                #n_snp=x$n_snp[1], 
                 freq=x$freq[1],
                 mean_prs_r2=mean(x$prs_r2,na.rm=TRUE),
                 mean_full_r2=mean(x$full_r2,na.rm=TRUE),

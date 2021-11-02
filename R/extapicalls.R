@@ -127,8 +127,11 @@ prismaLookup <- function(prismaOut) {
         
         return(partHits)
     }
-    else
-        return(..emptyLookupDf())
+    else {
+        o <- list(..emptyLookupDf())
+        names(o) <- names(selections)
+        return(o)
+    }
 }
 
 getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
