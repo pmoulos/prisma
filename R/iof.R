@@ -37,7 +37,7 @@
 # input may be a prefix of bim, bed, fam or a list with each
 importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
     selection=NULL,genome=NA_character_,alleleOrder=c("plink","reverse"),
-    gdsfile=ifelse(backend=="snpStats",tempfile(),NA)) {
+    gdsfile=ifelse(backend=="snpStats",tempfile(),NA),gdsOverwrite=TRUE) {
     
     backend <- backend[1]
     alleleOrder <- alleleOrder[1]
@@ -88,10 +88,14 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         disp("Reading PLINK files with snpStats framework")
         snpObj <- read.plink(input$bed,input$bim,input$fam,
             select.subjects=selection$samples,select.snps=selection$snps)
-        disp("Reading PLINK files with SNPRelate framework and storing ",
-            "output to ",gdsfile)
-        # We also need to read a GDS file for LD and IBD filtering
-        snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
+        if (file.exists(gdsfile) && !gdsOverwrite)
+            disp("Skipping GDS file creation as ",gdsfile," already exists...")
+        else {
+            disp("Reading PLINK files with SNPRelate framework and storing ",
+                "output to ",gdsfile)
+            # We also need to read a GDS file for LD and IBD filtering
+            snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
+        }
         ## ***SWITCH ALLELES*** if PLINK default
         #if (alleleOrder == "plink") {
         #    disp("Switching SnpMatrix alleles to comply with default PLINK ",
@@ -223,7 +227,8 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
     
     # Finally, attach the desired phenotype (if provided, otherwise default)
     ph <- phenotypes(obj)
-    if (is.null(ph) || is.null(pheno))
+    if (is.null(ph) || is.null(pheno) || (is(ph,"DataFrame") && nrow(ph) == 0)
+        || (is.data.frame(ph) && nrow(ph) == 0))
         phenoVec <- fam$affected
     else {
         if (is.numeric(pheno)) {

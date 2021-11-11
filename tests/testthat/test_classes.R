@@ -1,7 +1,7 @@
 # Pseudodata generating function
 .makeThingData <- function(error=c("none","snp_class","feature_size",
     "feature_name","sample_size","sample_name","pheno_size","pheno_name",
-    "pval_size","pval_name")) {
+    "pval_size","pval_name","eff_size","eff_name")) {
     if (missing(error))
         error <- "none"
     
@@ -61,13 +61,24 @@
     rownames(pspval) <- colnames(snp)
     colnames(pspval) <- c("test1","test2")
     
+    # Pseudo-effects and directions
+    pseff <- matrix(runif(200,min=0,max=2),100,2)
+    dire <- matrix(FALSE,100,2)
+    dire[sample(nrow(dire),50),1] <- TRUE
+    dire[sample(nrow(dire),50),2] <- TRUE
+    pseff[dire[,1],1] <- -pseff[dire[,1],1]
+    pseff[dire[,2],2] <- -pseff[dire[,2],2]
+    rownames(pseff) <- colnames(snp)
+    colnames(pseff) <- c("test1","test2")
+    
     if ("none" %in% error)
         return(list(
             snp=SnpMatrix(t(snp)),
             sample=fam,
             feature=map,
             pheno=pseudopheno,
-            pval=pspval
+            pval=pspval,
+            eff=pseff
         ))
     else {
         if ("snp_class" %in% error)
@@ -91,13 +102,18 @@
             pspval <- pspval[-sample(nrow(pspval),1),,drop=FALSE]
         if ("pval_name" %in% error)
             rownames(pspval)[sample(nrow(pspval),1)] <- "bad_p_name"
+        if ("eff_size" %in% error)
+            pseff <- pseff[-sample(nrow(pseff),1),,drop=FALSE]
+        if ("eff_name" %in% error)
+            rownames(pseff)[sample(nrow(pseff),1)] <- "bad_e_name"
         
         return(list(
             snp=snp,
             sample=fam,
             feature=map,
             pheno=pseudopheno,
-            pval=pspval
+            pval=pspval,
+            eff=pseff
         ))
     }
 }

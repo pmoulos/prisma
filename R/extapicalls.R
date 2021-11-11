@@ -953,14 +953,15 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     return(nil[-1,,drop=FALSE])
 }
 
-rsLocsFromEnsembl <- function(rs,gv=c("hg19","hg38"),canonical=TRUE) {
+rsLocsFromEnsembl <- function(rs,gv=c("hg38","hg19"),canonical=TRUE) {
     gv <- gv[1]
     if (!requireNamespace("biomaRt"))
         stop("Bioconductor package biomaRt is required!")
     
     # SNP attributes and filters for biomaRt
     filters <- c("snp_filter","variation_source")
-    attrs <- c("chr_name","chrom_start","refsnp_id")
+    attrs <- c("chr_name","chrom_start","refsnp_id","allele","minor_allele",
+        "minor_allele_freq","chrom_strand")
     values <- list(snp_filter=unique(rs),variation_source="dbSNP")
     
     host <- ifelse(gv=="hg38","www.ensembl.org","grch37.ensembl.org")
