@@ -5,19 +5,56 @@ Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
 Depends:
     R (>= 4.1.0)
+    lassosum
+    SummarizedExperiment
+    snpStats
+    SNPRelate
 Imports:
-    Biobase,
-    BiocGenerics,
-    methods,
-    parallel,
-    S4Vectors,
-    snpStats,
-    tools,
+    akmedoids
+    Biobase
+    biomaRt
+    BSgenome
+    GenomicRanges
+    ggplot
+    gwasrapidd
+    harmonicmeanp
+    islasso
+    jsonlite
+    kableExtra
+    liftOver
+    magrittr
+    methods
+    openxlsx
+    parallel
+    quincunx
+    R.utils
+    rmarkdown
+    rmdformats
+    RMTstat
+    rrBLUP
+    rrcov
+    rsnps
+    rtracklayer
+    S4Vectors
+    scales
+    scrime
+    statgenGWAS
+    stats
+    survcomp
+    tseries
     utils
 Suggests:
     knitr,
     testthat
-Description: TBD
+Description: prisma is an R package for the semi-automated construction and
+evaluation of Polygenic Risk Scores (PRS) with data from multiple summary 
+statistics and PRS extraction algorithms. prisma supports several Genome Wide
+Association (GWA) tests for the calculation of summary statistics and integrates 
+the results of multiple PRS algorithms. In addition, it offers multiple PRS 
+evaluation criteria and a semi-automated optimal PRS selection process through
+the local maximization of evaluation criteria. Finally, it integrates GWA 
+effects with linear programming and helps the user select the best PRS through
+a rich report of the results and online search in the GWAS Catalog.
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: false
@@ -26,10 +63,24 @@ biocViews: Software, WorkflowStep, BiomedicalInformatics
 VignetteBuilder: knitr
 BugReports: https://github.com/pmoulos/prisma/issues
 Version: 0.0.1
-Date: 2021-04-06
+Date: 2021-11-15
 Collate:
     'classes.R'
+    'defaults.R'
+    'evalfuns.R'
     'extapicalls.R'
-    'gwasfilters.R'
+    'externals.R'
+    'gwasfilters-bs.R'
+    'gwasfilters-ss.R'
+    'gwasfuns.R'
+    'impute.R'
+    'iof.R'
+    'merge.R'
+    'pipelines.R'
+    'plots.R'
+    'prisma.R'
+    'prsfuns.R'
+    'report.R'
+    'statfuns.R'
     'utils.R'
     'zzz.R'

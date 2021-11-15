@@ -120,7 +120,7 @@ twTest <- function(eigv,p=0.05,tol=1e-8) {
     mu  <- (vSt+Nst)^2/v
     sig <- (vSt+Nst)/v * (1/vSt+1/Nst)^(1/3)
 
-    twstat <-(L-mu)/sig
+    twstat <- (L-mu)/sig
     
     ps <- 1-ptw(twstat[!is.na(twstat)])
     d <- which(ps<p)
@@ -136,11 +136,11 @@ twTest <- function(eigv,p=0.05,tol=1e-8) {
     ))
 }
 
-# TODO: Plot histogram with overlayed normal cure + Q-Q plot
+# TODO: Plot histogram with overlayed normal curve + Q-Q plot
 normalityCheck <- function(x,pval=0.05,tests=c("sw","ks","jb"),lower=30,
     forceTest=TRUE,combine=c("fisher","simes","max","min"),nsample=1000) {
     # upper not implemented
-    if (!requireNamespace("tseries"))
+    if ("jb" %in% tests && !requireNamespace("tseries"))
         stop("R package tseries is required for Jarque-Bera test!")
     
     combine <- combine[1]
@@ -259,16 +259,19 @@ combineSimes <- function(p,zerofix=NULL) {
     return(min(c(s,1)))
 }
 
-#combineWeight <- function(p,w,zerofix=NULL) {
-#    p <- .zeroFix(p,zerofix)
-#    return(prod(p^w))
-#}
-#
+combineWeight <- function(p,w=NULL,zerofix=NULL) {
+    p <- .zeroFix(p,zerofix)
+    if (is.null(w))
+        w <- rep(1/length(p),length(p))
+    return(prod(p^w))
+}
 
-combineHarmonic <- function(p,w,zerofix=NULL) {
+combineHarmonic <- function(p,w=NULL,zerofix=NULL) {
     if (!requireNamespace("harmonicmeanp"))
         stop("R package harmonicmeanp is required!")
     p <- .zeroFix(p,zerofix)
+    if (is.null(w))
+        w <- rep(1/length(p),length(p))
     return(p.hmp(p,w,L=length(p),multilevel=FALSE))
 }
 
@@ -280,28 +283,20 @@ combineMaxp <- function(p) {
     return(max(p))
 }
 
-fisherMethod <- function(pvals,method=c("fisher"),p.corr=c("bonferroni","BH",
-    "none"),zeroSub=0.00001,na.rm=FALSE) {
-    stopifnot(method %in% c("fisher"))
-    stopifnot(p.corr %in% c("none","bonferroni","BH"))
-    stopifnot(all(pvals>=0, na.rm=TRUE) & all(pvals<=1, na.rm=TRUE))
-    stopifnot(zeroSub>=0 & zeroSub<=1 || length(zeroSub)!=1)
-    if(is.null(dim(pvals)))
+fisherMethod <- function(pvals,zerofix=NULL) {
+    stopifnot(all(pvals>=0 & all(pvals<=1))
+    
+    if (is.null(dim(pvals)))
         stop("pvals must have a dim attribute")
-    p.corr <- ifelse(length(p.corr)!=1, "BH", p.corr)
-    ##substitute p-values of 0
+    
+    zeroSub <- min(apply(pvals,1,.zeroFix,zerofix))
     pvals[pvals == 0] <- zeroSub
     
     fisher.sums <- data.frame(do.call(rbind,apply(pvals,1,fisherSum,
         zeroSub=zeroSub,na.rm=na.rm)))
-        
     rownames(fisher.sums) <- rownames(pvals)
     fisher.sums$p.value <- 1-pchisq(fisher.sums$S,df=2*fisher.sums$num.p)
-    fisher.sums$p.adj <- switch(p.corr,
-        bonferroni = p.adjust(fisher.sums$p.value,"bonferroni"),
-        BH = p.adjust(fisher.sums$p.value,"BH"),
-        none = fisher.sums$p.value
-    )
+    fisher.sums$p.adj <- fisher.sums$p.value
     return(fisher.sums)
 }
 

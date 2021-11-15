@@ -1,5 +1,7 @@
-.internalImputeWithSnpStats <- function(obj,mode=c("single","split"),rc=NULL) {
+.internalImputeWithSnpStats <- function(obj,mode=c("single","split"),
+    failed=c("scrime","none"),rc=NULL) {
     mode <- mode[1]
+    failed <- failed[1]
     
     # Imputation per chromosome
     map <- gfeatures(obj)
@@ -11,11 +13,11 @@
     }
     
     disp("\nStarting imputation analysis in ",length(parts)," chunks")
-    O <- lapply(names(parts),function(x,prt,m,rc) {
+    O <- lapply(names(parts),function(x,prt,m,f,rc) {
         disp("\n========== Imputing chromosome/part ",x)
         o <- prt[[x]]
-        return(.internalImputeWithSnpStatsWorker(o,m,rc))
-    },parts,mode,rc)
+        return(.internalImputeWithSnpStatsWorker(o,m,f,rc))
+    },parts,mode,failed,rc)
     
     disp("\nImputation finished, re-merging the output")
     
@@ -32,8 +34,9 @@
 # with missing SNPs. If the number of samples is not big, "split" rather
 # difficult to achieve
 .internalImputeWithSnpStatsWorker <- function(obj,mode=c("single","split"),
-    rc=NULL) {
+    failed=c("scrime","none"),rc=NULL) {
     mode <- mode[1]
+    failed <- failed[1]
     x <- assay(obj,1)
     if (!any(is.na(x)))
         return(obj)
@@ -69,12 +72,26 @@
         # CHECK: Potential parallelization
         disp("Imputing...")
         h <- split(rownames(nai),nai[,"col"])
+        #for (i in smIndMiss) {
+        #    snpmiss <- h[[as.character(i)]]
+        #    disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
+        #    disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+        #    simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
+        #    x[snpmiss,i] <- simp[,snpmiss]
+        #}
+        II <- cmclapply(smIndMiss,function(i,H,X,R) {
+            snpmiss <- H[[as.character(i)]]
+            disp("  for sample ",colnames(X)[i]," ",length(snpmiss)," SNPs")
+            disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+            simp <- impute.snps(R,t(X[,i]),as.numeric=FALSE)
+            return(simp)
+        },h,x,rules,rc=rc)
+        names(II) <- as.character(smIndMiss)
+        disp("Applying imputations...")
         for (i in smIndMiss) {
             snpmiss <- h[[as.character(i)]]
-            disp("  for sample ",colnames(x)[i]," ",length(snpmiss)," SNPs")
-            disp("    ",paste(snpmiss,collapse="\n    "),level="full")
-            simp <- impute.snps(rules,t(x[,i]),as.numeric=FALSE)
-            x[snpmiss,i] <- simp[,snpmiss]
+            disp("  for sample ",colnames(x)[i])
+            x[snpmiss,i] <- II[[as.character(i)]][,snpmiss]
         }
         
         # Recheck missing values and continue
@@ -88,8 +105,8 @@
     }
     ############################################################################
 
-    # If NAs remain, scrime
-    if (any(is.na(x))) {
+    # If NAs remain and imputation must continue, scrime
+    if (any(is.na(x)) && failed == "scrime") {
         disp(length(which(is.na(x)))," missing values remaining... Will ",
             "use genotype kNN imputation.")
         # Genotypes must be in range 1-3, as(x,"integer") collapses to vector

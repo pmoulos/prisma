@@ -281,7 +281,7 @@ mergeGWAS <- function(gwe1,gwe2,gdsfile=NULL,writegds=FALSE) {
         GWASExperiment2GDS(gwem)
         disp("Done!")
     }
-    disp("\n")
+    disp(" ")
     
     return(gwem)
 }
@@ -490,7 +490,7 @@ GWASExperiment2GDS <- function(obj) {
         gt.a1=x2$allele.1[nm],
         gt.a2=x2$allele.2[nm]
     )
-    rownames(inv) <- com[nm]
+    rownames(inv) <- rownames(x1)[nm]
 
     # Collapse inv
     colgts <- paste(inv[,1],inv[,2],inv[,3],inv[,4],sep="")

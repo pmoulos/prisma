@@ -137,15 +137,20 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
         return(.filterWithBigSnpr(x,filters,imputeMissing))
 }
 
-imputeGWAS <- function(obj,mode=c("single","split"),rc=NULL) {
+imputeGWAS <- function(obj,mode=c("single","split"),failed=c("scrime","none"),
+    rc=NULL) {
     mode <- mode[1]
+    failed <- failed[1]
     .checkTextArgs("Imputation mode (mode)",mode,c("single","split"),
         multiarg=FALSE)
+    .checkTextArgs("Imputation failure action (failed)",failed,
+        c("scrime","none"),multiarg=FALSE)
     
     m <- metadata(obj)
     if (m$backend == "snpStats") {
-        disp("\nImputing missing values with snpStats rules and scrime kNN")
-        return(.internalImputeWithSnpStats(obj,mode,rc=rc))
+        ex <- ifelse(failed=="scrime"," and scrime kNN","")
+        disp("\nImputing missing values with snpStats rules",ex)
+        return(.internalImputeWithSnpStats(obj,mode,failed,rc=rc))
     }
     else
         return(obj) # For now
