@@ -198,7 +198,8 @@
         # If yes, mark for removal
         if (nrow(ibdCoeff) > 0) {
             sr <- unique(c(ibdCoeff$ID1,ibdCoeff$ID2))
-            ir <- match(sr,colnames(obj))
+            z <- match(sr,colnames(obj))
+            ir <- z[!is.na(z)]
         }
         
         # Update filters
