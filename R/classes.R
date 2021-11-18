@@ -1126,3 +1126,18 @@ GWASExperiment2gData <- function(obj,covariates=NULL,pcs=FALSE,reverse=FALSE) {
     
     return(createGData(geno=geno,map=map,pheno=pheno,covar=covar))
 }
+
+GWASExperiment2GDS <- function(obj) {
+    if (is.null(gdsfile(obj)))
+        stop("A valid GDS file location must be provided! Use gdsfile()")
+    
+    # Write temporary PLINK
+    tmp <- tempfile()
+    writePlink(obj,outBase=tmp)
+    
+    # Write GDS file
+    bed <- paste0(tmp,".bed")
+    fam <- paste0(tmp,".fam")
+    bim <- paste0(tmp,".bim")
+    snpgdsBED2GDS(bed,fam,bim,gdsfile(obj),family=TRUE)
+}

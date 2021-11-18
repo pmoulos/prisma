@@ -134,7 +134,7 @@ filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
     if (is(assay(obj,1),"SnpMatrix"))
         return(.filterWithSnpStats(obj,filters,imputeMissing,imputeMode,rc))
     else if (is(assay(obj,1),"bigsnp"))
-        return(.filterWithBigSnpr(x,filters,imputeMissing))
+        return(.filterWithBigSnpr(obj,filters,imputeMissing))
 }
 
 imputeGWAS <- function(obj,mode=c("single","split"),failed=c("scrime","none"),
