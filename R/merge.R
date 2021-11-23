@@ -1,4 +1,5 @@
-mergeGWAS <- function(gwe1,gwe2,gdsfile=NULL,writegds=FALSE) {
+mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),gdsfile=NULL,
+    writegds=FALSE) {
     # Input must be GWASExperiment
     if (!is(gwe1,"GWASExperiment") || !is(gwe2,"GWASExperiment"))
         stop("Both objects to be merged must be GWASExperiment objects!")
@@ -12,6 +13,11 @@ mergeGWAS <- function(gwe1,gwe2,gdsfile=NULL,writegds=FALSE) {
     }
     else if (!is.character(gdsfile))
         stop("gdsfile argument must be a valid path!")
+    
+    
+    output <- output[1]
+    .checkTextArgs("Output SNPs (output)",output,c("common","all"),
+        multiarg=FALSE)
     
     # Check if input objects have genomes
     g1 <- genome(gwe1)
@@ -212,13 +218,18 @@ mergeGWAS <- function(gwe1,gwe2,gdsfile=NULL,writegds=FALSE) {
     # Dataset-only SNPs... No really need to flip anything as we are creating a 
     # new dataset... Or flip strand for consistency? No because some SNPs may 
     # or may not be flipped across array designs
-    disp("  Retrieving SNPs specific to each dataset")
-    feat1Only <- feat1[setdiff(rownames(feat1),rownames(feat1Check)),]
-    feat2Only <- feat2[setdiff(rownames(feat2),rownames(feat2Check)),]
+    if (output == "all") {
+        disp("  Retrieving SNPs specific to each dataset")
+        feat1Only <- feat1[setdiff(rownames(feat1),rownames(feat1Check)),]
+        feat2Only <- feat2[setdiff(rownames(feat2),rownames(feat2Check)),]
+    }
 
     # Now, we must merge and order the two feature sets
     disp("  Merging features")
-    featMerged <- rbind(feat1Only,feat1Check,feat2Only)
+    if (output == "all")
+        featMerged <- rbind(feat1Only,feat1Check,feat2Only)
+    else
+        featMerged <- feat1Check
     featMerged <- featMerged[order(featMerged$chromosome,featMerged$position),]
     
     # Merge samples... should be easy... PLINK writing will show
@@ -242,19 +253,25 @@ mergeGWAS <- function(gwe1,gwe2,gdsfile=NULL,writegds=FALSE) {
     # Merge the commons
     disp("  Merging genotypes")
     genoCommon <- cbind(geno1Check,geno2Check)
-    # Now the rest from each dataset - only genotypes + NAs for the rest samples
-    geno1Only <- geno1[rownames(feat1Only),]
-    geno2Only <- geno2[rownames(feat2Only),]
-    geno1Add <- SnpMatrix(matrix(0,nrow(geno1Only),ncol(geno2Only)))
-    rownames(geno1Add) <- rownames(geno1Only)
-    colnames(geno1Add) <- colnames(geno2Only)
-    geno2Add <- SnpMatrix(matrix(0,nrow(geno2Only),ncol(geno1Only)))
-    rownames(geno2Add) <- rownames(geno2Only)
-    colnames(geno2Add) <- colnames(geno1Only)
-    geno1Both <- cbind(geno1Only,geno1Add)
-    geno2Both <- cbind(geno2Add,geno2Only)
-    # Merge!
-    genoMerged <- rbind(geno1Both,genoCommon,geno2Both)
+    if (output == "all") {
+        # Now the rest from each dataset - only genotypes + NAs for the 
+        # rest samples
+        geno1Only <- geno1[rownames(feat1Only),]
+        geno2Only <- geno2[rownames(feat2Only),]
+        geno1Add <- SnpMatrix(matrix(0,nrow(geno1Only),ncol(geno2Only)))
+        rownames(geno1Add) <- rownames(geno1Only)
+        colnames(geno1Add) <- colnames(geno2Only)
+        geno2Add <- SnpMatrix(matrix(0,nrow(geno2Only),ncol(geno1Only)))
+        rownames(geno2Add) <- rownames(geno2Only)
+        colnames(geno2Add) <- colnames(geno1Only)
+        geno1Both <- cbind(geno1Only,geno1Add)
+        geno2Both <- cbind(geno2Add,geno2Only)
+        # Merge!
+        genoMerged <- rbind(geno1Both,genoCommon,geno2Both)
+    }
+    else
+        genoMerged <- genoCommon
+        
     # Align...
     if (!identical(rownames(featMerged),rownames(genoMerged)))
         genoMerged <- genoMerged[rownames(featMerged),]

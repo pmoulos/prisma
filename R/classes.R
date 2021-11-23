@@ -29,7 +29,7 @@ GWASExperiment <- function(genotypes=SnpMatrix(),features=DataFrame(),
     effects=SimpleList(),prsbetas=SimpleList(),
     metadata=list(genome=NA_character_,backend=NA_character_,
         filters=setNames(data.frame(matrix(ncol=5,nrow=0)),
-            c("parameter","name","value","type","filtered"))),...) {
+            c("parameter","name","value","type","filtered")))) {
     
     # It MUST have metadata with certain names in the list
     if (!is.list(metadata)) {
@@ -301,8 +301,8 @@ setMethod("prsbetas","GWASExperiment",function(x,response=1L,covariates=NULL,
     return(s)
 })
 
-setReplaceMethod("prsbetas","GWASExperiment",function(x,response,covariates=NULL,
-    npcs=0,...,value) {
+setReplaceMethod("prsbetas","GWASExperiment",function(x,response,
+    covariates=NULL,npcs=0,...,value) {
     response <- .validateAssociationScoreIndexing(x,response,covariates,npcs)
     if (is.null(x@prsbetas))
         x@prsbetas <- SimpleList()

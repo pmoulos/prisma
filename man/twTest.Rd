@@ -1,24 +1,14 @@
 \name{twTest}
-\title{Enrichment of PGS Catalog retrieved scores}
+\title{Tracy-Widom test for selection of PCs}
 \usage{
-    normalityCheck(x, pval = 0.05, tests = c("sw", "ks", "jb"),
-        lower = 30, forceTest = TRUE, combine = c("fisher",
-        "simes", "max", "min"), nsample = 1000)
+    twTest(eigv, p = 0.05, tol = 1e-8)
 }
 \arguments{
-    \item{x}{}
+    \item{eigv}{}
     
-    \item{pval}{p-value cutoff for the test significance.}
+    \item{p}{p-value cutoff for the test significance.}
     
-    \item{tests}{}
-    
-    \item{lower}{}
-    
-    \item{forceTest}{}
-    
-    \item{combine}{}
-    
-    \item{nsample}{}
+    \item{tol}{}
 }
 \value{
     

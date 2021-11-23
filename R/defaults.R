@@ -61,7 +61,9 @@ getDefaults <- function(what) {
             return(list(
                 snptest="v2.5.6",
                 plink="v1.90",
-                prsice="v2.3.3"
+                prsice="v2.3.3",
+                impute="v2.3.2",
+                gtool="v0.7.5"
             ))
         },
         lassosum = {

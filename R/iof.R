@@ -186,7 +186,7 @@ imputeGWAS <- function(obj,mode=c("single","split"),failed=c("scrime","none"),
 }
 
 writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
-    reverse=FALSE) {
+    reverse=FALSE,perChr=FALSE) {
     if (!is(obj,"GWASExperiment"))
         stop("The input object (obj) must be a GWASExperiment object!")
     if (is.null(outBase))

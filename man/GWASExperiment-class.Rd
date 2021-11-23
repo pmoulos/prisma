@@ -2,304 +2,471 @@
 \docType{class}
 
 % Classes
-\alias{class:Assays_OR_NULL}
-\alias{Assays_OR_NULL-class}
-\alias{Assays_OR_NULL}
-\alias{class:SummarizedExperiment}
-\alias{SummarizedExperiment-class}
-
-\alias{parallel_slot_names,SummarizedExperiment-method}
-\alias{vertical_slot_names,SummarizedExperiment-method}
-\alias{horizontal_slot_names,SummarizedExperiment-method}
+\alias{GWASExperiment}
+\alias{class:GWASExperiment}
+\alias{GWASExperiment-class}
 
 % Accessors
-\alias{length,SummarizedExperiment-method}
-\alias{names,SummarizedExperiment-method}
-\alias{names<-,SummarizedExperiment-method}
-\alias{rowData}
-\alias{rowData,SummarizedExperiment-method}
-\alias{rowData<-}
-\alias{rowData<-,SummarizedExperiment-method}
-\alias{colData}
-\alias{colData,SummarizedExperiment-method}
-\alias{colData<-}
-\alias{colData<-,SummarizedExperiment,DataFrame-method}
-\alias{colData<-,SummarizedExperiment,NULL-method}
-\alias{assays}
-\alias{assays,SummarizedExperiment-method}
-\alias{assays<-}
-\alias{assays<-,SummarizedExperiment,SimpleList-method}
-\alias{assays<-,SummarizedExperiment,list-method}
-\alias{assay}
-\alias{assay,SummarizedExperiment,missing-method}
-\alias{assay,SummarizedExperiment,numeric-method}
-\alias{assay,SummarizedExperiment,character-method}
-\alias{assay<-}
-\alias{assay<-,SummarizedExperiment,missing-method}
-\alias{assay<-,SummarizedExperiment,numeric-method}
-\alias{assay<-,SummarizedExperiment,character-method}
-\alias{assayNames}
-\alias{assayNames,SummarizedExperiment-method}
-\alias{assayNames<-}
-\alias{assayNames<-,SummarizedExperiment,character-method}
-\alias{dim,SummarizedExperiment-method}
-\alias{dimnames,SummarizedExperiment-method}
-\alias{dimnames<-,SummarizedExperiment,list-method}
-\alias{dimnames<-,SummarizedExperiment,NULL-method}
+\alias{genotypes}
+\alias{genotypes,GWASExperiment-method}
+\alias{genotypes<-}
+\alias{genotypes<-,GWASExperiment-method}
+\alias{genotypes<-,SnpMatrix-method}
+
+\alias{gfeatures}
+\alias{gfeatures,GWASExperiment-method}
+\alias{gfeatures<-}
+\alias{gfeatures<-,DataFrame-method}
+\alias{gfeatures<-,data.frame-method}
+
+\alias{gsamples}
+\alias{gsamples,GWASExperiment-method}
+\alias{gsamples<-}
+\alias{gsamples<-,DataFrame-method}
+\alias{gsamples<-,data.frame-method}
+
+\alias{phenotypes}
+\alias{phenotypes,GWASExperiment-method}
+\alias{phenotypes<-}
+\alias{phenotypes<-,DataFrame-method}
+\alias{phenotypes<-,data.frame-method}
+\alias{phenotypes<-,NULL-method}
+
+\alias{pvalues}
+\alias{pvalues,GWASExperiment-method}
+\alias{pvalues<-}
+\alias{pvalues<-,SimpleList-method}
+
+\alias{effects}
+\alias{effects,GWASExperiment-method}
+\alias{effects<-}
+\alias{effects<-,SimpleList-method}
+
+\alias{prsbetas}
+\alias{prsbetas,GWASExperiment-method}
+\alias{prsbetas<-}
+\alias{prsbetas<-,SimpleList-method}
+
+\alias{genome}
+\alias{genome,GWASExperiment-method}
+\alias{genome<-}
+\alias{genome<-,character-method}
+
+\alias{gdsfile}
+\alias{gdsfile,GWASExperiment-method}
+\alias{gdsfile<-}
+\alias{gdsfile<-,character-method}
+
+\alias{filterRecord}
+\alias{filterRecord,GWASExperiment-method}
+\alias{filterRecord<-}
+\alias{filterRecord<-,data.frame-method}
+
+\alias{pcaCovariates}
+\alias{pcaCovariates,GWASExperiment-method}
+\alias{pcaCovariates<-}
+\alias{pcaCovariates<-,matrix-method}
+
+\alias{allPvalues}
+\alias{allPvalues,SimpleList-method}
+\alias{allEffects}
+\alias{allEffects,SimpleList-method}
+\alias{allPrsbetas}
+\alias{allPrsbetas,SimpleList-method}
 
 % Subsetting
-\alias{[,SummarizedExperiment-method}
-\alias{[,SummarizedExperiment,ANY-method}
-\alias{[,SummarizedExperiment,ANY,ANY,ANY-method}
-\alias{[<-,SummarizedExperiment,ANY,ANY,SummarizedExperiment-method}
-\alias{subset,SummarizedExperiment-method}
+\alias{[,GWASExperiment-method}
+\alias{[,GWASExperiment,ANY-method}
+\alias{[,GWASExperiment,ANY,ANY,ANY-method}
+\alias{[<-,GWASExperiment,ANY,ANY,GWASExperiment-method}
+\alias{subset,GWASExperiment-method}
 
 % Quick colData access
-\alias{[[,SummarizedExperiment,ANY,missing-method}
-\alias{[[<-,SummarizedExperiment,ANY,missing-method}
-\alias{$,SummarizedExperiment-method}
-\alias{$<-,SummarizedExperiment-method}
+\alias{[[,GWASExperiment,ANY,missing-method}
+\alias{[[<-,GWASExperiment,ANY,missing-method}
 
 % Display
-\alias{show,SummarizedExperiment-method}
-\alias{showAsCell,SummarizedExperiment-method}
+\alias{show,GWASExperiment-method}
 
 % Combine
-\alias{rbind,SummarizedExperiment-method}
-\alias{cbind,SummarizedExperiment-method}
-\alias{combineRows}
-\alias{combineRows,SummarizedExperiment-method}
-\alias{combineCols}
-\alias{combineCols,SummarizedExperiment-method}
+\alias{rbind,GWASExperiment-method}
+\alias{cbind,GWASExperiment-method}
 
-% On-disk realization
-\alias{realize,SummarizedExperiment-method}
-
-% updateObject
-\alias{updateObject,SummarizedExperiment-method}
-
-\title{SummarizedExperiment objects}
+\title{GWASExperiment objects}
 
 \description{
-
-  The SummarizedExperiment class is a matrix-like container where rows
-  represent features of interest (e.g. genes, transcripts, exons, etc...)
-  and columns represent samples (with sample data summarized as a
-  \link{DataFrame}). A SummarizedExperiment object contains one or more
-  assays, each represented by a matrix-like object of numeric or other mode.
-
-  Note that SummarizedExperiment is the parent of the
-  \link{RangedSummarizedExperiment} class which means that all the methods
-  documented below also work on a \link{RangedSummarizedExperiment} object.
+    The GWASExperiment class is a matrix-like container which
+    directly inherits all the properties from the 
+    \code{\link{SummarizedExperiment}} class and extends it with
+    respect to holding GWAS data in terms of accomodating not only 
+    genotypic and phenotypic data but also association scores and
+    SNP effects from Genome-Wide Association tests. In addition,
+    as PRISMA's main purpose is the construction and evaluation
+    of Polygenic Risk Scores, it offers facilities to store the
+    results of respective analyses.
+    
+    Specifically, the assays of a GWASExperiment hold a matrix
+    object (SnpMatrix or bigSNP) where rows represent SNPs or
+    other variants and columns represent samples. The values of
+    the assays represent genotypes and they are accessed and
+    manipulated through the respective functions of the packages
+    \code{snpStats} and \code{bigSNP}. Apart from the assays,
+    the \code{rowData} of the GWASExperiment hold information
+    about the markers and the \code{colData} hold information
+    about the samples. Such information are typically derived
+    from the initial input data used to construct the 
+    GWASExperiment. The easiest way to construct it is from a
+    set of PLINK files in BED, BIM and FAM formats. Direct
+    construction is also possible, as long as the provided
+    information about markers and samples is complete, for
+    example, markers should be accompanied at least by
+    chromosome and position data as well as major/minor 
+    allele information.
+    
+    Apart from the basic GWASExperiment data which make direct
+    use of the \code{\link{SummarizedExperiment}} slots, the
+    class offers slots to store associated phenotypic and
+    anthropometric data for each sample which are used for
+    GWA tests, and slots to store the results of these tests
+    in terms of p-values and reggression coefficients (effects).
+    For the SNPs that may then become part of a PRS, the
+    GWASExperiment also offers a slot for storing the weights
+    of the PRS SNPs. Furthermore, GWASExperiment takes
+    advantage of the \code{metadata} slot of the
+    \code{\link{SummarizedExperiment}} to store additional
+    information on GWAS and subsequent PRS extraction through
+    the GWA summary statistics, such as Principal Component
+    Analysis results used as covariates to capture and
+    account for potential underlying population stratification,
+    reference genome information, track of the filters applied
+    to the genotypes and samples and other information. 
+    Finally, it offers the ability to avoid genotypic and
+    phenotypic data duplication when conducting multiple GWA
+    tests by allowing the association and storage of many test
+    results (e.g. with different covariates) within the same
+    object.
 }
 
 \usage{
+    ## Constructor
 
-## Constructor
+    GWASExperiment(
+        genotypes = SnpMatrix(), 
+        features = DataFrame(),
+        samples = DataFrame(),
+        phenotypes = DataFrame(),
+        pvalues = SimpleList(),
+        effects = SimpleList(),
+        prsbetas = SimpleList(),
+        metadata = list(
+            genome = NA_character_,
+            backend = NA_character_,
+            filters = setNames(
+                data.frame(matrix(ncol = 5, nrow = 0)),
+                c("parameter", "name", "value", "type", "filtered")
+            )
+        )
+    )
 
-# See ?RangedSummarizedExperiment for the constructor function.
 
-## Accessors
+    ## Accessors - apart from the ones of SummarizedExperiment
 
-assayNames(x, ...)
-assayNames(x, ...) <- value
-assays(x, withDimnames=TRUE, ...)
-assays(x, withDimnames=TRUE, ...) <- value
-assay(x, i, withDimnames=TRUE, ...)
-assay(x, i, withDimnames=TRUE, ...) <- value
-rowData(x, use.names=TRUE, ...)
-rowData(x, ...) <- value
-colData(x, ...)
-colData(x, ...) <- value
-#dim(x)
-#dimnames(x)
-#dimnames(x) <- value
+    genotypes(x, ...)
+    genotypes(x, ...) <- value
+    gfeatures(x, withDimnames=TRUE, ...)
+    gfeatures(x, withDimnames=TRUE, ...) <- value
+    gsamples(x, withDimnames=TRUE, ...)
+    gsamples(x, withDimnames=TRUE, ...) <- value
 
-## Quick colData access
+    phenotypes(x, withDimnames=TRUE, ...)
+    phenotypes(x, withDimnames=TRUE, ...) <- value
 
-\S4method{$}{SummarizedExperiment}(x, name)
-\S4method{$}{SummarizedExperiment}(x, name) <- value
-\S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...)
-\S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...) <- value
+    pvalues(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...)
+    pvalues(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...) <- value
+    allPvalues(x, i = seq_len(ncol(x)))
+    effects(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...)
+    effects(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...) <- value
+    allEffects(x, i = seq_len(ncol(x)))
+    prsbetas(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...)
+    prsbetas(x, response = 1L, covariates = NULL, npcs = 0,
+        withDimnames = TRUE, ...) <- value
+    allPrsbetas(x, i = seq_len(ncol(x)))
 
-## Subsetting
+    genome(x)
+    genome(x) <- value
+    gdsfile(x)
+    gdsfile(x) <- value
+    filterRecord(x)
+    filterRecord(x) <- value
+    pcaCovariates(x)
+    pcaCovariates(x) <- value
 
-\S4method{[}{SummarizedExperiment}(x, i, j, ..., drop=TRUE)
-\S4method{[}{SummarizedExperiment,ANY,ANY,SummarizedExperiment}(x, i, j) <- value
-\S4method{subset}{SummarizedExperiment}(x, subset, select, ...)
 
-## Combining
+    ## Quick colData access
 
-\S4method{cbind}{SummarizedExperiment}(..., deparse.level=1)
-\S4method{rbind}{SummarizedExperiment}(..., deparse.level=1)
+    \S4method{$}{SummarizedExperiment}(x, name)
+    \S4method{$}{SummarizedExperiment}(x, name) <- value
+    \S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...)
+    \S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...) <- value
 
-## On-disk realization
-\S4method{realize}{SummarizedExperiment}(x, BACKEND=getAutoRealizationBackend())
+
+    ## Subsetting
+
+    \S4method{[}{GWASExperiment}(x, i, j, ..., drop=TRUE)
+    \S4method{[}{GWASExperiment,ANY,ANY,GWASExperiment}(x, i, j) <- value
+
+
+    ## Combining
+
+    \S4method{cbind}{GWASExperiment}(..., deparse.level=1)
+    \S4method{rbind}{GWASExperiment}(..., deparse.level=1)
 }
 
 \arguments{
+    \item{x}{a GWASExperiment object.}
+  
+    \item{...}{for \code{cbind}, \code{rbind}, \code{...} 
+    contains GWASExperiment objects to be combined. For other 
+    accessors, ignored.}
+  
+    \item{value}{an object of a class specified in the S4 method
+    signature or as outlined in Details.}
 
-  \item{x}{A SummarizedExperiment object.}
+    \item{i, j}{for \code{genotypes}, \code{genotypes<-}, 
+    \code{i} is an integer or numeric scalar, see Details 
+    for additional constraints.
 
-  \item{...}{
-    For \code{assay}, arguments in \code{...} are forwarded to \code{assays}.
+    For \code{[,GWASExperiment}, \code{[,GWASExperiment<-}, 
+    \code{i}, \code{j} are subscripts that can act to subset the 
+    rows and columns of \code{x}, that is the \code{matrix} 
+    elements of \code{genotypes}.
 
-    For \code{cbind}, \code{rbind}, \code{...} contains SummarizedExperiment
-    objects to be combined.
+    For \code{[[,GWASExperiment}, \code{[[<-,GWASExperiment}, 
+    \code{i} is a scalar index (e.g., \code{character(1)} or 
+    \code{integer(1)}) into a column of \code{gsamples}.}
 
-    For other accessors, ignored.
-  }
+    \item{withDimnames}{a \code{logical(1)}, indicating whether 
+    the dimnames of the GWASExperiment object should be applied 
+    (i.e. copied) to the extracted assays (genotypes or other
+    data such as samples, features, phenotypes). More precisely, 
+    setting \code{withDimnames=FALSE} in the \emph{getter} 
+    returns the assays \emph{as-is} whereas setting 
+    \code{withDimnames=FALSE} return them with possibly modified 
+    dimnames.
 
-  \item{value}{An object of a class specified in the S4 method
-    signature or as outlined in \sQuote{Details}.}
+    Setting \code{withDimnames=FALSE} in the \emph{setter} 
+    (\code{assays<-}) is required when the dimnames on the supplied 
+    assays are not identical to the dimnames on the GWASExperiment 
+    object. It does not influence actual assignment of dimnames to 
+    assays (they're always stored as-is). For more details, see
+    \code{\link{SummarizedExperiment}}.}
+    
+    \item{drop}{A \code{logical(1)}, ignored by these methods.}
 
-  \item{i, j}{
-    For \code{assay}, \code{assay<-}, \code{i} is an integer or
-    numeric scalar; see \sQuote{Details} for additional constraints.
-
-    For \code{[,SummarizedExperiment},
-    \code{[,SummarizedExperiment<-}, \code{i}, \code{j} are subscripts
-    that can act to subset the rows and columns of \code{x}, that is the
-    \code{matrix} elements of \code{assays}.
-
-    For \code{[[,SummarizedExperiment},
-    \code{[[<-,SummarizedExperiment}, \code{i} is a scalar index (e.g.,
-    \code{character(1)} or \code{integer(1)}) into a column of
-    \code{colData}.
-  }
-
-  \item{name}{A symbol representing the name of a column of
-    \code{colData}.}
-
-  \item{withDimnames}{A \code{logical(1)}, indicating whether the
-    dimnames of the SummarizedExperiment object should be applied (i.e.
-    copied) to the extracted assays. More precisely, setting
-    \code{withDimnames=FALSE} in the \emph{getter} returns the
-    assays \emph{as-is} whereas setting \code{withDimnames=FALSE}
-    return them with possibly modified dimnames.
-
-    Setting \code{withDimnames=FALSE} in the \emph{setter} (\code{assays<-})
-    is required when the dimnames on the supplied assays are not identical
-    to the dimnames on the SummarizedExperiment object; it does not
-    influence actual assignment of dimnames to assays (they're always
-    stored as-is).
-
-    Note that \preformatted{  assays(x, withDimnames=FALSE) <- assays(x, withDimnames=FALSE)}
-    is guaranteed to always work and be a no-op. This is not the case
-    if \code{withDimnames=TRUE} is used or if \code{withDimnames} is
-    not specified.
-  }
-
-  \item{use.names}{Like \code{\link[S4Vectors]{mcols}(x)}, by default
-    \code{rowData(x)} propagates the rownames of \code{x} to the returned
-    \link[S4Vectors]{DataFrame} object (note that for a SummarizedExperiment
-    object, the rownames are also the names i.e. \code{rownames(x)} is
-    always the same as \code{names(x)}). Setting \code{use.names=FALSE}
-    suppresses this propagation i.e. it returns a \link[S4Vectors]{DataFrame}
-    object with no rownames. Use this when \code{rowData(x)} fails,
-    which can happen when the rownames contain NAs (because the rownames
-    of a SummarizedExperiment object can contain NAs, but the rownames of
-    a \link[S4Vectors]{DataFrame} object cannot).}
-
-  \item{drop}{A \code{logical(1)}, ignored by these methods.}
-
-  \item{deparse.level}{See \code{?base::\link[base]{cbind}} for a description of
-    this argument.}
-
-  \item{subset}{An expression which, when evaluated in the
-    context of \code{rowData(x)}, is a logical vector indicating
-    elements or rows to keep: missing values are taken as false.}
-
-  \item{select}{An expression which, when evaluated in the
-    context of \code{colData(x)}, is a logical vector indicating
-    elements or rows to keep: missing values are taken as false.}
-
-  \item{BACKEND}{\code{NULL} (the default), or a single string specifying the
-    name of the backend. When the backend is set to \code{NULL},
-    each element of \code{assays(x)} is realized in memory as an ordinary array
-    by just calling \code{as.array} on it.}
-
+    \item{deparse.level}{See \code{?base::\link[base]{cbind}} for a 
+    description of this argument.}
+    
+    \item{genotypes}{a \code{SnpMatrix} or \code{bigSNP} 
+    matrix-like object that holds the genotypes for the 
+    SNPs/markers in each row and each sample in each column.}
+    
+    \item{features}{a \code{\link{DataFrame}} or 
+    \code{\link{data.frame}} holding detailed information about
+    each genotyped SNP. See also Details.}
+    
+    \item{samples}{a \code{\link{DataFrame}} or 
+    \code{\link{data.frame}} holding information about each
+    genotyped sample. See also Details.}
+    
+    \item{phenotypes}{a \code{\link{DataFrame}} or 
+    \code{\link{data.frame}} holding phenotypic records about 
+    each genotyped sample, typically used for GWA tests. See 
+    also Details.}
+    
+    \item{pvalues}{a \code{\link{SimpleList}} or 
+    \code{\link{list}} with p-values from GWA tests for each
+    SNP. Each member corresponds to a GWA test with specific
+    covariates. See also Details.}
+    
+    \item{effects}{a \code{\link{SimpleList}} or 
+    \code{\link{list}} with regression coefficients (or converted
+    odds ratios) from GWA tests for each SNP (effects). Each 
+    member corresponds to a GWA test with specific covariates. 
+    See also Details.}
+    
+    \item{prsbetas}{a \code{\link{SimpleList}} or 
+    \code{\link{list}} with weights for each SNP participating
+    in a PRS. Each member corresponds to a GWA test with specific
+    covariates. Typically, subset of effects, unless an adjustment
+    algorithms (e.g. lassosum) has been applied. See also Details.}
+    
+    \item{metadata}{a list similar to \code{\link{metadata}}
+    of \code{\link{SummarizedExperiment}}. It should contain at
+    least \code{genome}, \code{backend} and \code{filters}
+    members. See also Details.}
+    
+    \item{response}{a numeric or integer or character scalar.
+    If a number, it should correspond to the column number of
+    the response phenotype in a GWA test. If character, it
+    should be one of the phenotypes associated with \code{x}.
+    See also Details.}
+    
+    \item{covariates}{a character vector or \code{NULL}. The
+    covariates to be used in regression models and GWA tests.
+    They should exist in the phenotypes of \code{x}. See also 
+    Details.}
+    
+    \item{npcs}{the number of PCs included in the covariates
+    in a GWA test. See also Details.}
+    
+    \item{i}{a scalar or vector of indices for which to retrieve
+    statistical scores, corresponding to a number of models fit
+    to \code{x}. See also Details.}
 }
 
 \details{
+    The GWASExperiment class is a straighforward expansion of the
+    \code{\link{SummarizedExperiment}} class which is meant for 
+    numeric and other data types derived typically from a sequencing 
+    experiment but is suitable to host genotypic data as the main 
+    features of the latter are Single Nucleotide Polymorphisms 
+    (SNPs) which share a lot of common information with sequencing
+    experiments such as genomic coordinates and certain types of
+    abundance. The structure is rectangular like a \code{matrix}, 
+    but with additional annotations on the rows and columns, and 
+    with the possibility to manage several assays simultaneously 
+    so long as they be of the same dimensions. More generic
+    information can be found on the manual pages of the
+    \link{SummarizedExperiment} class. The following focus on the
+    expansions introduced in the GWASExperiment class.
 
-  The SummarizedExperiment class is meant for numeric and other
-  data types derived from a sequencing experiment. The structure is
-  rectangular like a \code{matrix}, but with additional annotations on
-  the rows and columns, and with the possibility to manage several
-  assays simultaneously so long as they be of the same dimensions.
+    The rows of a GWASExperiment object represent SNPs/markers of
+    interest. Information about these markers is stored in a
+    \link{DataFrame} or \link{data.frame} object, accessible 
+    using the function \code{gfeatures} (or the native 
+    \code{rowData} as \code{gfeatures} is an alias to it). The 
+    object must have as many rows as there are rows in the 
+    GWASExperiment object, with each row of the object providing 
+    information on the SNP in the corresponding row of the 
+    GWASExperiment object. Columns of the object represent 
+    different attributes of the features of interest. Specifically, 
+    for the GWASExperiment case, it must have at least genomic
+    coordinates, that is chromosome and position, a unique id (it
+    can be a dbSNP id) and the two alleles comprising the genotype.
+    A typical case is when the GWASExperiment is created from PLINK
+    files with the backend provided by \code{snpStats} package
+    and the columns of the object are \code{chromosome},
+    \code{snp.name}, \code{cM}, \code{position}, \code{allele.1}
+    and \code{allele.2}. These are also the preferred column names
+    of the object. It must also have assigned rownames, preferrably
+    the same as the \code{snp.names} column.
 
-  The rows of a SummarizedExperiment object represent features
-  of interest. Information about these features is stored in a
-  \link{DataFrame} object, accessible using the function
-  \code{rowData}. The \link{DataFrame} must have as many rows
-  as there are rows in the SummarizedExperiment object, with each row
-  of the \link{DataFrame} providing information on the feature in the
-  corresponding row of the SummarizedExperiment object. Columns of the
-  \link{DataFrame} represent different attributes of the features
-  of interest, e.g., gene or transcript IDs, etc.
+    Each column of a GWASExperiment object represents a sample
+    (e.g. a person contributing to a GWAS project). Information 
+    about the samples are stored in a \link{DataFrame} or ,
+    \link{data.frame} object, accessible using the function 
+    \code{gsamples} (or the native \code{colData} as 
+    \code{gsamples} is an alias to it). The object must have as 
+    many rows as there are columns in the GWASExperiment object, 
+    with each row of the object providing information on the sample
+    in the corresponding column of the GWASExperiment object.
+    Columns of the object represent different sample attributes, 
+    e.g., pedigree, sex etc. Column names typically provide a short 
+    identifier unique to each sample. A typical case is when the 
+    GWASExperiment is created from PLINK files with the backend 
+    provided by \code{snpStats} package and the columns of the
+    object are \code{pedigree}, \code{member}, \code{father},
+    \code{mother}, \code{sex} and \code{affected}. These are also 
+    the preferred column names of the object. It must also have 
+    assigned rownames, preferrably the same as the \code{member} 
+    column.
 
-  Each column of a SummarizedExperiment object represents a sample.
-  Information about the samples are stored in a \link{DataFrame},
-  accessible using the function \code{colData}, described below.
-  The \link{DataFrame} must have as many rows as there are
-  columns in the SummarizedExperiment object, with each row of the
-  \link{DataFrame} providing information on the sample in the
-  corresponding column of the SummarizedExperiment object.
-  Columns of the \link{DataFrame} represent different sample
-  attributes, e.g., tissue of origin, etc. Columns of the
-  \link{DataFrame} can themselves be annotated (via the
-  \code{\link[S4Vectors]{mcols}} function). Column names typically
-  provide a short identifier unique to each sample.
+    A GWASExperiment object, as a SummarizedExperiment, can also 
+    contain information about the overall experiment, for instance 
+    the lab in which it was conducted, the publications with which 
+    it is associated, etc. This information is stored as a 
+    \code{list} object, accessible using the \code{metadata} 
+    function. The form of the data associated with the experiment
+    is left to the discretion of the user. However, the 
+    \code{metadata} of a GWASExperiment object must have at least
+    three elements. These are:
+    
+    \itemize{
+        \item \code{genome}: the reference genome used in the
+        genotyping technology (usually \code{hg38} or \code{hg19}).
+        It can be accessed and set using the \code{genome} function.
+        
+        \item \code{filters}: the set of filters applied to the
+        GWASExperiment to filter out noisy genotyping data (if any)
+        and a summary of their results in a \code{data.frame}. A
+        placeholder is automatically added on construction. It can
+        be accessed and set with the \code{filterRecord} fuction.
+        
+        \item \code{backend}: the backend package used to read and
+        store the genotype data (one of \code{snpStats} or
+        \code{bigsnpr}). This is crucial for downstream functions
+        and manipulation and must not be changed.
+    }
 
-  A SummarizedExperiment object can also contain information about
-  the overall experiment, for instance the lab in which it was conducted,
-  the publications with which it is associated, etc. This information is
-  stored as a \code{list} object, accessible using the \code{metadata}
-  function. The form of the data associated with the experiment is left to
-  the discretion of the user.
-
-  The SummarizedExperiment container is appropriate for matrix-like
-  data. The data are accessed using the \code{assays} function,
-  described below. This returns a \link{SimpleList} object. Each
-  element of the list must itself be a matrix (of any mode) and must
-  have dimensions that are the same as the dimensions of the
-  SummarizedExperiment in which they are stored. Row and column
-  names of each matrix must either be \code{NULL} or match those of the
-  SummarizedExperiment during construction. It is convenient for
-  the elements of \link{SimpleList} of assays to be named.
-
+    The GWASExperiment container is appropriate for matrix-like
+    genotypic data, such as those derived from gentype microarray
+    technologies. Apart from the related SummarizedExperiment data
+    accessor functions, the data are accessed using the 
+    \code{genotypes} function, described below. This returns a
+    \link{SnpMatrix} or \link{bigSNP} object. A \link{SimpleList} 
+    object with genotypic data from potentially different 
+    experiment can be accessed with \code{\link{assays}}. 
+    \code{genotypes} returns the first one, but typically, this is 
+    what is being used. Each element of the list must itself either 
+    a \code{SnpMatrix} or a {bigSNP} object and must have 
+    dimensions that are the same as the dimensions of the
+    GWASExperiment in which they are stored. Row and column
+    names of each object must either be \code{NULL} or match those 
+    of the GWASExperiment during construction.
+    
+    Furthermore, the GWASExperiment offers facilities for storing
+    other data typical for subsequent GWAS analyses and PRS
+    constructions, such as storing phenotypic and anthropometric
+    data used for association analysis, the results of GWA tests
+    and the results of PRS analysis. Instead of storing these
+    data to the metadata slot of a SummarizedExperiment, they
+    are bound to slots following the dimensions and subsetting
+    of the main genotypic matrix object. Therefore, phenotypic
+    data are accessed through the \code{phenotypes} function,
+    the results of GWA tests (p-values, regression coefficients)
+    are accessed through the \code{pvalues} and \code{effects}
+    functions respectively, and associated PRS weights are
+    accessed throught the function \code{prsbetas}. All these
+    functions are described below and all return 
+    \code{SimpleList} objects, as a GWASExperiment object may
+    have multiple GWA and PRS results attached to it to avoid
+    genotype repetition. A listing of associated analyses
+    with a GWASExperiment object may be retrieved with the
+    \code{listGwa} and \code{listPrs} functions and the 
+    functions \code{allPvalues}, \code{allEffects} and
+    \code{allPrsbetas} can be used to retrieve a list of
+    all the analyses results.
 }
 
-\section{Constructor}{
-
-  SummarizedExperiment instances are constructed using the
-  \code{SummarizedExperiment} function documented in
-  \code{?\link{RangedSummarizedExperiment}}.
-
+\section{Constructor} {
+    GWASExperiment instances are constructed using the
+    \code{GWASExperiment} function with arguments outlined 
+    above.
 }
 
-\section{Accessors}{
+\section{Accessors} {
+    In the following code snippets, \code{x} is a GWASExperiment
+    object.
 
-  In the following code snippets, \code{x} is a SummarizedExperiment
-  object.
-
-  \describe{
-
-    \item{\code{assays(x)}, \code{assays(x) <- value}:}{Get or set the
-      assays. \code{value} is a \code{list} or \code{SimpleList}, each
-      element of which is a matrix with the same dimensions as
-      \code{x}.}
-
-    \item{\code{assay(x, i)}, \code{assay(x, i) <- value}:}{A convenient
-      alternative (to \code{assays(x)[[i]]}, \code{assays(x)[[i]] <-
-      value}) to get or set the \code{i}th (default first) assay
-      element. \code{value} must be a matrix of the same dimension as
-      \code{x}, and with dimension names \code{NULL} or consistent with
-      those of \code{x}.}
-
-    \item{\code{assayNames(x)}, \code{assayNames(x) <- value}:}{Get or
-     set the names of \code{assay()} elements.}
+\describe{
+    \item{\code{genotypes(x)}, \code{genotypes(x) <- value}:}{Get 
+    or set the genotypes. \code{value} is a \code{SnpMatrix} or 
+    \code{bigSNP} with the same dimensions as \code{x}.}
 
     \item{\code{rowData(x, use.names=TRUE)}, \code{rowData(x) <- value}:}{
       Get or set the row data. \code{value} is a \link{DataFrame} object.}

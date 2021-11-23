@@ -284,7 +284,7 @@ combineMaxp <- function(p) {
 }
 
 fisherMethod <- function(pvals,zerofix=NULL) {
-    stopifnot(all(pvals>=0 & all(pvals<=1))
+    stopifnot(all(pvals>=0 & all(pvals<=1)))
     
     if (is.null(dim(pvals)))
         stop("pvals must have a dim attribute")
