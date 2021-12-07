@@ -259,18 +259,45 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
     }
 
     # Write the PLINK files that we will work with!
-    write.plink(
-        file.base=outBase,
-        snps=gen[,!na],
-        pedigree=fam$pedigree,
-        id=rownames(fam),
-        father=fam$father,
-        mother=fam$mother,
-        sex=fam$sex,
-        phenotype=phenoVec,
-        chromosome=map$chromosome[!na],
-        position=map$position[!na],
-        allele.1=map$allele.1[!na],
-        allele.2=map$allele.2[!na]
-    )
+    if (perChr) {
+        gen <- gen[,!na]
+        map <- map[!na,,drop=FALSE]
+        S <- split(seq_len(nrow(map)),map$chromosome)
+        if (!any(grepl("chr",names(S))))
+            names(S) <- paste("chr",names(S),sep="")
+        lapply(names(S),function(n,R) {
+            disp("===== Writing files for chromosome ",
+                gsub("chr","",n,ignore.case=TRUE))
+            ii <- R[[n]]
+            write.plink(
+                file.base=paste0(outBase,"_",n),
+                snps=gen[,ii],
+                pedigree=fam$pedigree,
+                id=rownames(fam),
+                father=fam$father,
+                mother=fam$mother,
+                sex=fam$sex,
+                phenotype=phenoVec,
+                chromosome=map$chromosome[ii],
+                position=map$position[ii],
+                allele.1=map$allele.1[ii],
+                allele.2=map$allele.2[ii]
+            )
+        },S)
+    }
+    else
+        write.plink(
+            file.base=outBase,
+            snps=gen[,!na],
+            pedigree=fam$pedigree,
+            id=rownames(fam),
+            father=fam$father,
+            mother=fam$mother,
+            sex=fam$sex,
+            phenotype=phenoVec,
+            chromosome=map$chromosome[!na],
+            position=map$position[!na],
+            allele.1=map$allele.1[!na],
+            allele.2=map$allele.2[!na]
+        )
 }

@@ -536,44 +536,6 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         ldb=NULL,out=paste0("prsice_out_",runId),runid=runId,gb=gb))
 }
 
-.validateWorkspacePath <- function(path,tool="tool") {
-    # Various path options
-    if (!is.null(path)) {
-        if (!is.character(path)) {
-            warning("The desired ",tool," workspace must be a valid string! ",
-                "Setting to NULL for autocreation",immediate.=TRUE)
-            path <- NULL
-        }
-        else {
-            if (!dir.exists(path)) {
-                #if (!interactive()) # Just create...
-                    dir.create(path,recursive=TRUE)
-                #else {
-                #    # No disp here
-                #    message("The desired ",tool," workspace does not exist!")
-                #    confirm <- menu(c("Yes","No"),
-                #        title=sprintf(paste0(tool," workspace is going to be ",
-                #            "created at %s. Do you agree?"),path))
-                #    if (confirm == 1)
-                #        dir.create(path,recursive=TRUE)
-                #    else
-                #        stop(paste0(tool," cannot be executed without a valid ",
-                #            "workspace.\nPlease agree or use the 'path' ",
-                #            "argument in the respective function."))
-                #}
-            }
-        }
-    }
-    else {
-        path <- file.path(tempdir(),paste0(tool,"_",.randomString()))
-        dir.create(path,recursive=TRUE,showWarnings=FALSE)
-    }
-    
-    # Finally
-    disp(tool," operations will be executed at ",path)
-    return(path)
-}
-
 .getGwaLinArgPrior <- function() {
     return(c("snptest","statgen","plink","glm","rrblup"))
 }
