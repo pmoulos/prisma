@@ -833,9 +833,6 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 }
 
 .validateResponseAndCovariates <- function(p,res,cvs=NULL) {
-    if (res %in% cvs)
-        stop("Response variable ",res," cannot be also a covariate!")
-            
     if (is.numeric(res))
         res <- names(p)[res] # Will be NA if out of bounds
     if (!(res %in% names(p)))
@@ -849,6 +846,9 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
         stop("Covariates ",paste0(nf,collapse=", ")," could not be found in ",
             "the input GWASExperiment phenotypes!")
     }
+    
+    if (res %in% cvs)
+        stop("Response variable ",res," cannot be also a covariate!")
     
     return(list(res=res,cvs=cvs))
 }

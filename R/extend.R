@@ -13,7 +13,7 @@
 # Ideally, some kind of break and continue mechanism should be in place like
 # in prs pipelines
 extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
-    continue=FALSE,cleanup=c("none","intermediate","all"),rc=NULL) {
+    continue=FALSE,cleanup=c("none","intermediate","all"),runId=NULL,rc=NULL) {
     if (!.toolAvailable("gtool"))
         stop("GTOOL program not found in the system!")
     if (!.toolAvailable("impute"))
@@ -35,17 +35,21 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         stop("Cannot extend the dataset without location info!")
     
     # We need a runid for potentially working in the same space
-    runid <- .randomString()
+    if (is.null(runId))
+        runId <- .randomString()
+    
+    # Better to create a runId subdir to do the processing instead of attaching
+    # to filename and move the final beds outside this in the end
+    wspaceBak <- wspace
+    wspace <- file.path(wspace,runId)
+    if (!dir.exists(wspace))
+        dir.create(wspace,recursive=TRUE,mode="0755",showWarnings=FALSE)
     
     # Prepare the main input files to impute per chromosome
-    gensam <- .prepareInputFilesForImpute2(obj,runid,wspace,rc)
+    gensam <- .prepareInputFilesForImpute2(obj,wspace,rc)
     genFiles <- gensam$gen
     sampleFiles <- gensam$sam
     # These must be named BASE_chrZ.gen, BASE_chrZ.sam
-    
-    # writePlink writes with split map chromosome order
-    S <- split(map,map$chromosome)
-    chrs <- names(genFiles) <- names(sampleFiles) <- names(S)
     
     # Create the imputation intervals
     chunkList <- .makeImputationIntervals(map,intSize)
@@ -53,12 +57,20 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     # Impute2 path
     itool <- .getToolPath("impute")
     
+    chrs <- unique(map$chromosome)
     disp("\n",.symbolBar("#",64))
     disp("External imputation on ",length(chrs)," chromosomes")
     disp(.symbolBar("#",64))
-    devNull <- lapply(chrs,function(x) {
-        disp(.symbolBar("=",64))
-        disp("\nImputing on chromosome ",x)
+    
+    # Pre create the chromosome directories
+    chrDirs <- file.path(wspace,"chromosomes",chrs)
+    toCreate <- chrDirs[!dir.exists(chrDirs)]
+    for (d in toCreate)
+        dir.create(d,recursive=TRUE,mode="0755",showWarnings=FALSE)
+    
+    null <- lapply(chrs,function(x) {
+        disp("\n",.symbolBar("=",64))
+        disp("Imputing on chromosome ",x)
         disp(.symbolBar("=",64))
         
         # Input and intervals
@@ -71,28 +83,44 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     # After finish, harvest interval results for each chromosome
     disp("\nImputation finished, re-merging imputation intervals")
-    impFiles <- .summarizeImpute2Run(wspace) # It's a named list!
+    impList <- .summarizeImpute2Run(wspace) # Contains named lists
+    impFiles <- impList$gen
+    infoFiles <- impList$info
     
     # And convert back to PLINK
-    .postProcessImpute2Files(impFiles,sampleFiles,rc=NULL)
+    .postProcessImpute2Files(impFiles,sampleFiles,rc=rc)
     
     # At this point we must be having BASE_chrZ.imputed file triplets
     # These must be moved somewhere? Covnerted to GWASExperiment?
     # Read back to GWASExperiment
     disp("\nInterval merging finished, reading back to GWASExperiment")
-    ibedFiles <- dir(wspace,pattern="\\.imputed\\.bed$",full.names=TRUE)
+    ibedFiles <- dir(file.path(wspace,"output"),pattern=".imputed.bed$",
+        full.names=TRUE)
     pheno <- phenotypes(obj)
     objList <- cmclapply(ibedFiles,function(x) {
         x <- sub("\\.bed$","",x)
+        y <- file.path(wspace,"chromosomes",paste0(basename(x),".info"))
+        
         # GDS files will not be needed further though
-        return(importGWAS(
+        gwe <- importGWAS(
             input=x,
             phenos=pheno,
             backend=metadata(obj)$backend,
             genome=genome(obj),
             gdsfile=file.path(dirname(x),paste0(basename(x),".gds")),
             gdsOverwrite=FALSE
-        ))
+        )
+        
+        # INFO score should also be attached
+        disp("Attaching also info scores")
+        tmp <- read.delim(y)
+        rownames(tmp) <- tmp$rs_id
+        tmp <- tmp[rownames(gwe),]
+        g <- gfeatures(gwe)
+        g$info <- tmp$info
+        gfeatures(gwe) <- g
+        
+        return(gwe)
     },rc=rc)
     
     # Now we have to cbind and order
@@ -102,14 +130,18 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     theOrder <- order(tmp$chromosome,tmp$position)
     impObj <- impObj[theOrder,]
     
+    # We need to restore original workspace, without runId as it may have to be
+    # deleted overall
+    wspace <- wspaceBak
     switch(cleanup,
         none = {
-            disp("All imputation pipeline output can be found at ",wspace)
+            disp("All imputation pipeline output can be found at ",
+                file.path(wspace,runId))
         },
         intermediate = {
             disp("Cleaning up temporary interval imputation files and other ",
                 "intermediate files from ",wspace)
-            .imputePartialCleanup(wspace,runid)
+            .imputePartialCleanup(wspace,runId)
         },
         all = {
             disp("Cleaning up all imputation pipeline files!")
@@ -117,38 +149,40 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         }
     )
     
-    disp("Done!\n")
+    disp("Done! The run id was ",runId,"\n")
     
     return(impObj)
 }
 
-.imputePartialCleanup <- function(wspace,ri) {
-    chrdirs <- list.dirs(wspace,full.names=TRUE,recursive=FALSE)
-    unlink(chrdirs,recursive=TRUE,force=TRUE)
-    
-    # Rename final .ped, .bim, .fam to remove run id
-    beds <- dir(wspace,pattern=paste0("^",ri,".*.imputed.bed$"),full.names=TRUE)
-    bims <- dir(wspace,pattern=paste0("^",ri,".*.imputed.bim$"),full.names=TRUE)
-    fams <- dir(wspace,pattern=paste0("^",ri,".*.imputed.fam$"),full.names=TRUE)
-    if (length(beds) > 0) {
-        for (be in beds)
-            file.rename(from=be,to=sub(paste0(ri,"_"),"",be))
-    }
-    if (length(bims) > 0) {
-        for (bi in bims)
-            file.rename(from=bi,to=sub(paste0(ri,"_"),"",bi))
-    }
-    if (length(fams) > 0) {
-        for (fa in fams)
-            file.rename(from=fa,to=sub(paste0(ri,"_"),"",fa))
+.imputePartialCleanup <- function(wspace,rid) {
+    ..intMoveUp <- function(x,r) {
+        if (length(x) > 0) {
+            for (y in x) {
+                to <- sub(paste0(r,"_"),"",y)
+                to <- file.path(dirname(to),"..",basename(to))
+                file.rename(from=y,to=to)
+            }
+        }
     }
     
-    tmps <- dir(wspace,pattern=paste0("^",ri),full.names=TRUE)
-    if (length(tmps) > 0)
-        unlink(tmps,recursive=TRUE,force=TRUE)
+    wspace <- file.path(wspace,rid)
+    unlink(file.path(wspace,"input"),recursive=TRUE,force=TRUE)
+    unlink(file.path(wspace,"chromosomes"),recursive=TRUE,force=TRUE)
+    
+    beds <- dir(file.path(wspace,"output"),
+        #pattern=paste0("^",rid,".*.imputed.bed$"),full.names=TRUE)
+        pattern=".imputed.bed$",full.names=TRUE)
+    bims <- dir(file.path(wspace,"output"),
+        pattern=".imputed.bim$",full.names=TRUE)
+    fams <- dir(file.path(wspace,"output"),
+        pattern=".imputed.fam$",full.names=TRUE)
+    ..intMoveUp(beds,rid)
+    ..intMoveUp(bims,rid)
+    ..intMoveUp(fams,rid)
+    unlink(file.path(wspace,"output"),recursive=TRUE,force=TRUE)
 }
 
-.prepareInputFilesForImpute2 <- function(obj,runid,wspace,rc=NULL) {
+.prepareInputFilesForImpute2 <- function(obj,wspace,rc=NULL) {
     ..plinkToPedCommand <- function(x,p) {
         x <- gsub("\\.bed$","",x)
         return(paste(
@@ -177,27 +211,37 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     # Export GWASExperiment as PLINK per chromosome
     disp("")
-    writePlink(obj,outBase=file.path(wspace,paste0(runid,"_plink_impute2")),
-        perChr=TRUE)
+    inputDir <- file.path(wspace,"input")
+    if (!dir.exists(inputDir))
+        dir.create(inputDir,recursive=TRUE,mode="0755",showWarnings=FALSE)
+    writePlink(obj,outBase=file.path(inputDir,"plink_impute2"),perChr=TRUE,
+        overwrite=FALSE)
     
     # Convert to PED
     disp("\nConverting BED files to PED")
-    bedFiles <- dir(wspace,pattern="\\.bed$",full.names=TRUE)
+    bedFiles <- dir(inputDir,pattern=".bed$",full.names=TRUE)
     pedOut <- unlist(cmclapply(bedFiles,function(x,p) {
-        cmd <- ..plinkToPedCommand(x,p)
-        disp("  converting ",x)
-        disp("\nExecuting:\n",cmd,level="full")
-        out <- tryCatch({
-            log <- .formatSystemOutputForDisp(capture.output({
-                system(cmd,intern=TRUE)
-            }))
-            disp("\nPLINK output is:\n",level="full")
-            disp(paste(log,collapse="\n"),"\n",level="full")
-            FALSE
-        },error=function(e) {
-            message("Caught error: ",e$message)
-            return(TRUE)
-        },finally="")
+        dest <- sub(".bed$",".ped",x)
+        if (!file.exists(dest)) {
+            cmd <- ..plinkToPedCommand(x,p)
+            disp("  converting ",x)
+            disp("\nExecuting:\n",cmd,level="full")
+            out <- tryCatch({
+                log <- .formatSystemOutputForDisp(capture.output({
+                    system(cmd,intern=TRUE)
+                }))
+                disp("\nPLINK output is:\n",level="full")
+                disp(paste(log,collapse="\n"),"\n",level="full")
+                FALSE
+            },error=function(e) {
+                message("Caught error: ",e$message)
+                return(TRUE)
+            },finally="")
+        }
+        else {
+            disp("  file ",dest," already exists! Skipping...")
+            return(FALSE)
+        }
     },plink,rc=rc))
     
     # Conversion should be sucesfull...
@@ -205,32 +249,48 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         stop("A problem occured during the conversion of BED files ",
             paste(bedFiles[pedOut],collapse=", "),". Please check!")
     
-    pedFiles <- dir(wspace,pattern="\\.ped$",full.names=TRUE)
+    pedFiles <- dir(inputDir,pattern="\\.ped$",full.names=TRUE)
     #mapFiles <- dir(wspace,pattern="\.map$")
     disp("\nConverting PED files to GEN")
     genOut <- unlist(cmclapply(pedFiles,function(x,g) {
-        cmd <- ..gtoolToGenCommand(x,g)
-        disp("  converting ",x)
-        disp("\nExecuting:\n",cmd,level="full")
-        out <- tryCatch({
-            log <- .formatSystemOutputForDisp(capture.output({
-                system(cmd,intern=TRUE)
-            }))
-            disp("\nPLINK output is:\n",level="full")
-            disp(paste(log,collapse="\n"),"\n",level="full")
-            FALSE
-        },error=function(e) {
-            message("Caught error: ",e$message)
-            return(TRUE)
-        },finally="")
+        dest <- sub(".ped$",".gen",x)
+        if (!file.exists(dest)) {
+            cmd <- ..gtoolToGenCommand(x,g)
+            disp("  converting ",x)
+            disp("\nExecuting:\n",cmd,level="full")
+            out <- tryCatch({
+                log <- .formatSystemOutputForDisp(capture.output({
+                    system(cmd,intern=TRUE)
+                }))
+                disp("\nPLINK output is:\n",level="full")
+                disp(paste(log,collapse="\n"),"\n",level="full")
+                FALSE
+            },error=function(e) {
+                message("Caught error: ",e$message)
+                return(TRUE)
+            },finally="")
+        }
+        else {
+            disp("  file ",dest," already exists! Skipping...")
+            return(FALSE)
+        }
     },gtool,rc=rc))
     
     if (any(genOut))
         stop("A problem occured during the generation of GEN files ",
             paste(pedFiles[genOut],collapse=", "),". Please check!")
     
-    genFiles <- dir(wspace,pattern="\\.gen$")
-    samFiles <- dir(wspace,pattern="\\.sample$")
+    genFiles <- dir(inputDir,pattern="\\.gen$")
+    samFiles <- dir(inputDir,pattern="\\.sample$")
+    
+    # dir-ing is unstable... We must name these vectors with chromosomes
+    # extracted from their names...
+    names(genFiles) <- unlist(lapply(strsplit(genFiles,"_"),function(s) {
+        sub(".gen","",sub("chr","",s[3]))
+    }))
+    names(samFiles) <- unlist(lapply(strsplit(samFiles,"_"),function(s) {
+        sub(".sample","",sub("chr","",s[3]))
+    }))
     
     return(list(gen=genFiles,sam=samFiles))
 }
@@ -251,12 +311,14 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     ..gtoolToPedCommand <- function(x,y,g) {
         x <- gsub("\\.imputed\\.gen$","",x)
+        xs <- file.path(dirname(x),"..","input",basename(x))
+        xp <- file.path(dirname(x),"..","output",basename(x))
         return(paste(
            paste0(g," -G \\"),
            paste0("  --g ",paste0(x,".imputed.gen")," \\"),
-           paste0("  --s ",paste0(x,".sample")," \\"),
-           paste0("  --ped ",paste0(x,".imputed.ped")," \\"),
-           paste0("  --map ",paste0(x,".imputed.map")," \\"),
+           paste0("  --s ",paste0(xs,".sample")," \\"),
+           paste0("  --ped ",paste0(xp,".imputed.ped")," \\"),
+           paste0("  --map ",paste0(xp,".imputed.map")," \\"),
            paste0("  --chr ",y),
            sep="\n"
         ))
@@ -265,24 +327,36 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     gtool <- .getToolPath("gtool")
     plink <- .getToolPath("plink")
     
+    outputDir <- file.path(dirname(impFiles[[1]]),"..","output")
+    if (!dir.exists(outputDir))
+        dir.create(outputDir,recursive=TRUE,mode="0755",showWarnings=FALSE)
+    
     # Convert GEN impute files to PED
     disp("\nConverting GEN files to PED")
     pedOut <- unlist(cmclapply(names(impFiles),function(n,g,D) {
         x <- D[[n]]
-        cmd <- ..gtoolToPedCommand(x,n,g)
-        disp("  converting ",x)
-        disp("\nExecuting:\n",cmd,level="full")
-        out <- tryCatch({
-            log <- .formatSystemOutputForDisp(capture.output({
-                system(cmd,intern=TRUE)
-            }))
-            disp("\nPLINK output is:\n",level="full")
-            disp(paste(log,collapse="\n"),"\n",level="full")
-            FALSE
-        },error=function(e) {
-            message("Caught error: ",e$message)
-            return(TRUE)
-        },finally="")
+        dest <- file.path(dirname(x),"..","output",paste0(sub(".gen$",".ped",
+            basename(x))))
+        if (!file.exists(dest)) {
+            cmd <- ..gtoolToPedCommand(x,n,g)
+            disp("  converting ",x)
+            disp("\nExecuting:\n",cmd,level="full")
+            out <- tryCatch({
+                log <- .formatSystemOutputForDisp(capture.output({
+                    system(cmd,intern=TRUE)
+                }))
+                disp("\nPLINK output is:\n",level="full")
+                disp(paste(log,collapse="\n"),"\n",level="full")
+                FALSE
+            },error=function(e) {
+                message("Caught error: ",e$message)
+                return(TRUE)
+            },finally="")
+        }
+        else {
+            disp("  file ",dest," already exists! Skipping...")
+            return(FALSE)
+        }
     },gtool,impFiles,rc=rc))
     
     if (any(pedOut))
@@ -291,23 +365,30 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     # Convert PED to BED
     disp("\nConverting PED files to BED")
-    pedFiles <- dir(dirname(impFiles[[1]]),pattern="\\.imputed\\.ped$",
-        full.names=TRUE)
+    pedFiles <- dir(file.path(dirname(impFiles[[1]]),"..","output"),
+        pattern="\\.imputed\\.ped$",full.names=TRUE)
     bedOut <- unlist(cmclapply(pedFiles,function(x,p) {
-        cmd <- ..plinkToBedCommand(x,p)
-        disp("  converting ",x)
-        disp("\nExecuting:\n",cmd,level="full")
-        out <- tryCatch({
-            log <- .formatSystemOutputForDisp(capture.output({
-                system(cmd,intern=TRUE)
-            }))
-            disp("\nPLINK output is:\n",level="full")
-            disp(paste(log,collapse="\n"),"\n",level="full")
-            FALSE
-        },error=function(e) {
-            message("Caught error: ",e$message)
-            return(TRUE)
-        },finally="")
+        dest <- sub(".ped$",".bed",x)
+        if (!file.exists(dest)) {
+            cmd <- ..plinkToBedCommand(x,p)
+            disp("  converting ",x)
+            disp("\nExecuting:\n",cmd,level="full")
+            out <- tryCatch({
+                log <- .formatSystemOutputForDisp(capture.output({
+                    system(cmd,intern=TRUE)
+                }))
+                disp("\nPLINK output is:\n",level="full")
+                disp(paste(log,collapse="\n"),"\n",level="full")
+                FALSE
+            },error=function(e) {
+                message("Caught error: ",e$message)
+                return(TRUE)
+            },finally="")
+        }
+        else {
+            disp("  file ",dest," already exists! Skipping...")
+            return(FALSE)
+        }
     },plink,rc=rc))
     
     # Conversion should be sucesfull...
@@ -318,20 +399,46 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
 
 # This function expects to find a directory with one subdir for each chromosome
 # and in that subdir, results for each interval. We simply cat files.
-.summarizeImpute2Run <- function(wspace) {
+.summarizeImpute2Run <- function(wspace,rc=NULL) {
     # We expect only to find a dir per chromosome, nothing else!
-    chrDirs <- list.dirs(wspace,full.names=TRUE,recursive=FALSE)
+    chrDirs <- list.dirs(file.path(wspace,"chromosomes"),full.names=TRUE,
+        recursive=FALSE)
     # The outout filename must be the part before ___interval___
+    # We need to summarize both genotype and info files for INFO score
     sumGens <- cmclapply(chrDirs,function(x) {
-        disp("Summarizing imputation files for chromosome ",x)
+        disp("Summarizing imputation files for chromosome ",basename(x))
         filesToCat <- dir(x,pattern=".gen$",full.names=TRUE)
         mainName <- strsplit(basename(filesToCat[1]),"___")[[1]][1]
-        mainFile <- file.path(wspace,paste0(mainName,".imputed.gen"))
-        file.append(mainFile,filesToCat)
+        mainFile <- file.path(wspace,"chromosomes",
+            paste0(mainName,".imputed.gen"))
+        if (!file.exists(mainFile))
+            file.append(mainFile,filesToCat)
+        else
+            disp("  file ",mainFile," exists! Skipping...")
         return(mainFile)
     },rc=rc)
-    names(sumGens) <- basename(chrDirs)
-    return(sumGens) # Or may later just dir them to proceed
+    
+    sumInfos <- lapply(chrDirs,function(x) {
+        disp("Summarizing info files for chromosome ",basename(x))
+        filesToCat <- dir(x,pattern=".gen_info$",full.names=TRUE)
+        mainName <- strsplit(basename(filesToCat[1]),"___")[[1]][1]
+        mainFile <- file.path(wspace,"chromosomes",
+            paste0(mainName,".imputed.info"))
+        if (!file.exists(mainFile)) {
+            infoList <- cmclapply(filesToCat,function(z) {
+                return(read.table(z,header=TRUE,quote=""))  
+            },rc=rc)
+            toWrite <- do.call("rbind",infoList)
+            write.table(toWrite,file=mainFile,sep="\t",quote=FALSE,
+                row.names=FALSE)
+        }
+        else
+            disp("  file ",mainFile," exists! Skipping...")
+        return(mainFile)
+    })
+    
+    names(sumGens) <- names(sumInfos) <- basename(chrDirs)
+    return(list(gen=sumGens,info=sumInfos))
 }
 
 # Impute expects the following patterns in a specific folder:
@@ -355,11 +462,11 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     lFile <- file.path(refSpace,paste0("1000GP_Phase3_chr",chr,".legend.gz"))
     
     # Output file base and dir per chromosome
-    chrDir <- file.path(wspace,chr)
-    if (!dir.exists(chrDir))
-        dir.create(chrDir,recursive=TRUE,mode="0755",showWarnings=FALSE)
+    chrDir <- file.path(wspace,"chromosomes",chr)
+    #if (!dir.exists(chrDir))
+    #    dir.create(chrDir,recursive=TRUE,mode="0755",showWarnings=FALSE)
     oFileBase <- file.path(chrDir,sub("(.*)\\..*$","\\1",basename(g)))
-    g <- file.path(wspace,basename(g))
+    g <- file.path(wspace,"input",basename(g))
     
     # Create a list of intervals for parallel
     ints <- as.list(as.data.frame(t(ints)))
@@ -373,9 +480,10 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         
         disp("Imputing for interval ",intext," output at ",oFile)
         
-        if (!file.exists(oFile)) { # For crash restart support later
+        #if (!file.exists(oFile)) { # For crash restart support later
+        if (!.intervalComplete(intext,chrDir)) {
             cmd <- paste(
-               paste0(exec," -m \\"),
+               paste0(exec," \\"),
                paste0("  -m ",mFile," \\"),
                paste0("  -h ",hFile," \\"),
                paste0("  -l ",lFile," \\"),
@@ -473,6 +581,16 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     }
 }
 
+.intervalComplete <- function(int,chrDir) {
+    progFile <- file.path(chrDir,paste0(".",int,".json"))
+    if (!file.exists(progFile))
+        return(FALSE)
+    else {
+        curr <- fromJSON(progFile)
+        return(curr$done)
+    }
+}
+
 #~ impute2 \
 #~   -m /impute/1000GP_Phase3/genetic_map_chr1_combined_b37.txt \
 #~   -h /impute/1000GP_Phase3/1000GP_Phase3_chr1.hap.gz \
@@ -526,3 +644,29 @@ download1000GP3 <- function(path=NULL) {
         return(NULL)
     }
 }
+
+#~ .imputePartialCleanup <- function(wspace,ri) {
+#~     chrdirs <- list.dirs(wspace,full.names=TRUE,recursive=FALSE)
+#~     unlink(chrdirs,recursive=TRUE,force=TRUE)
+    
+#~     # Rename final .ped, .bim, .fam to remove run id
+#~     beds <- dir(wspace,pattern=paste0("^",ri,".*.imputed.bed$"),full.names=TRUE)
+#~     bims <- dir(wspace,pattern=paste0("^",ri,".*.imputed.bim$"),full.names=TRUE)
+#~     fams <- dir(wspace,pattern=paste0("^",ri,".*.imputed.fam$"),full.names=TRUE)
+#~     if (length(beds) > 0) {
+#~         for (be in beds)
+#~             file.rename(from=be,to=sub(paste0(ri,"_"),"",be))
+#~     }
+#~     if (length(bims) > 0) {
+#~         for (bi in bims)
+#~             file.rename(from=bi,to=sub(paste0(ri,"_"),"",bi))
+#~     }
+#~     if (length(fams) > 0) {
+#~         for (fa in fams)
+#~             file.rename(from=fa,to=sub(paste0(ri,"_"),"",fa))
+#~     }
+    
+#~     tmps <- dir(wspace,pattern=paste0("^",ri),full.names=TRUE)
+#~     if (length(tmps) > 0)
+#~         unlink(tmps,recursive=TRUE,force=TRUE)   
+#~ }

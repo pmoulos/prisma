@@ -1,19 +1,30 @@
-mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),gdsfile=NULL,
-    writegds=FALSE) {
+# We must adjust the procedure for data derived from *exactly* the same arrays
+# and manifest files etc.
+
+mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
+    gdsfile=NULL,writegds=FALSE) {
     # Input must be GWASExperiment
     if (!is(gwe1,"GWASExperiment") || !is(gwe2,"GWASExperiment"))
         stop("Both objects to be merged must be GWASExperiment objects!")
-
-    # Check if gdsfile location provided...
-    if (is.null(gdsfile)) {
-        gdsfile <- tempfile()
-        warning("It is advised to provide a location for the creation of the ",
-            "new GDS file for better control...\nPlacing in temporary ",gdsfile,
-            immediate.=TRUE)
-    }
-    else if (!is.character(gdsfile))
-        stop("gdsfile argument must be a valid path!")
     
+    # Check simple allele reverse resolution - reference based is safe when
+    # data are derived e.g. from the *same* arrays
+    if (!is.null(mafResolve) && !is.numeric(mafResolve))
+        stop("mafResolve must be either NULL or numeric!")
+    if (is.numeric(mafResolve) && !(mafResolve %in% c(1,2)))
+        stop("When numeric, mafResolve must be either 1 or 2!")
+    
+    # Check if gdsfile location provided...
+    if (writegds) {
+        if (is.null(gdsfile)) {
+            gdsfile <- tempfile()
+            warning("It is advised to provide a location for the creation ",
+                "of the new GDS file for better control...\nPlacing in ",
+                "temporary ",gdsfile,immediate.=TRUE)
+        }
+        else if (!is.character(gdsfile))
+            stop("gdsfile argument must be a valid path!")
+    }
     
     output <- output[1]
     .checkTextArgs("Output SNPs (output)",output,c("common","all"),
@@ -82,8 +93,17 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),gdsfile=NULL,
     if (length(toResolve) > 0) { # Further investigation
         disp("  Found ",length(toResolve)," SNPs with potentially reversed ",
             "minor/major alleles")
-        disp("    Trying to resolve...")
-        toReverse <- .resolveMinorAlleles(rownames(alleles)[toResolve],alleles)
+        if (is.null(mafResolve)) {
+            disp("    Trying to resolve online...")
+            toReverse <- .resolveMinorAlleles(rownames(alleles)[toResolve],
+                alleles)
+        }
+        else {
+            disp("    Resolving using dataset ",mafResolve," as reference...")
+            toReverse <- matrix(TRUE,length(rownames(alleles)[toResolve]),2)
+            rownames(toReverse) <- rownames(alleles)[toResolve]
+            toReverse[,mafResolve] <- FALSE
+        }
         
         # Essentially the content of toReverse says:
         # If column 1 is TRUE, then reverse alleles in dataset 1 - not strand!
@@ -103,9 +123,14 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),gdsfile=NULL,
             # toResolve will be later used also for genotype reverse
 
             # Then proceed with 1st round of strand-flip. Which dataset should  
-            # be flipped? The one with the most reversed alleles
-            tab <- apply(toReverse,2,table)
-            flipInd <- which(tab["TRUE",]==max(tab["TRUE",]))
+            # be flipped? The one with the most reversed alleles OR the one
+            # which is not reference
+            if (is.null(mafResolve)) {
+                tab <- apply(toReverse,2,table)
+                flipInd <- which(tab["TRUE",]==max(tab["TRUE",]))
+            }
+            else
+                flipInd <- ifelse(mafResolve==1,2,1)
         }
         else # If cannot be decided like that, reverse the smaller
             flipInd <- ifelse(nrow(gwe2) > nrow(gwe1),1,2)

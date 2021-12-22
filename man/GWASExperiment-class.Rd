@@ -209,10 +209,10 @@
 
     ## Quick colData access
 
-    \S4method{$}{SummarizedExperiment}(x, name)
-    \S4method{$}{SummarizedExperiment}(x, name) <- value
-    \S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...)
-    \S4method{[[}{SummarizedExperiment,ANY,missing}(x, i, j, ...) <- value
+    \S4method{$}{GWASExperiment}(x, name)
+    \S4method{$}{GWASExperiment}(x, name) <- value
+    \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...)
+    \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...) <- value
 
 
     ## Subsetting
@@ -461,72 +461,149 @@
 
 \section{Accessors} {
     In the following code snippets, \code{x} is a GWASExperiment
-    object.
+    object. We do not describe standard \link{SummarizedExperiment}
+    accessors such as \code{rowData}, \code{colData}, \code{dim}
+    etc. Details can be found in the respective man pages. General
+    patterns such as that row data must have \code{NULL} or identical
+    row names as with the main matrix object (here, the genotypes)
+    are assumed.
 
 \describe{
     \item{\code{genotypes(x)}, \code{genotypes(x) <- value}:}{Get 
     or set the genotypes. \code{value} is a \code{SnpMatrix} or 
     \code{bigSNP} with the same dimensions as \code{x}.}
 
-    \item{\code{rowData(x, use.names=TRUE)}, \code{rowData(x) <- value}:}{
-      Get or set the row data. \code{value} is a \link{DataFrame} object.}
-
-    \item{\code{colData(x)}, \code{colData(x) <- value}:}{Get or set the
-      column data. \code{value} is a \link{DataFrame} object. Row
-      names of \code{value} must be NULL or consistent with the existing
-      column names of \code{x}.}
-
-    \item{\code{metadata(x)}, \code{metadata(x) <- value}:}{Get or set
-      the experiment data. \code{value} is a \code{list} with arbitrary
-      content.}
-
-    \item{\code{dim(x)}:}{Get the dimensions (features of interest x samples)
-      of the SummarizedExperiment.}
-
-    \item{\code{dimnames(x)}, \code{dimnames(x) <- value}:}{Get or set
-      the dimension names. \code{value} is usually a list of length 2,
-      containing elements that are either \code{NULL} or vectors of
-      appropriate length for the corresponding dimension. \code{value}
-      can be \code{NULL}, which removes dimension names. This method
-      implies that \code{rownames}, \code{rownames<-}, \code{colnames},
-      and \code{colnames<-} are all available.}
-
-  }
+    \item{\code{gfeatures(x, withDimnames=TRUE)}, 
+    \code{gfeatures(x) <- value}:}{Get or set the feature data (similar
+    to row data in a SummarizedExperiment). \code{value} is a 
+    \code{\link{DataFrame}} or a \code{\link{data.frame}} object.}
+    
+    \item{\code{gsamples(x, withDimnames=TRUE)}, 
+    \code{gsamples(x) <- value}:}{Get or set the sample data (similar
+    to column data in a SummarizedExperiment). \code{value} is a 
+    \code{\link{DataFrame}} or a \code{\link{data.frame}} object.}
+    
+    \item{\code{phenotypes(x, withDimnames=TRUE)}, 
+    \code{phenotypes(x) <- value}:}{Get or set the phenotypic data
+    for each sample. \code{value} is a \code{\link{data.frame}} 
+    object with as many rows as the number of samples and associated
+    phenotypes in the experiment.}
+    
+    \item{\code{pvalues(x, response = 1L, covariates = NULL, 
+    npcs = 0, withDimnames = TRUE)}, pvalues(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    Get or set the p-values after the application of one or more
+    genotype-phenotype association tests. \code{response} is the
+    phenotype for which the association test is performed. It can be
+    a numeric or integer value denoting the column number in the 
+    phenotypes data frame which is associated with x \code{value},
+    or a character in which case it's the name of the phenotype and
+    corresponds to a column name of the aforementioned data frame. 
+    It defaults to the first available phenotype. \code{covariates}
+    are the phenotypic covariates to be included in an association 
+    model and must be available in the phenotypes data frame. It can
+    be either a numeric/integer vector denoting column numbers or
+    a character vector denoting column names of the phenotypes data
+    frame. It defaults to \code{NULL} for no addition of covariates,
+    other than the main phenotype (\code{response}). \code{npcs}
+    denotes the number of PCs to include in the model as additional
+    covariates to capture potential population substructures. It
+    defaults to \code{0} for no PCs as additional covariates. For
+    \code{withDimnames}, see above e.g. \code{gfeatures}. The
+    reason for this accessor to have additional arguments
+    (\code{response}, \code{covariates}, \code{npcs}) is that
+    \code{x} may have multiple association test results attached
+    to it, and these variable offer a way of unique access to
+    them. Finally, \code{value} is a numeric matrix with p-values
+    for each SNP. This matrix has as many columns as the different
+    test types performed (e.g. SNPTEST and statgenGWAS) and are
+    named accordingly.}
+    
+    \item{\code{allPvalues(x, i = seq_len(ncol(x)))} will
+    retrieve (access-only) either all the p-value matrices
+    attached to \code{x} or as many as requested by \code{i},
+    assuming at least \code{i} tests have been performed.}
+    
+    \item{\code{effects(x, response = 1L, covariates = NULL, 
+    npcs = 0, withDimnames = TRUE)}, effects(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    Get or set the SNP effects with respect to the phenotype after 
+    the application of one or more genotype-phenotype association 
+    tests. The effects are essentially regression coefficients or
+    odds ratios for binomial regression models. \code{response}, 
+    \code{covariates} and \code{npcs} are as in the \code{pvalues}
+    accessor. \code{value} is a numeric matrix with effects for
+    each SNP. This matrix has as many columns as the different test
+    types performed (e.g. SNPTEST and statgenGWAS) and are named
+    accordingly.}
+    
+    \item{\code{allEffects(x, i = seq_len(ncol(x)))} will
+    retrieve (access-only) either all the effect matrices
+    attached to \code{x} or as many as requested by \code{i},
+    assuming at least \code{i} tests have been performed.}
+    
+    \item{\code{prsbetas(x, response = 1L, covariates = NULL, 
+    npcs = 0, withDimnames = TRUE)}, prsbetas(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    Get or set the beta coefficients (or odd ratios) effects 
+    derived after the application of a Polygenic Risk Scores
+    algorithm, with respect to the phenotype tested with one or
+    more of the association tests. Essentially, the PRS betas are
+    the regression coefficients for the SNPs participating in a
+    PRS either corrected in the case of effect shrinkage algorithms
+    (e.g. lassosum), or as returned by the association test.
+    \code{response}, \code{covariates} and \code{npcs} are as in 
+    the \code{pvalues} accessor. \code{value} is a numeric matrix 
+    with effects for each SNP participating in a PRS candidate and
+    0 otherwise. This matrix has as many columns as the different 
+    PRS algorithms executed on \code{x} and are named accordingly.}
+    
+    \item{\code{allPrsbetas(x, i = seq_len(ncol(x)))} will
+    retrieve (access-only) either all the PRS beta matrices
+    attached to \code{x} or as many as requested by \code{i},
+    assuming at least \code{i} tests have been performed.}
+    
+    \item{\code{genome(x), \code{genome(x) <- value}:}{Get or set
+    the genome build where the features (SNPs, other variations)
+    are mapped to. Typically, one of \code{"hg19"} or \code{"hg38"}
+    as the class is designed mainly for human data. Other genomes
+    may be provided, but for these human builts, other 
+    functionalities are also supported such as SNP information
+    retrieval from dbSNP and/or Ensembl, and also enrichment of
+    PGS score files.}
+    
+    \item{\code{gdsfile(x), \code{gdsfile(x) <- value}:}{Get or set
+    the supporting GDS file location. This is required by the 
+    package SNPRelate to perform certain functionalities such as
+    Linkage Disequilibrium (LD) pruning, Identity By Descent (IBD)
+    filtering and others. If not provided, these functionalities
+    will not be available.}
+    
+    \item{\code{filterRecord(x), \code{filterRecord(x) <- value}:}{
+    Get or set a data frame holding a record of the filters applied
+    to \code{x}, the cutoff values and the filtering results (i.e.
+    how many SNPs where filtered). This data frame has a specific
+    format and violating will cause an error. Typically, users will
+    only access the filter records. To see the structure of this
+    data frame, call \code{filterRecord(x)}.}
+    
+    \item{\code{pcaCovariates(x), \code{pcaCovariates(x) <- value}:}{
+    Get or set the PCA covariates that capture underlying population
+    stratification structures. The PCA covariates are typically
+    calculated using the \code{\link{calcPcaCovars}} function with
+    one of the supporting methods within the package. Users will
+    usually only access the PCA covariates while setting them using
+    the \code{\link{calcPcaCovars}} function.}
 }
 
 \section{Subsetting}{
-
-  In the code snippets below, \code{x} is a SummarizedExperiment object.
-
-  \describe{
-
-    \item{\code{x[i,j]}, \code{x[i,j] <- value}:}{Create or replace a
-      subset of \code{x}. \code{i}, \code{j} can be \code{numeric},
-      \code{logical}, \code{character}, or \code{missing}. \code{value}
-      must be a SummarizedExperiment object with dimensions,
-      dimension names, and assay elements consistent with the subset
-      \code{x[i,j]} being replaced.}
-
-    \item{\code{subset(x, subset, select)}:}{Create a subset of \code{x}
-      using an expression \code{subset} referring to columns of
-      \code{rowData(x)} and / or \code{select} referring to column names
-      of \code{colData(x)}.}
-
-  }
-
-  Additional subsetting accessors provide convenient access to
-  \code{colData} columns
-
-  \describe{
-
-    \item{\code{x$name}, \code{x$name <- value}}{Access or replace
-    column \code{name} in \code{x}.}
-
-    \item{\code{x[[i, ...]]}, \code{x[[i, ...]] <- value}}{Access or
-    replace column \code{i} in \code{x}.}
-
-  }
-
+    The subsetting operations are as described in the respective
+    section of the \link{SummarizedExperiment} help page. There 
+    are restrictions in the case of a GWASExperiment as in the
+    case of replacement, the data types stored in its slots must
+    be compatible (i.e. SnpMatrix, bigSNP objects for genotypes 
+    and DataFrame, data.frame objects for associated genotype and
+    sample data).
 }
 
 \section{Combining}{

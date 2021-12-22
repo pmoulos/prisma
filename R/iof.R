@@ -37,8 +37,7 @@
 # input may be a prefix of bim, bed, fam or a list with each
 importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
     selection=NULL,genome=NA_character_,alleleOrder=c("plink","reverse"),
-    gdsfile=ifelse(backend=="snpStats",tempfile(),NA),gdsOverwrite=TRUE) {
-    
+    gdsfile=NULL,gdsOverwrite=TRUE) {
     backend <- backend[1]
     alleleOrder <- alleleOrder[1]
     if (!(backend %in% c("snpStats","bigsnpr")))
@@ -51,10 +50,12 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             stop("Bioconductor package snpStats is required!")
         if (!requireNamespace("SNPRelate"))
             stop("Bioconductor package SNPRelate is required!")
-        if (is.na(gdsfile) || !is.character(gdsfile)) {
+        if (is.null(gdsfile) || !is.character(gdsfile)) {
             warning("A valid path to store GDS file for filtering is required!",
-                " Assuming default (tempfile())...")
-            gdsfile <- tempfile()
+                " Assuming default...",immediate.=TRUE)
+            gdsfile <- file.path(dirname(input[[1]]),
+                sub("(.bed|.bim|.fam)$","",basename(input[[1]]),
+                    ignore.case=TRUE))
         }
     }
     if (backend == "bigsnpr" && !requireNamespace("snpStats"))
@@ -186,7 +187,7 @@ imputeGWAS <- function(obj,mode=c("single","split"),failed=c("scrime","none"),
 }
 
 writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
-    reverse=FALSE,perChr=FALSE) {
+    reverse=FALSE,perChr=FALSE,overwrite=TRUE) {
     if (!is(obj,"GWASExperiment"))
         stop("The input object (obj) must be a GWASExperiment object!")
     if (is.null(outBase))
@@ -268,36 +269,44 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
         lapply(names(S),function(n,R) {
             disp("===== Writing files for chromosome ",
                 gsub("chr","",n,ignore.case=TRUE))
-            ii <- R[[n]]
+            if (file.exists(paste0(outBase,"_",n,".bed")) && !overwrite)
+                disp("  fileset ",paste0(outBase,"_",n)," exists! Skipping...")
+            else {
+                ii <- R[[n]]
+                write.plink(
+                    file.base=paste0(outBase,"_",n),
+                    snps=gen[,ii],
+                    pedigree=fam$pedigree,
+                    id=rownames(fam),
+                    father=fam$father,
+                    mother=fam$mother,
+                    sex=fam$sex,
+                    phenotype=phenoVec,
+                    chromosome=map$chromosome[ii],
+                    position=map$position[ii],
+                    allele.1=map$allele.1[ii],
+                    allele.2=map$allele.2[ii]
+                )
+            }            
+        },S)
+    }
+    else
+        if (file.exists(paste0(outBase,".bed")) && !overwrite)
+            disp("  fileset ",outBase," exists! Skipping...")
+        else {
             write.plink(
-                file.base=paste0(outBase,"_",n),
-                snps=gen[,ii],
+                file.base=outBase,
+                snps=gen[,!na],
                 pedigree=fam$pedigree,
                 id=rownames(fam),
                 father=fam$father,
                 mother=fam$mother,
                 sex=fam$sex,
                 phenotype=phenoVec,
-                chromosome=map$chromosome[ii],
-                position=map$position[ii],
-                allele.1=map$allele.1[ii],
-                allele.2=map$allele.2[ii]
+                chromosome=map$chromosome[!na],
+                position=map$position[!na],
+                allele.1=map$allele.1[!na],
+                allele.2=map$allele.2[!na]
             )
-        },S)
-    }
-    else
-        write.plink(
-            file.base=outBase,
-            snps=gen[,!na],
-            pedigree=fam$pedigree,
-            id=rownames(fam),
-            father=fam$father,
-            mother=fam$mother,
-            sex=fam$sex,
-            phenotype=phenoVec,
-            chromosome=map$chromosome[!na],
-            position=map$position[!na],
-            allele.1=map$allele.1[!na],
-            allele.2=map$allele.2[!na]
-        )
+        }        
 }
