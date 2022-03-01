@@ -577,10 +577,12 @@
     splitResult <- tryCatch({
         .denovoDatasetPartitionWorker(gwe,phenotype,trainSize,output)
     },error=function(e) {
+        disp("Caught error during dataset partitioning: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during dataset partitioning: ",e$message,
             call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during dataset partitioning!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during dataset partitioning!",
             call.=FALSE)
@@ -613,9 +615,11 @@
     qcResult <- tryCatch({
         .localQcWorker(base,target,filters,imputeMissing,pcs,pcaMethod,npcs)
     },error=function(e) {
+        disp("Caught error during dataset QC: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during dataset QC: ",e$message,call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during dataset QC!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during dataset QC!",call.=FALSE)
     },finally="")
@@ -652,9 +656,11 @@
             statgenOpts=statgenOpts,snptestOpts=snptestOpts,
             plinkOpts=plinkOpts,rc=rc)
     },error=function(e) {
+        disp("Caught error during base GWA: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during base GWA: ",e$message,call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during base GWA!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during base GWA!",call.=FALSE)
     },finally="")
@@ -669,9 +675,11 @@
             methods=prsMethods,prsiceOpts=prsiceOpts,wspace=iterWspace,
             rc=rc)
     },error=function(e) {
+        disp("Caught error during target PRS: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during target PRS: ",e$message,call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during target PRS!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during target PRS!",call.=FALSE)
     },finally="")
@@ -682,10 +690,12 @@
     splitResult <- tryCatch({
         .externalDatasetPartitionWorker(gwe,phenotype,trainSize)
     },error=function(e) {
+        disp("Caught error during dataset partitioning: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during dataset partitioning: ",e$message,
             call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during dataset partitioning!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during dataset partitioning!",
             call.=FALSE)
@@ -710,9 +720,11 @@
             'methods=gwaMethod,',paste0(gwaMethod,"Opts"),'=gwaOpts,rc=rc)')
         eval(parse(text=rcm))
     },error=function(e) {
+        disp("Caught error during reduced GWAS: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during reduced GWAS: ",e$message,call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during reduced GWAS!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during reduced GWAS!",call.=FALSE)
     },finally="")
@@ -727,10 +739,12 @@
             response=phenotype,covariates=covariates,pcs=pcs,
             mode="apply",wspace=iterWspace,rc=rc)
     },error=function(e) {
+        disp("Caught error during target PRS application: ",e$message)
         .exitFromSink(logging)
         stop("Caught error during target PRS application: ",e$message,
             call.=FALSE)
     },interrupt=function(i) {
+        disp("Caught keyboard interruption during target PRS application!")
         .exitFromSink(logging)
         stop("Caught keyboard interruption during target PRS application!",
             call.=FALSE)
@@ -740,7 +754,13 @@
 
 .readPrsiceR2 <- function(wspace) {
     sum <- dir(wspace,pattern=".summary$",full.names=TRUE)
-    if (is.character(sum) && file.exists(sum)) {
+    if (is.character(sum) && all(file.exists(sum))) {
+        if (length(sum) > 1) { # Read the latest
+            details <- file.info(sum)
+            details <- 
+                details[order(as.POSIXct(details$mtime),decreasing=TRUE),]
+            sum <- rownames(details)[1]
+        }
         tmp <- read.delim(sum)
         return(c(r2m=tmp$Full.R2,r2n=tmp$Null.R2,r2p=tmp$PRS.R2,p=tmp$P,
             emp=tmp$Empirical.P,nsnp=tmp$Num_SNP))

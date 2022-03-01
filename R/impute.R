@@ -81,8 +81,9 @@
         #}
         II <- cmclapply(smIndMiss,function(i,H,X,R) {
             snpmiss <- H[[as.character(i)]]
-            disp("  for sample ",colnames(X)[i]," ",length(snpmiss)," SNPs")
-            disp("    ",paste(snpmiss,collapse="\n    "),level="full")
+            disp("  for sample ",colnames(X)[i]," ",length(snpmiss)," SNPs",
+                level="full")
+            disp("    ",paste(snpmiss,collapse="\n    "),level="debug")
             simp <- impute.snps(R,t(X[,i]),as.numeric=FALSE)
             return(simp)
         },h,x,rules,rc=rc)
@@ -90,7 +91,7 @@
         disp("Applying imputations...")
         for (i in smIndMiss) {
             snpmiss <- h[[as.character(i)]]
-            disp("  for sample ",colnames(x)[i])
+            disp("  for sample ",colnames(x)[i],level="full")
             x[snpmiss,i] <- II[[as.character(i)]][,snpmiss]
         }
         

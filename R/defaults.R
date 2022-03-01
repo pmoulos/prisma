@@ -54,7 +54,8 @@ getDefaults <- function(what) {
             return(list(
                 effect="genotypic",
                 seed=42,
-                workspace=NULL
+                workspace=NULL,
+                cliopts=NULL
             ))
         },
         externalTools = {

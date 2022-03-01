@@ -101,14 +101,15 @@ createSample <- function() {
     
 }
 
-cmclapply <- function(...,rc,setseed=FALSE) {
+cmclapply <- function(...,rc,setseed=FALSE,preschedule=TRUE) {
     if (suppressWarnings(!requireNamespace("parallel")) 
         || .Platform$OS.type!="unix")
         ncores <- 1
     else
         ncores <- .coresFrac(rc)
     if (ncores > 1)
-        return(mclapply(...,mc.cores=ncores,mc.set.seed=setseed))
+        return(mclapply(...,mc.cores=ncores,mc.set.seed=setseed,
+            mc.preschedule=preschedule))
     else
         return(lapply(...))
 }
@@ -121,17 +122,37 @@ prismaVerbosity <- function(level=NULL) {
         else
             level  <- "normal"
     }
-    .checkTextArgs("verbosity level",level,c("silent","normal","full"),
+    .checkTextArgs("verbosity level",level,c("silent","normal","full","debug"),
         multiarg=FALSE)
     options("prisma_verbosity"=level)
 }
 
-disp <- function(...,level=c("normal","full")) {
+disp <- function(...,level=c("normal","full","debug")) {
     level <- level[1]
     v <- prismaVerbosity()
-    if (v=="full" && level=="normal" || v=="full" && level=="full"
-        || v=="normal" && level=="normal")
+    if ((v=="full" && level=="normal") || (v=="full" && level=="full")
+        || (v=="normal" && level=="normal") || (v=="debug" && level=="normal")
+        || (v=="debug" && level=="full") || (v=="debug" && level=="debug"))
         message(...)
+}
+
+.checkAndCorrectFactorsFormat <- function(x) {
+    # First two are FID+IID - PRSice does not care
+    cls <- unlist(lapply(x,class))[3:ncol(x)]
+    if (!any(cls=="character")) # All OK
+        return(x)
+    
+    crc <- which(cls=="character") + 2 # FID + IID removed!
+    for (j in crc) {
+        tmp <- x[,j]
+        tmp <- as.factor(tmp)
+        levels(tmp) <- seq_along(levels(tmp))
+        x[,j] <- tmp
+    }
+    message("    variable(s) ",paste(names(x)[crc],sep=", ")," converted ",
+        "to factor")
+    
+    return(x)
 }
 
 .splitFactorForParallel <- function(n,rc) {
@@ -337,6 +358,8 @@ disp <- function(...,level=c("normal","full")) {
 }
 
 .checkTextArgs <- function(argName,argValue,argList,multiarg=FALSE) {
+    if (!is.character(argValue))
+        stop(argValue," must be a character scalar or vector!")
     if (multiarg) {
         argValue <- tolower(argValue)
         if (!all(argValue %in% argList))

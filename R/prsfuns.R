@@ -66,8 +66,11 @@ runPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     theBetas <- matrix(0,nrow(target),length(methods))
     rownames(theBetas) <- rownames(target)
     colnames(theBetas) <- methods
-    for (m in methods)
-        theBetas[prsResults[[m]]$variant_id,m] <- prsResults[[m]]$effect_weight
+    for (m in methods) {
+        # There are extreme cases where there are 1-2 mismatches
+        keep <- intersect(prsResults[[m]]$variant_id,rownames(target))
+        theBetas[keep,m] <- prsResults[[m]][keep,"effect_weight"]
+    }
     
     npcs <- ifelse(pcs && .hasPcaCovariates(base),ncol(pcaCovariates(base)),0)
     prsbetas(target,response,covariates,npcs) <- theBetas
@@ -170,7 +173,10 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     # Marker names
     tmp <- out$sumstats
     rownames(tmp) <- paste0(tmp$chr,"_",tmp$pos,"_",tmp$A1,"_",tmp$A2)
-    rownames(tmp) <- marks[rownames(tmp)]
+    # There are some extreme cases of not agreeing marker names...
+    keep <- intersect(rownames(tmp),names(marks))
+    tmp <- tmp[keep,,drop=FALSE]
+    rownames(tmp) <- marks[keep]
     out$sumstats <- tmp
     setwd(cwd)
 
@@ -508,11 +514,15 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
     # Prepare the covariates - a file must be written with space delimited
     disp("  preparing the covariates file...")
     covarFile <- file.path(wspace,paste0("covar_",runId))
+    # ALL the covariates must be numeric - there may be factors which are 
+    # character - R is deceiving about this as it handles
+    covars <- .checkAndCorrectFactorsFormat(covars)
     write.table(covars,file=covarFile,quote=FALSE,row.names=FALSE)
     
     # Prepare the phenotype - a file must be written with space delimited
     disp("  preparing the phenotype file...")
     phenoFile <- file.path(wspace,paste0("pheno_",runId))
+    pheno <- .checkAndCorrectFactorsFormat(pheno)
     write.table(pheno,file=phenoFile,quote=FALSE,row.names=FALSE)
 
     # Prepare PLINK files

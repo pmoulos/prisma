@@ -114,10 +114,11 @@ prisma <- function(
     names(outList) <- gwaMethods
     
     # If a run id is not provided, construct one - careful, it will be the same
+    # if seed provided
     # TODO: Think of something about unique run ids...
     if (is.null(runId))
         runId <- .randomString(1,11)
-    
+        
     # Run discovery and evaluation loop for each selected method
     for (m in gwaMethods) {
         disp("\n",.symbolBar("*",64))
@@ -128,10 +129,16 @@ prisma <- function(
         # collection of the whole dnResult list, whether that run has failed or 
         # not. When continue=TRUE, prsPipeline will continue from this point and
         # the dnResult going to the next part will be intact. Also, the work is 
-        # split to two directories in the workspace, baseline and selection
+        # split to two directories in the workspace, baseline and selection.
+        #
+        # However, there is a case where we may have a failure may occure right
+        # after a gwa method completes and before the next starts, so the
+        # workspace and new parameters file does not exist. In this case, we
+        # have to place a .progress file in prsWorkspace
         disp("\n",.symbolBar("#",64))
         disp("1. Discovery of de novo PRS candidates")
         disp(.symbolBar("#",64),"\n")
+        
         dnResult <- prsPipeline(
             gwe=gwe,
             phenotype=phenotype,
@@ -184,7 +191,7 @@ prisma <- function(
             step=step,
             minFreq=minFreq,
             minSnps=minSnps,
-            dropSameQuantile=dropSameQuantile,
+            dropSameQuantiles=dropSameQuantiles,
             aggregation=aggregation,
             effectWeight=effectWeight,
             filters=filters,
@@ -290,7 +297,7 @@ prisma <- function(
     
     # Record call args
     allArgs <- .getPrismaMainDefaults()
-    allArgs[names(callArgs)] <- callArgs
+    allArgs[names(callArgs)] <- eval(callArgs)
     
     return(list(
         params=list(
@@ -697,7 +704,30 @@ prsPipeline <- function(
     # Variable to collect any previous results
     prevResult <- NULL
     
+    # Sanity check for continue: if there is no workspace at all, or if there
+    # is no parameters file, continue becomes FALSE wit, period.
     if (continue) {
+        if (is.null(prsWorkspace))
+            stop("Please provide a valid PRISMA workspace to continue an ",
+                "interrupted pipeline!")
+        # It may not exist in case of multiple GWA methods and when called from
+        # the prisma() wrapper... Create it and check later for parameters file.
+        if (is.character(prsWorkspace) && !dir.exists(prsWorkspace))
+            prsWorkspace <- .validateWorkspacePath(prsWorkspace,"prisma")
+        
+        if (!any(file.exists(dir(prsWorkspace,pattern="params",
+            full.names=TRUE)))) {
+            # Now, if it's called from prisma, just set continue to FALSE and go on
+            # If it's called independently, simply stop
+            clr <- deparse(sys.calls()[sys.nframe()-1])[1]
+            if (grepl("prisma\\(",clr))
+                continue <- FALSE
+            else
+                stop("No parameters file was found in the PRISMA workspace ",
+                    prsWorkspace,"! Please start a new run.")
+        }
+    }
+    
     # Strategy for pipeline continuation
     # 1. If continue=TRUE, read the parameters JSON file from workspace
     #    (params.json), with a check of course, if workspace does not exist, a
@@ -709,13 +739,7 @@ prsPipeline <- function(
     # 2.1. Write it with {iter: i, done: false} on iteration start
     # 2.2. Read it and set done: true on iteration finish
     # 3. Finally, run the pipeline workers with niter the gathered i's
-        if (is.null(prsWorkspace))
-            stop("Please provide a valid PRISMA workspace to continue an ",
-                "interrupted pipeline!")
-        if (is.character(prsWorkspace) && !dir.exists(prsWorkspace))
-            stop("The PRISMA workspace ",prsWorkspace," does not exist! ",
-                "Please start a new run.")
-        
+    if (continue) {
         if (is.null(runId))
             callParams <- fromJSON(file.path(prsWorkspace,"params.json"))
         else {
@@ -723,10 +747,14 @@ prsPipeline <- function(
             if (file.exists(pfile))
                 callParams <- fromJSON(pfile)
             else {
-                warning("Parameters file for run ",runId," was not found! ",
-                    "This is normal if providing a runId for the first ", "time. Reading the latest one...",call.=FALSE,
-                    immediate.=TRUE)
-                callParams <- fromJSON(file.path(prsWorkspace,"params.json"))
+                if (file.exists(file.path(prsWorkspace,"params.json"))) {
+                    warning("Parameters file for run ",runId," was not found! ",
+                        "This is normal if providing a runId for the first ",
+                        "time. Reading the latest one...",call.=FALSE,
+                        immediate.=TRUE)
+                    callParams <- fromJSON(file.path(prsWorkspace,
+                        "params.json"))
+                }
             }
         }
         
@@ -785,14 +813,7 @@ prsPipeline <- function(
                 sdirs <- dir(prsWorkspace,pattern=paste0(runId,"_external_"),
                     full.names=TRUE)
         }
-        idone <- unlist(lapply(seq_along(sdirs),function(i,s) {
-            f <- file.path(s[i],".prog.json")
-            if (!file.exists(f)) # Very unlikely as it's created 1st thing
-                return(NULL)
-            js <- fromJSON(f)
-            if (js$done)
-                return(js$iter)
-        },sdirs))
+        idone <- .getCompleteIters(sdirs)
         niter <- setdiff(seq_len(niter),idone)
         if (length(niter) == 0) {
             disp("All requsted PRISMA iterations seem to have been performed!",
@@ -1328,6 +1349,17 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     return(FALSE)
 }
 
+.getCompleteIters <- function(d) {
+    return(unlist(lapply(seq_along(d),function(i,s) {
+        f <- file.path(s[i],".prog.json")
+        if (!file.exists(f)) # Very unlikely as it's created 1st thing
+            return(NULL)
+        js <- fromJSON(f)
+        if (js$done)
+            return(js$iter)
+    },d)))
+}
+
 .prettyLogOptions <- function(callArgs,what=c("prisma","select","pipeline")) {
     what <- what[1]
     if (what == "prisma") {
@@ -1625,3 +1657,38 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         ifelse(is.null(eval(args$rc)),"single core",
             paste0(100*eval(args$rc),"%")))
 }
+
+#~ .initPipelineProgress <- function(wspace,methods,rid) {
+#~     progFile <- file.path(wspace,".prog.json")
+#~     prog <- lapply(methods,function(x) {
+#~         return(list(
+#~             discovery_init=FALSE,
+#~             discovery_complete=FALSE,
+#~             selection_init=FALSE,
+#~             selection_complete=FALSE
+#~         ))
+#~     })
+#~     names(prog) <- methods
+#~     prog$rid=rid
+#~     write_json(prog,path=progFile,auto_unbox=TRUE,pretty=TRUE)
+#~ }
+    
+#~ .setPipelineProgress <- function(wspace,met,step) {
+#~     progFile <- file.path(wspace,".prog.json")
+#~     curr <- fromJSON(progFile)
+#~     curr$met$step <- TRUE
+#~     write_json(curr,path=progFile,auto_unbox=TRUE,pretty=TRUE)
+#~ }
+
+#~ .getPipelineProgress <- function(wspace,met,step) {
+#~     progFile <- file.path(wspace,".prog.json")
+#~     curr <- fromJSON(progFile)
+#~     return(curr$met$step)
+#~ }
+
+#~ .itersOkForGwa <- function(d,n) {
+#~     # Essentially check .prog.json in any dirs inside
+#~     sdirs <- list.dirs(d,full.names=TRUE,recursive=FALSE)
+#~     idone <- .getCompleteIters(sdirs)
+#~     return(length(idone) == n)
+#~ }

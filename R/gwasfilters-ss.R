@@ -43,32 +43,45 @@
     # Sample metrics are at col.summmary instead of row.summary
     # ATTENTION: The above does not work! We must internally transpose the
     # SnpMatrix again and output the correct indices.
+    
+    disp("  Calculating SNP summaries for filtering")
     x <- t(assay(obj,1))
     snpSum <- col.summary(x)
     sampleSum <- row.summary(x)
     
     # SNP filters init
+    disp("  SNP filters")
     filteredSnpCall <- filteredMaf <- filteredHwe <- logical(nrow(obj))
     
     # SNP filters: call rate
-    if (!.isEmpty(filters$snpCallRate))
+    if (!.isEmpty(filters$snpCallRate)) {
+        disp("    Call rate")
         filteredSnpCall <- snpSum$Call.rate < filters$snpCallRate
-    # SNP filters: call rate
-    if (!.isEmpty(filters$maf))
+    }
+    # SNP filters: MAF
+    if (!.isEmpty(filters$maf)) {
+        disp("    Minor Allele Frequency")
         filteredMaf <- snpSum$MAF < filters$maf
+    }
     # SNP filters: Hardy-Weinberg p-value
-    if (!.isEmpty(filters$hwe))
+    if (!.isEmpty(filters$hwe)) {
+        disp("    Hardy-Weinberg equilibrium")
         filteredHwe <- abs(snpSum$z.HWE) >= abs(qnorm(filters$hwe/2))
+    }
     
-    # SNP filters init
+    # Sample filters init
+    disp("  Sample filters")
     filteredSampleCallRate <- filteredHetero <- filteredInbreed <- 
         logical(ncol(obj))
     
     # Sample filters: call rate
-    if (!.isEmpty(filters$sampleCallRate))
+    if (!.isEmpty(filters$sampleCallRate)) {
+        disp("    Call rate")
         filteredSampleCallRate <- sampleSum$Call.rate < filters$sampleCallRate
+    }
     # Sample filters: heterozygosity
     if (!.isEmpty(filters$heteroHard) || !.isEmpty(filters$heteroStat)) {
+        disp("    Heterozygosity")
         if (.isEmpty(filters$heteroHard)) {
             if (filters$heteroStat == "mean") {
                 loc <- mean(sampleSum$Heterozygosity,na.rm=TRUE)
@@ -89,14 +102,17 @@
     
     # Sample filters: inbreeding coefficient
     if (!.isEmpty(filters$inbreed)) {
+        disp("    Inbreeding coefficient")
         hetF <- .calcInbreedFromSnpMatrix(x,snpSum,sampleSum)
         filteredInbreed <- hetF > filters$inbreed
     }
     
     # Report filtered entities with metadata
+    disp("  Summarizing SNP filter results")
     filteredSnpCallInd <- which(filteredSnpCall)
     filteredMafInd <- which(filteredMaf)
     filteredHweInd <- which(filteredHwe)
+    disp("  Summarizing sample filter results")
     filteredSampleCallRateInd <- which(filteredSampleCallRate)
     filteredHeteroInd <- which(filteredHetero)
     filteredInbreedInd <- which(filteredInbreed)

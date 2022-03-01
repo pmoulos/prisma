@@ -37,8 +37,8 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
         warning("A genome version is not provided and neither input ",
             "GWASExperiment object has an associated human genome ",
             "version!\n I will now try to guess...",immediate.=TRUE)
-        g1 <-  .guessHumanGenomeVersion(gwe1)
-        g2 <-  .guessHumanGenomeVersion(gwe2)
+        g1 <-  guessHumanGenomeVersion(gwe1)
+        g2 <-  guessHumanGenomeVersion(gwe2)
         if (!is.na(g1))
             genome(gwe1) <- g1
         if (!is.na(g2))
@@ -48,7 +48,7 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
         warning("A genome version is not provided the second ",
             "GWASExperiment object does not have an associated human ",
             "genome version!\n I will now try to guess...",immediate.=TRUE)
-        g2 <-  .guessHumanGenomeVersion(gwe2)
+        g2 <-  guessHumanGenomeVersion(gwe2)
         if (!is.na(g2))
             genome(gwe2) <- g2
     }
@@ -56,7 +56,7 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
         warning("A genome version is not provided the first ",
             "GWASExperiment object does not have an associated human ",
             "genome version!\n I will now try to guess...",immediate.=TRUE)
-        g1 <-  .guessHumanGenomeVersion(gwe1)
+        g1 <-  guessHumanGenomeVersion(gwe1)
         if (!is.na(g1))
             genome(gwe1) <- g1
     }
@@ -169,10 +169,14 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     # If still not identical and alleles are different, we cannot do many 
     # things... These must be really few and are dropped
     disp("  Checking for non-resolvable alleles")
-    bad <- which(feat1Check$allele.1 != feat2Check$allele.1)
+    bad <- which(feat1Check$allele.1 != feat2Check$allele.1 |
+        feat1Check$allele.2 != feat2Check$allele.2)
+    theBad <- NULL
     if (length(bad) > 0) {
-        disp("    Found ",length(bad),". These are:\n",paste(rownames(
-            feat1Check)[z],collapse=", "))
+        theBad <- rownames(feat1Check)[bad]
+        disp("    Found ",length(bad),". These are:\n",paste(theBad,
+            collapse=", "))
+        disp("  They may be multiallelic SNPs mapped different on each set.")
         disp("  You may investigate further but I will have to drop them...")
         feat1Check <- feat1Check[-bad,]
         feat2Check <- feat2Check[-bad,]
@@ -231,6 +235,7 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
         if (length(z) > 0) { # Should be...
             disp("  Common SNP set still not identical! ",length(z)," SNPs ",
                 "cannot be resolved by any means! Purging...")
+            theBad <- c(theBad,feat1Check$snp.name[z])
             feat1Check <- feat1Check[-z,]
             feat2Check <- feat2Check[-z,]
         }
@@ -271,9 +276,11 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     geno2Check <- geno2[rownames(feat2Check),]
     # Switch and retranspoe
     if (any(toReverse)) {
-        disp("  Reversing alleles that were resolved durign SNP matching")
-        geno1Check <- t(switch.alleles(t(geno1Check),a1ind))
-        geno2Check <- t(switch.alleles(t(geno2Check),a2ind))
+        disp("  Reversing alleles that were resolved during SNP matching")
+        geno1Check <- t(switch.alleles(t(geno1Check),intersect(a1ind,
+            rownames(geno1Check))))
+        geno2Check <- t(switch.alleles(t(geno2Check),intersect(a2ind,
+            rownames(geno2Check))))
     }
     # Merge the commons
     disp("  Merging genotypes")
@@ -316,7 +323,16 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
             gdsfile=gdsfile,
             alleleOrder="plink"
         )
-    ) 
+    )
+    
+    # It's possible somehow that the bad SNPs have escaped...
+    if (length(theBad) > 0) {
+        #print(theBad)
+        nexpr <- paste0("^(",paste(theBad,collapse="|"),")$")
+        wtf <- grep(nexpr,rownames(gwem),perl=TRUE)
+        if (length(wtf) > 0)
+            gwem <- gwem[-wtf,]
+    }
     
     if (writegds) {
         disp("Writing also GDS file...")
@@ -326,26 +342,6 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     disp(" ")
     
     return(gwem)
-}
-
-.guessHumanGenomeVersion <- function(o) {
-    # Sample 5 random SNPs... If not with rs, then no possibility
-    s <- sample(rownames(o),5)
-    s <- s[grepl("^rs",s)]
-    if (length(s) == 0) {
-        warning("Cannot determine genome version without rs ids!",
-            immediate.=TRUE)
-        return(NA)
-    }
-        
-    # rsnps fetch from hg38
-    hits <- suppressWarnings(rsnps::ncbi_snp_query(s))
-    pos <- gfeatures(o)[s,"position"]
-    hpo <- hits$bp
-    if (!all(pos %in% hpo))
-        return("hg19")
-    else
-        return("hg38")
 }
 
 .revMapAllele <- function(x,n,w=c("allele","strand")) {
@@ -392,6 +388,7 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     
     # We do not care about the genome as we are not looking for locations, so
     # we leave it at hg38 (default)
+    disp("      using Ensembl...")
     snpInfo <- rsLocsFromEnsembl(snps)
     rownames(snpInfo) <- snpInfo$refsnp_id
     
@@ -400,8 +397,15 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     
     # Some SNPs may be outdated - try rsnps package
     if (nrow(snpInfo) < length(snps)) {
+        disp("      using dbSNP...")
         miss <- setdiff(snps,rownames(snpInfo))
-        missHits <- suppressWarnings(rsnps::ncbi_snp_query(miss))
+        missHits <- tryCatch({
+            suppressWarnings(rsnps::ncbi_snp_query(miss))
+        },error=function(e) {
+            disp("Caught error: ",e$message)
+            disp("Probably SNP does not currentl exist in dbSNP! Will drop...")
+            return(data.frame())
+        },finally="")
         if (nrow(missHits) > 0) { # Construct a df to add to snpInfo
             toAdd <- data.frame(
                 chr_name=missHits$chromosome,

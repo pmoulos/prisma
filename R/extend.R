@@ -67,7 +67,7 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     toCreate <- chrDirs[!dir.exists(chrDirs)]
     for (d in toCreate)
         dir.create(d,recursive=TRUE,mode="0755",showWarnings=FALSE)
-    
+    chrs <- chrs[!(chrs %in% c("1","10","11","12","13","14","15","16"))]
     null <- lapply(chrs,function(x) {
         disp("\n",.symbolBar("=",64))
         disp("Imputing on chromosome ",x)
@@ -90,6 +90,14 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     # And convert back to PLINK
     .postProcessImpute2Files(impFiles,sampleFiles,rc=rc)
     
+    # TODO: Urgent, need to add a step of parsing/cutting GEN files to get
+    # the alleles as they are returned by gtool as 1, 2 instead of ACGT if
+    # there are indels in the reference
+    # Seems that we didn't have to implement this... Alleles are in the a0 and
+    # a1 columns of INFO files...
+    #disp("\nExtracting alleles from GEN files for later restoration")
+    #alleleFiles <- .extractAllelesFromGen(impFiles)
+    
     # At this point we must be having BASE_chrZ.imputed file triplets
     # These must be moved somewhere? Covnerted to GWASExperiment?
     # Read back to GWASExperiment
@@ -98,6 +106,7 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         full.names=TRUE)
     pheno <- phenotypes(obj)
     objList <- cmclapply(ibedFiles,function(x) {
+        disp("Prosessing ",x)
         x <- sub("\\.bed$","",x)
         y <- file.path(wspace,"chromosomes",paste0(basename(x),".info"))
         
@@ -112,12 +121,15 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         )
         
         # INFO score should also be attached
-        disp("Attaching also info scores")
-        tmp <- read.delim(y)
-        rownames(tmp) <- tmp$rs_id
-        tmp <- tmp[rownames(gwe),]
+        infoData <- read.delim(y)
+        rownames(infoData) <- infoData$rs_id
+        infoData <- infoData[rownames(gwe),]
+        
         g <- gfeatures(gwe)
-        g$info <- tmp$info
+        # Correct alleles in A, C, G, T format and add info
+        g$allele.1 <- infoData$a0
+        g$allele.2 <- infoData$a1
+        g$info <- infoData$info
         gfeatures(gwe) <- g
         
         return(gwe)
@@ -128,7 +140,8 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     impObj <- do.call("rbind",objList)
     tmp <- gfeatures(impObj)
     theOrder <- order(tmp$chromosome,tmp$position)
-    impObj <- impObj[theOrder,]
+    # There is a warning about the size of SnpMatrix objects... OK
+    impObj <- suppressWarnings(impObj[theOrder,])
     
     # We need to restore original workspace, without runId as it may have to be
     # deleted overall
@@ -153,6 +166,59 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     return(impObj)
 }
+
+#~ .extractAllelesFromGen <- function(gen) {
+#~     ..cutCommand <- function(x) {
+#~         o <- paste0(gsub("\\.gen$","",x),".als")
+#~         return(paste0("cut -f2,4,5 -d' ' ",x," > ",o))
+#~     }
+    
+#~     # Is cut command available? We may be in Windows
+#~     useCut <- ifelse(Sys.which("cut")=="",FALSE,TRUE)
+    
+#~     if (useCut) {
+#~         alsOut <- cmclapply(gen,function(x) {
+#~             cmd <- ..cutCommand(x)
+#~             disp("  extracting from ",x)
+#~             disp("\nExecuting:\n",cmd,level="full")
+#~             out <- tryCatch({
+#~                 log <- capture.output({
+#~                     system(cmd,intern=TRUE)
+#~                 })
+#~                 FALSE
+#~             },error=function(e) {
+#~                 message("Caught error: ",e$message)
+#~                 return(TRUE)
+#~             },finally="")
+#~             return(out)
+#~         },rc=rc)
+#~     }
+#~     else { # Vanilla R, will take a bit longer
+#~         # Read a few lines from the first gen to get columns to remove
+#~         tmp <- read.table(gen[1],nrow=10)
+#~         colClasses <- c("NULL","character","NULL",rep("character",2),
+#~             rep("NULL",ncol(tmp)-5))
+#~         alsOut <- cmclapply(gen,function(x) {
+#~             disp("  reading from ",x)
+#~             out <- tryCatch({
+#~                 als <- read.table(x,colClasses=colClasses,quote="")
+#~                 write.table(als,file=paste0(gsub("\\.gen$","",x),".als"),
+#~                     quote=FALSE,row.names=FALSE,col.names=FALSE)
+#~                 FALSE
+#~             },error=function(e) {
+#~                 message("Caught error: ",e$message)
+#~                 return(TRUE)
+#~             },finally="")
+#~             return(out)
+#~         },rc=rc)
+#~     }
+    
+#~     if (any(alsOut))
+#~         stop("A problem occured during allele extraction from GEN files ",
+#~             paste(gen[alsOut],collapse=", "),". Please check!")
+    
+#~     return(paste(gsub("\\.gen$","",gen),".als",sep=""))
+#~ }
 
 .imputePartialCleanup <- function(wspace,rid) {
     ..intMoveUp <- function(x,r) {
@@ -320,6 +386,8 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
            paste0("  --ped ",paste0(xp,".imputed.ped")," \\"),
            paste0("  --map ",paste0(xp,".imputed.map")," \\"),
            paste0("  --chr ",y),
+           #paste0("  --chr ",y," \\"),
+           #"  --snp ",
            sep="\n"
         ))
     }
@@ -518,6 +586,8 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
             disp("  result for interval ",intext," exists! Skipping...")
             out <- FALSE
         }
+        
+        return(out)
     },rc=rc))
 
     if (any(fails)) {
@@ -533,7 +603,8 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
 }
 
 # x is a gwe or gfeatures
-.makeImputationIntervals <- function(x,size=1e+6) {
+# There must be a minimum number of SNPs in each interval...
+.makeImputationIntervals <- function(x,size=1e+6,ms=5) {
     # Check x
     if (!is(x,"GWASExperiment") && !is(x,"DataFrame") && !is.data.frame(x))
         stop("Input object must be a GWASExperiment or its gfeatures!")
@@ -548,24 +619,75 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     # Split positions per chromosome
     x <- as.data.frame(x[,c("chromosome","position")])
-    S <- split(x$position,x$chromosome)
+    #S <- split(x$position,x$chromosome)
+    S <- split(x,x$chromosome)
     
     # Firstly create a GRanges with smallest and largest SNP position
     tmp <- GRanges(do.call("rbind",lapply(names(S),function(n,Y) {
-        y <- Y[[n]]
+        y <- Y[[n]]$position
         return(data.frame(chromosome=n,start=min(y),end=max(y)))        
     },S)))
     
     # Then calculate number of chunks of length ~size according to size
     nc <- vapply(S,function(x) {
-        return(round((max(x,na.rm=TRUE)-min(x,na.rm=TRUE))/size))
+        return(round((max(x$position,na.rm=TRUE) - 
+            min(x$position,na.rm=TRUE))/size))
     },numeric(1))
     
     # Now tile
     ints <- tile(tmp,nc)
+    
+    ## We should now overlap with SNP locations... if <2 merge
+    #ints <- .correctTheIntervals(ints,x)
+    
     return(lapply(ints,function(x) {
         return(as.data.frame(unname(x))[,c("start","end")])
     }))
+    
+}
+
+.correctTheIntervals <- function(ints,x,ms) {
+    # Make GPos object from 
+    xg <- x
+    xg$end <- x$position
+    names(xg)[2] <- "start"
+    xg <- GPos(xg)
+    
+    # Split it so as to apply find overlaps
+    xgl <- split(xg,seqnames(xg))
+    
+    # Find overlaps. Chromosome existence should not be a problem since ints
+    # is constructed from gfeatures.
+    hits <- lapply(names(ints),function(n,a,b) {
+        findOverlaps(a[[n]],b[[n]])
+    },ints,xgl)
+    names(hits) <- names(ints)
+    
+    # Locate empty intervals and drop them
+    tables <- lapply(hits,function(y) {
+        return(table(queryHits(y)))
+    })
+    indsToKeep <- lapply(tables,function(y) {
+        return(as.numeric(names(y)))
+    })
+    ints <- lapply(names(ints),function(n,a,b) {
+        return(a[[n]][b[[n]]])
+    },ints,indsToKeep)
+    names(ints) <- names(hits)
+    
+    # Now we should merge intervals with number of snps < ms
+    lapply(names(ints),function(n,a,b) {
+        # Any interval has < ms SNPs? If not happy
+        if (!any(b[[n]] < ms))
+            return(a[[n]])
+        
+        # Else reduce... merge with the neighboring interval with the less SNPs
+        small <- which(b[[n]] < ms)
+        #if (any(small == 1)) # merge with 2
+        #if (any(small == length(b[[n]]))) # merge with n-1
+        # etc.
+        
+    },ints,tables)
 }
 
 .recordIntervalProgress <- function(int,chrDir,done=FALSE) {

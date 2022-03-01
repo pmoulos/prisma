@@ -37,7 +37,7 @@
 # input may be a prefix of bim, bed, fam or a list with each
 importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
     selection=NULL,genome=NA_character_,alleleOrder=c("plink","reverse"),
-    gdsfile=NULL,gdsOverwrite=TRUE) {
+    writeGds=TRUE,gdsfile=NULL,gdsOverwrite=TRUE) {
     backend <- backend[1]
     alleleOrder <- alleleOrder[1]
     if (!(backend %in% c("snpStats","bigsnpr")))
@@ -50,21 +50,23 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             stop("Bioconductor package snpStats is required!")
         if (!requireNamespace("SNPRelate"))
             stop("Bioconductor package SNPRelate is required!")
-        if (is.null(gdsfile) || !is.character(gdsfile)) {
+        if (writeGds && (is.null(gdsfile) || !is.character(gdsfile))) {
             warning("A valid path to store GDS file for filtering is required!",
                 " Assuming default...",immediate.=TRUE)
             gdsfile <- file.path(dirname(input[[1]]),
                 sub("(.bed|.bim|.fam)$","",basename(input[[1]]),
                     ignore.case=TRUE))
+            gdsfile <- paste0(gdsfile,".gds")
         }
     }
     if (backend == "bigsnpr" && !requireNamespace("snpStats"))
         stop("Bioconductor package bigsnpr is required!")
     
     if (!is.null(phenos)) {
-        if (!is.character(phenos) && !is.data.frame(phenos))
-            stop("The phenotypes argument (pheno) must be a data.frame or an ",
-                "existing file!")
+        if (!is.character(phenos) && !is.data.frame(phenos)
+            && !is(phenos,"DataFrame"))
+            stop("The phenotypes argument (pheno) must be a data.frame or a ",
+                "DataFrame or an existing file!")
         if (is.character(phenos) && !file.exists(phenos))
             stop("When character, the phenotypes argument (pheno) must be an ",
                 "existing file!")
@@ -89,13 +91,12 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         disp("Reading PLINK files with snpStats framework")
         snpObj <- read.plink(input$bed,input$bim,input$fam,
             select.subjects=selection$samples,select.snps=selection$snps)
-        if (file.exists(gdsfile) && !gdsOverwrite)
-            disp("Skipping GDS file creation as ",gdsfile," already exists...")
-        else {
-            disp("Reading PLINK files with SNPRelate framework and storing ",
-                "output to ",gdsfile)
-            # We also need to read a GDS file for LD and IBD filtering
-            snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,family=TRUE)
+        if (writeGds) {
+            if (file.exists(gdsfile) && !gdsOverwrite)
+                disp("Skipping GDS file creation as ",gdsfile,
+                    " already exists...")
+            else
+                .writeGdsFile(input,snpObj,gdsfile,selection)
         }
         ## ***SWITCH ALLELES*** if PLINK default
         #if (alleleOrder == "plink") {
@@ -104,7 +105,6 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         #    snpObj$genotypes <- switch.alleles(snpObj$genotypes,
         #        seq_len(ncol(snpObj$genotypes)))
         #}
-        
         return(GWASExperiment(
             genotypes=t(snpObj$genotypes),
             features=snpObj$map,
@@ -124,6 +124,41 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         #snpObj <- ... snp_readSth
     }
         
+}
+
+.writeGdsFile <- function(input,snpObj,gdsfile,selection) {
+    disp("Reading PLINK files with SNPRelate framework and storing output tp ",
+        gdsfile)
+    # We also need to read a GDS file for LD and IBD filtering
+    # If selection is not NULL, then the GDS file will not be 
+    # correct... We have to write temporary BED/BIM/FAMs...
+    if (!is.null(selection)) {
+        tmpBase <- tempfile()
+        disp("  SNP/Sample selection was made! Writing temporary PLINK files ",
+            "for correct GDS creation...")
+        write.plink(
+            file.base=tmpBase,
+            snps=snpObj$genotypes,
+            pedigree=snpObj$fam$pedigree,
+            id=rownames(snpObj$fam),
+            father=snpObj$fam$father,
+            mother=snpObj$fam$mother,
+            sex=snpObj$fam$sex,
+            phenotype=snpObj$fam$affected,
+            chromosome=snpObj$map$chromosome,
+            position=snpObj$map$position,
+            allele.1=snpObj$map$allele.1,
+            allele.2=snpObj$map$allele.2
+        )
+        snpgdsBED2GDS(paste0(tmpBase,".bed"),paste0(tmpBase,".fam"),
+            paste0(tmpBase,".bim"),gdsfile,family=TRUE)
+        unlink(paste0(tmpBase,".bed"))
+        unlink(paste0(tmpBase,".bim"))
+        unlink(paste0(tmpBase,".fam"))
+    }
+    else
+        snpgdsBED2GDS(input$bed,input$fam,input$bim,gdsfile,
+            family=TRUE)
 }
 
 filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
@@ -204,6 +239,7 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
         gen <- switch.alleles(gen,seq_len(ncol(gen)))
     
     if (salvage) {
+        disp("Trying to salvage SNPs with missing locations")
         if (is.na(genome(obj)))
             warning("Cannot salvage SNP locations if genome version/build is ",
                 "not specified! Skipping...")
@@ -220,13 +256,17 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
     }
     
     # Preflight...
+    disp("Preflight...")
     map$chromosome <- as.character(map$chromosome)
     if (any(map$chromosome %in% c("23","24","25","26"))) {
         map$chromosome[map$chromosome=="23"] <- "X"
         map$chromosome[map$chromosome=="24"] <- "Y"
-        chromosome[map$chromosome=="25"] <- "XY"
+        map$chromosome[map$chromosome=="25"] <- "XY"
         map$chromosome[map$chromosome=="26"] <- "MT"
     }
+    
+    # Has info score from imputation? If yes must be written to separate file
+    hasInfo <- ifelse("info" %in% names(map),TRUE,FALSE)
     
     # Filter out those with remaining NA chromosome, position (controls?)
     na <- is.na(map$chromosome)
@@ -287,10 +327,23 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
                     allele.1=map$allele.1[ii],
                     allele.2=map$allele.2[ii]
                 )
-            }            
+            }
+            
+            if (hasInfo) {
+                if (file.exists(paste0(outBase,"_",n,".impinfo")) && !overwrite)
+                    disp("  imputation info file ",paste0(outBase,"_",n,
+                        ".impinfo")," exists! Skipping...")
+                else {
+                    impinfo <- map[ii,c("snp.name","info")]
+                    names(impinfo)[1] <- "snp_namedu -sjls
+                    "
+                    write.table(impinfo,paste0(outBase,"_",n,".impinfo"),
+                        sep="\t",quote=FALSE,row.names=FALSE)
+                }
+            }
         },S)
     }
-    else
+    else {
         if (file.exists(paste0(outBase,".bed")) && !overwrite)
             disp("  fileset ",outBase," exists! Skipping...")
         else {
@@ -308,5 +361,22 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
                 allele.1=map$allele.1[!na],
                 allele.2=map$allele.2[!na]
             )
-        }        
+        }
+        
+        if (hasInfo) {
+            if (file.exists(paste0(outBase,".impinfo")) && !overwrite)
+                disp("  imputation info file ",paste0(outBase,".impinfo"),
+                    " exists! Skipping...")
+            else {
+                impinfo <- map[!na,c("snp.name","info")]
+                names(impinfo)[1] <- "snp_name"
+                write.table(impinfo,paste0(outBase,".impinfo"),sep="\t",
+                    quote=FALSE,row.names=FALSE)
+            }
+        }
+    }
+    
+    # For some reason the process takes a lot of memory...
+    gc(verbose=FALSE)
+    invisible(return(NULL))
 }

@@ -59,11 +59,13 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     P <- lapply(names(parts),function(x,prt) {
         disp("\n========== Analyzing chromosome/part ",x)
         o <- prt[[x]]
-        return(.gwaWorker(o,response,covariates,pcs,psig,methods,combine,
+        y <- .gwaWorker(o,response,covariates,pcs,psig,methods,combine,
             glmOpts$family,rrblupOpts$pcblup,rrblupOpts$npcs,
             snptestOpts$test,snptestOpts$model,snptestOpts$workspace,
-            plinkOpts$effect,plinkOpts$seed,plinkOpts$workspace,glmOpts$size,
-            noGlmPrl,rc))
+            plinkOpts$effect,plinkOpts$seed,plinkOpts$workspace,
+            plinkOpts$cliopts,glmOpts$size,noGlmPrl,rc)
+        gc(verbose=FALSE)
+        return(y)
     },parts)
     names(P) <- names(parts)
     
@@ -90,7 +92,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
 # Returns only the p-value matrix. For assigning p-values to object, use GWA
 .gwaWorker <- function(obj,response,covariates,pcs,psig,methods,combine,
     family,usepcblup,npcsblup,snptest,snpmodel,snpspace,pleff,plseed,plspace,
-    size,noglmprl,rc=NULL,...) {
+    plcliopts,size,noglmprl,rc=NULL,...) {
     # Initialize pvalue matrix
     pMatrix <- eMatrix <- matrix(1,nrow=nrow(obj),ncol=length(methods))
     rownames(pMatrix) <- rownames(eMatrix) <- rownames(obj)
@@ -127,7 +129,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
             },
             plink = {
                 plRes <- gwaPlink(obj,response,covariates,pcs,psig,plseed,
-                    plspace,rc)
+                    plcliopts,plspace,rc)
                 pMatrix[,m] <- plRes$pvalue
                 eMatrix[,m] <- plRes$effect
             },
@@ -449,6 +451,9 @@ gwaStatgen <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     response <- chResCov$res
     covariates <- chResCov$cvs
     p <- p[,c(response,covariates),drop=FALSE]
+    # statgenGWAS works only with numeric phenotypes...
+    p <- .checkAndCorrectFactorsFormat(p)
+    phenotypes(obj) <- p
     
     # Convert to gData object
     disp("\nPreparing data for statgenGWAS...")
@@ -561,7 +566,7 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
 }
 
 gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
-    seed=42,wspace=NULL,rc=NULL) {
+    seed=42,cliopts=NULL,wspace=NULL,rc=NULL) {
     # Tool availability before all else
     if (!.toolAvailable("plink"))
         stop("PLINK program not found in the system!")
@@ -612,6 +617,11 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     if (threads > 1) {
         addThreads <- paste0("  --threads ",threads)
         command <- paste0(command," \\\n",addThreads)
+    }
+    
+    if (!is.null(cliopts)) {
+        addOpts <- paste0("  ",cliopts)
+        command <- paste0(command," \\\n",addOpts)
     }
     
     message("\nExecuting:\n",command)
@@ -681,6 +691,7 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     
     # Modify the phenotypes data frame
     disp(" writing SNPTEST sample file in ",wspace)
+    p <- .checkAndCorrectFactorsFormat(p)
     p <- data.frame(sample_id=rownames(p),p)
     ct <- c("0",ct)
     sfile <- file.path(wspace,"pheno.sample")
@@ -781,12 +792,14 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     # Prepare the phenotype - a file must be written with space delimited
     disp("  writing the PLINK phenotype file...")
     phenoFile <- file.path(wspace,paste0("pheno_",runId))
+    pheno <- .checkAndCorrectFactorsFormat(pheno)
     write.table(pheno,file=phenoFile,quote=FALSE,row.names=FALSE)
     
     # Prepare the covariates - a file must be written with space delimited
     if (needCov) {
         disp("  writing the covariates file...")
         covarFile <- file.path(wspace,paste0("covar_",runId))
+        covar <- .checkAndCorrectFactorsFormat(covar)
         write.table(covar,file=covarFile,quote=FALSE,row.names=FALSE)
     }
     else
@@ -972,6 +985,10 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     if (!.isEmpty(a$workspace)) {
         if (!is.character(a$workspace))
             stop("The PLINK workspace directory must be a character!")
+    }
+    if (!.isEmpty(a$cliopts)) {
+        if (!is.character(a$cliopts))
+            stop("PLINK additional parameters must be a string!")
     }
 }
 

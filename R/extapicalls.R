@@ -886,6 +886,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
 
 # test: identical(out,gp) if from=to
 # test: !any(identical(starts)) if from!=to
+# liftOver not working anymore without list?
 .liftOverSNPs <- function(gp,from,to) {
     if (!requireNamespace("rtracklayer"))
         stop("Bioconductor package rtracklayer is required!")
@@ -909,8 +910,33 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     
     orsls <- seqlevelsStyle(gp)
     seqlevelsStyle(gp) <- "UCSC"
-    lifted <- liftOver(gp,ch)
-    lifted <- unlist(lifted)
+    
+    sp <- split(gp,seqnames(gp))
+    tmp <- lapply(names(sp),function(n,S) {
+        disp("  lifting ",n)
+        x <- S[[n]]
+        lo <- liftOver(x,ch)
+        le <- lengths(lo)
+        # If more than one mappings (rare) keep 1st
+        mult <- which(le > 1)
+        if (length(mult) > 0) {
+            for (m in mult)
+                lo[[m]] <- lo[[m]][1]
+        }
+        lout <- unlist(lo)
+        # If mapping on different chromosome, drop position
+        off <- which(seqnames(lout) != n)
+        if (length(off) > 0) {
+            seqnames(lout)[off] <- n
+            start(lout)[off] <- 0
+            end(lout)[off] <- 0
+            dropsf <- seqlevels(lout)[seqlevels(lout) != n]
+            lout <- dropSeqlevels(lout,dropsf)
+        }
+        return(as.data.frame(lout))
+    },sp)
+    lifted <- GRanges(do.call("rbind",tmp))
+    
     seqlevelsStyle(lifted) <- orsls[1]
     nams <- names(lifted) # Names are not kept in GPos conversion
     out <- GPos(lifted,stitch=FALSE)
