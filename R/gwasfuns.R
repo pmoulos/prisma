@@ -99,12 +99,13 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     colnames(pMatrix) <- colnames(eMatrix) <- methods
     
     # Run GWAS
+    rcLocal <- rc
+    if (noglmprl)
+        rcLocal <- NULL
+        
     for (m in methods) {
         switch(m,
             glm = {
-                rcLocal <- rc
-                if (noglmprl)
-                    rcLocal <- NULL
                 glmRes <- gwaGlm(obj,response,covariates,pcs,family,psig,
                     penalized=FALSE,size,rc=rcLocal)
                 pMatrix[,m] <- glmRes[,4]
@@ -112,12 +113,12 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
             },
             rrblup = {
                 rrbRes <- gwaBlup(obj,response,covariates,usepc=usepcblup,
-                    npcs=npcsblup,psig=psig,rc=rc)
+                    npcs=npcsblup,psig=psig,rc=rcLocal)
                 pMatrix[,m] <- rrbRes$pvalue
                 eMatrix[,m] <- rrbRes$effect
             },
             statgen = {
-                sgRes <- gwaStatgen(obj,response,covariates,pcs,psig,rc)
+                sgRes <- gwaStatgen(obj,response,covariates,pcs,psig,rcLocal)
                 pMatrix[,m] <- sgRes$pValue
                 eMatrix[,m] <- sgRes$effect
             },
@@ -129,13 +130,13 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
             },
             plink = {
                 plRes <- gwaPlink(obj,response,covariates,pcs,psig,plseed,
-                    plcliopts,plspace,rc)
+                    plcliopts,plspace,rcLocal)
                 pMatrix[,m] <- plRes$pvalue
                 eMatrix[,m] <- plRes$effect
             },
             lasso = {
                 lsRes <- gwaGlm(obj,response,covariates,pcs,family,psig,size,
-                    penalized=TRUE,rc)
+                    penalized=TRUE,rc=rcLocal)
                 pMatrix[,m] <- lsRes[,4]
                 eMatrix[,m] <- lsRes[,1]
             }
