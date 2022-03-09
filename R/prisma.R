@@ -1320,7 +1320,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         # Is a complete run?
         if (checks[2]) {
             prm <- fromJSON(file.path(d,"params.json"))
-            nAsked <- prm$niter
+            nAsked <- ifelse(is.list(prm$niter),length(prm$niter),prm$niter)
             nDone <- length(unlist(lapply(seq_along(sdirs),function(i,s) {
                 f <- file.path(s[i],".prog.json")
                 if (!file.exists(f)) # Very unlikely as it's created 1st thing

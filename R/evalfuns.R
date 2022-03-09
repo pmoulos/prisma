@@ -731,6 +731,11 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
         n <- rownames(snpset)
         freq <- snpset$freq[nrow(snpset)]
         
+        # Failsafe, NA in effects, may arrive!!! Convert to zero effect
+        ill <- .illegalEffs(sdf[n,"effect"])
+        if (length(ill) > 0)
+            sdf[ill,"effect"] <- 0
+        
         disp("  testing PRS with SNPs from ",n[1]," to ",n[length(n)])
         thePrs <- .prs(snps[,n],sdf[n,"effect"])
         dat <- cbind(p,thePrs)
@@ -870,6 +875,12 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     return(x)
 }
 
+.illegalEffs <- function(x) {
+    na <- which(is.na(x))
+    nan <- which(is.nan(x))
+    inf <- which(is.infinite(x))
+    return(union(na,union(nan,inf)))
+}
 
 #~ .evalGlmWorker <- function(dat,res,red,fam,...) {
 #~     ii <- which(colnames(dat)==res)
