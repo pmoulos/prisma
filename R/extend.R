@@ -57,7 +57,7 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     # Impute2 path
     itool <- .getToolPath("impute")
     
-    chrs <- unique(map$chromosome)
+    chrs <- as.character(unique(map$chromosome))
     disp("\n",.symbolBar("#",64))
     disp("External imputation on ",length(chrs)," chromosomes")
     disp(.symbolBar("#",64))
@@ -67,7 +67,9 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     toCreate <- chrDirs[!dir.exists(chrDirs)]
     for (d in toCreate)
         dir.create(d,recursive=TRUE,mode="0755",showWarnings=FALSE)
-    chrs <- chrs[!(chrs %in% c("1","10","11","12","13","14","15","16"))]
+    #chrs <- chrs[!(chrs %in% c("1","10","11","12","13","14","15","16"))]
+    genFiles <- genFiles[chrs]
+    sampleFiles <- sampleFiles[chrs]
     null <- lapply(chrs,function(x) {
         disp("\n",.symbolBar("=",64))
         disp("Imputing on chromosome ",x)
@@ -110,18 +112,29 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         x <- sub("\\.bed$","",x)
         y <- file.path(wspace,"chromosomes",paste0(basename(x),".info"))
         
+        # It's possible that duplicate SNPs are created through the imputation
+        # process... We remove them through SNP selection while reading PLINK
+        selection <- list(samples=NULL,snps=NULL)
+        bim <- read.delim(paste0(x,".bim"),header=FALSE)
+        nodup <- which(!duplicated(bim[,seq_len(4)]))
+        if (length(nodup) != nrow(bim))
+            selection$snps <- nodup
+        
         # GDS files will not be needed further though
         gwe <- importGWAS(
             input=x,
             phenos=pheno,
             backend=metadata(obj)$backend,
             genome=genome(obj),
+            selection=selection,
             gdsfile=file.path(dirname(x),paste0(basename(x),".gds")),
             gdsOverwrite=FALSE
         )
         
         # INFO score should also be attached
         infoData <- read.delim(y)
+        if (!is.null(selection$snps))
+            infoData <- infoData[!duplicated(infoData[,c(2,3)]),,drop=FALSE]
         rownames(infoData) <- infoData$rs_id
         infoData <- infoData[rownames(gwe),]
         
@@ -137,7 +150,7 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
     
     # Now we have to cbind and order
     disp("\nFinalizing...")
-    impObj <- do.call("rbind",objList)
+    impObj <- suppressWarnings(do.call("rbind",objList))
     tmp <- gfeatures(impObj)
     theOrder <- order(tmp$chromosome,tmp$position)
     # There is a warning about the size of SnpMatrix objects... OK

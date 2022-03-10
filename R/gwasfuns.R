@@ -129,8 +129,20 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
                 eMatrix[,m] <- stRes$effect
             },
             plink = {
+                # parallelization needs further customization... The number of
+                # PLINK threads x number of local threads should not exceed
+                # 90% of available cores
+                if (!is.null(rc)) {
+                    nc <- parallel::detectCores()
+                    if ((rc*nc)^2 > nc)
+                        prcLocal <- 0.9*(sqrt(nc)/nc)
+                    else
+                        prcLocal <- rc
+                }
+                else
+                    prcLocal <- NULL
                 plRes <- gwaPlink(obj,response,covariates,pcs,psig,plseed,
-                    plcliopts,plspace,rcLocal)
+                    plcliopts,plspace,prcLocal)
                 pMatrix[,m] <- plRes$pvalue
                 eMatrix[,m] <- plRes$effect
             },
