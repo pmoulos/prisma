@@ -822,7 +822,7 @@ download1000GP3 <- function(path=NULL) {
         return(paste(
            paste0(g," \\"),
            paste0("  -g ",paste0(x,".bed")," \\"),
-           paste0("  -og ",paste0(x,".gen")," \\"),
+           paste0("  -og ",paste0(x,".gentmp")," \\"),
            paste0("  -os ",paste0(x,".sample")),
            sep="\n"
         ))
@@ -868,8 +868,19 @@ download1000GP3 <- function(path=NULL) {
         stop("A problem occured during the generation of GEN files ",
             paste(pedFiles[genOut],collapse=", "),". Please check!")
     
-    genFiles <- dir(inputDir,pattern="\\.gen$")
+    genFiles <- dir(inputDir,pattern="\\.gentmp$")
     samFiles <- dir(inputDir,pattern="\\.sample$")
+    
+    # Remove 3rd column from genFiles
+    genFiles <- unlist(cmclapply(genFiles,function(x) {
+        disp("  correcting format for ",x)
+        y <- read.table(x)
+        x <- gsub("\\.gentmp$","",x)
+        y <- y[,-3,drop=FALSE]
+        x <- paste0(x,".gen")
+        write.table(y,row.names=FALSE,col.names=FALSE)
+        return(x)
+    },rc=rc))
     
     # dir-ing is unstable... We must name these vectors with chromosomes
     # extracted from their names...

@@ -235,8 +235,10 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
     
     # If the input object comes with default PLINK allele order, then they were
     # reversed upon importing and also have the alleleOrder metadata field.
-    if (reverse)
+    if (reverse) {
+        disp("Switching alleles...")
         gen <- switch.alleles(gen,seq_len(ncol(gen)))
+    }
     
     if (salvage) {
         disp("Trying to salvage SNPs with missing locations")
