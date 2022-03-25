@@ -70,6 +70,18 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     disp("Now trying to merge features (markers, SNPs)")
     feat1 <- gfeatures(gwe1)
     feat2 <- gfeatures(gwe2)
+    
+    # Before continuing, ensure rownames and snp.name are the same
+    if (!identical(rownames(feat1),feat1$snp.name)) {
+        disp("Object #1 rownames and snp.name are not the same! Correcting...")
+        feat1$snp.name <- rownames(feat1)
+        gfeatures(gwe1) <- feat1
+    }
+    if (!identical(rownames(feat2),feat2$snp.name)) {
+        disp("Object #2 rownames and snp.name are not the same! Correcting...")
+        feat2$snp.name <- rownames(feat2)
+        gfeatures(gwe2) <- feat2
+    }
 
     # Common markers to investigate alleles
     com <- intersect(rownames(feat1),rownames(feat2))

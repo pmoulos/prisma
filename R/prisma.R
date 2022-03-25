@@ -104,7 +104,8 @@ prisma <- function(
     disp("\n",strftime(Sys.time()),": Data processing started...")
     
     # Here, display options
-    callArgs <- as.list(match.call())[-1]
+    #callArgs <- as.list(match.call())[-1]
+    callArgs <-  as.list(environment())
     .prettyLogOptions(callArgs,"prisma")
     
     ## Only one used for now, until we run linear optimization in effects

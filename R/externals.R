@@ -253,6 +253,55 @@ downloadGtool <- function(ver=c("v0.7.5"),path=NULL) {
             "version!")
 }
 
+downloadQctool <- function(ver=c("v2.2.0","v2.0.8"),path=NULL) {
+    ver <- ver[1]
+    .checkTextArgs("QCTOOL version (ver)",ver,c("v2.2.0","v2.0.8"),
+        multiarg=FALSE)
+    
+    
+    base <- "https://www.well.ox.ac.uk/~gav/resources/"
+    if (ver == "v2.2.0")
+        ext <- "qctool_v2.2.0-CentOS_Linux7.8.2003-x86_64.tgz"
+    else if (ver == "v2.0.8")
+        ext <- "qctool_v2.0.8-CentOS_Linux7.6.1810-x86_64.tgz"
+    
+    src <- paste0(base,ext)
+    unext <- sub(".tgz","",ext)
+    sver <- substring(ver,2,nchar(ver))
+    defPath <- .createToolPath("qctool",sver,"QCTOOL",path)
+    
+    # Download and uncompress
+    disp("Preparing to download QCTOOL...")
+    des <- file.path(tempdir(),ext)
+    download.file(src,des)
+    
+    # Move and rename the executable to the common style
+    disp("Installing...")
+    untar(des,exdir=defPath)
+    tomove <- dir(file.path(defPath,unext))
+    for (f in tomove)
+        file.rename(from=file.path(defPath,unext,f),to=file.path(defPath,f))
+    unlink(file.path(defPath,unext),recursive=TRUE)
+    Sys.chmod(file.path(defPath,"qctool"),"0755")
+    
+    # Test whether all properly fetched and installed
+    disp("Verifying...")
+    cmd <- file.path(defPath,"qctool")
+    disp("Trying the command: ",cmd)
+    # Always 1 if no proper input, no help!
+    v <- suppressWarnings(system(cmd,intern=TRUE))
+    if (any(grepl("OptionProcessingException",v))) { # Success
+        disp("QCTOOL seems to be working! Updating environment...")
+        .EXTERNALS[["qctool"]]$dir <- defPath
+        .EXTERNALS[["qctool"]]$exec <- "qctool"
+        .EXTERNALS[["qctool"]]$version <- .tryNumerize(sver)
+    }
+    else
+        disp("QCTOOL does NOT seem to be working! Please install manually ",
+            "and make it accessible through the system's path or try another ",
+            "version!")
+}
+
 .getToolPath <- function(tool=.EXTERNAL_TOOLS_LIST,version=NULL,error=TRUE) {
     if (.toolAvailable(tool[1],version,error)) {
         components <- as.list(.EXTERNALS[[tool]])

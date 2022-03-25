@@ -13,15 +13,22 @@
 # Ideally, some kind of break and continue mechanism should be in place like
 # in prs pipelines
 extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
-    continue=FALSE,cleanup=c("none","intermediate","all"),runId=NULL,rc=NULL) {
-    if (!.toolAvailable("gtool"))
-        stop("GTOOL program not found in the system!")
+    continue=FALSE,cleanup=c("none","intermediate","all"),runId=NULL,
+    convTool=c("gtool","qctool"),rc=NULL) {
     if (!.toolAvailable("impute"))
         stop("IMPUTE2 program not found in the system!")
     
     cleanup <- cleanup[1]
+    convTool <- convTool[1]
     .checkTextArgs("Cleanup option (cleanup)",cleanup,
         c("none","intermediate","all"),multiarg=FALSE)
+    .checkTextArgs("Format conversion tool (convTool)",convTool,
+        c("gtool","qctool"),multiarg=FALSE)
+    
+    if (convTool == "gtool" && !.toolAvailable("gtool"))
+        stop("GTOOL program not found in the system!")
+    if (convTool == "qctool" && !.toolAvailable("qctool"))
+        stop("QCTOOL program not found in the system!")
     
     # Validate workspace
     wspace <- .validateWorkspacePath(wspace,"impute")
@@ -805,3 +812,70 @@ download1000GP3 <- function(path=NULL) {
 #~     if (length(tmps) > 0)
 #~         unlink(tmps,recursive=TRUE,force=TRUE)   
 #~ }
+
+.prepareInputFilesForImpute2_1 <- function(obj,wspace,rc=NULL) {
+    ..qctoolToGenCommand <- function(x,g) {
+        x <- gsub("\\.bed$","",x)
+        return(paste(
+           paste0(g," \\"),
+           paste0("  -g ",paste0(x,".bed")," \\"),
+           paste0("  -og ",paste0(x,".gen")," \\"),
+           paste0("  -os ",paste0(x,".sample")),
+           sep="\n"
+        ))
+    }
+    
+    qctool <- .getToolPath("qctool")
+    
+    # Export GWASExperiment as PLINK per chromosome
+    disp("")
+    inputDir <- file.path(wspace,"input")
+    if (!dir.exists(inputDir))
+        dir.create(inputDir,recursive=TRUE,mode="0755",showWarnings=FALSE)
+    writePlink(obj,outBase=file.path(inputDir,"plink_impute2"),perChr=TRUE,
+        overwrite=FALSE)
+    
+    bedFiles <- dir(inputDir,pattern=".bed$",full.names=TRUE)
+    disp("\nConverting BED files to GEN")
+    genOut <- unlist(cmclapply(bedFiles,function(x,g) {
+        dest <- sub(".bed$",".gen",x)
+        if (!file.exists(dest)) {
+            cmd <- ..qctoolToGenCommand(x,g)
+            disp("  converting ",x)
+            disp("\nExecuting:\n",cmd,level="full")
+            out <- tryCatch({
+                log <- .formatSystemOutputForDisp(capture.output({
+                    system(cmd,intern=TRUE)
+                }))
+                disp("\nQCTOOL output is:\n",level="full")
+                disp(paste(log,collapse="\n"),"\n",level="full")
+                FALSE
+            },error=function(e) {
+                message("Caught error: ",e$message)
+                return(TRUE)
+            },finally="")
+        }
+        else {
+            disp("  file ",dest," already exists! Skipping...")
+            return(FALSE)
+        }
+    },qctool,rc=rc))
+    
+    if (any(genOut))
+        stop("A problem occured during the generation of GEN files ",
+            paste(pedFiles[genOut],collapse=", "),". Please check!")
+    
+    genFiles <- dir(inputDir,pattern="\\.gen$")
+    samFiles <- dir(inputDir,pattern="\\.sample$")
+    
+    # dir-ing is unstable... We must name these vectors with chromosomes
+    # extracted from their names...
+    names(genFiles) <- unlist(lapply(strsplit(genFiles,"_"),function(s) {
+        sub(".gen","",sub("chr","",s[3]))
+    }))
+    names(samFiles) <- unlist(lapply(strsplit(samFiles,"_"),function(s) {
+        sub(".sample","",sub("chr","",s[3]))
+    }))
+    
+    return(list(gen=genFiles,sam=samFiles))
+}
