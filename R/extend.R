@@ -848,7 +848,7 @@ download1000GP3 <- function(path=NULL) {
             disp("\nExecuting:\n",cmd,level="full")
             out <- tryCatch({
                 log <- .formatSystemOutputForDisp(capture.output({
-                    system(cmd,intern=TRUE,ignore.stdout=TRUE,\
+                    system(cmd,intern=TRUE,ignore.stdout=TRUE,
                         ignore.stderr=TRUE)
                 }))
                 disp("\nQCTOOL output is:\n",level="full")
