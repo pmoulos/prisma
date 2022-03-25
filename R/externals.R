@@ -351,6 +351,9 @@ downloadQctool <- function(ver=c("v2.2.0","v2.0.8"),path=NULL) {
         },
         gtool = {
             execs <- "gtool"
+        },
+        qctool = {
+            execs <- "qctool"
         }
     )
     
