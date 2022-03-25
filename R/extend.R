@@ -53,7 +53,10 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
         dir.create(wspace,recursive=TRUE,mode="0755",showWarnings=FALSE)
     
     # Prepare the main input files to impute per chromosome
-    gensam <- .prepareInputFilesForImpute2(obj,wspace,rc)
+    if (convTool == "gtool")
+        gensam <- .prepareInputFilesForImpute2(obj,wspace,rc)
+    else if (convTool == "qctool")
+        gensam <- .prepareInputFilesForImpute2_1(obj,wspace,rc)
     genFiles <- gensam$gen
     sampleFiles <- gensam$sam
     # These must be named BASE_chrZ.gen, BASE_chrZ.sam
