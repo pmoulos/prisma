@@ -861,6 +861,7 @@ download1000GP3 <- function(path=NULL) {
                 xx <- paste0(xx,".gen")
                 write.table(y,file=xx,row.names=FALSE,col.names=FALSE,
                     quote=FALSE)
+                unlink(paste0(xx,".tmp.gen"),recursive=TRUE,force=TRUE)
                 FALSE
             },error=function(e) {
                 message("Caught error: ",e$message)
@@ -877,8 +878,8 @@ download1000GP3 <- function(path=NULL) {
         stop("A problem occured during the generation of GEN files ",
             paste(pedFiles[genOut],collapse=", "),". Please check!")
     
-    #genFiles <- dir(inputDir,pattern="\\.gentmp$",full.names=TRUE)
-    genFiles <- dir(inputDir,pattern="\\.gen$",full.names=TRUE)
+    genFiles <- dir(inputDir,pattern="\\.gen$")
+    #genFiles <- dir(inputDir,pattern="\\.gen$",full.names=TRUE)
     samFiles <- dir(inputDir,pattern="\\.sample$")
     
     ## Remove 3rd column from genFiles
