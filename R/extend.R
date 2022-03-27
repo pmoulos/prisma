@@ -858,8 +858,8 @@ download1000GP3 <- function(path=NULL) {
                 y <- read.table(xx)
                 xx <- gsub("\\.tmp\\.gen$","",xx)
                 y <- y[,-3,drop=FALSE]
-                xx <- paste0(xx,".gen")
-                write.table(y,file=xx,row.names=FALSE,col.names=FALSE,
+                xxx <- paste0(xx,".gen")
+                write.table(y,file=xxx,row.names=FALSE,col.names=FALSE,
                     quote=FALSE)
                 unlink(paste0(xx,".tmp.gen"),recursive=TRUE,force=TRUE)
                 FALSE
