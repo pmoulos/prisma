@@ -856,12 +856,11 @@ download1000GP3 <- function(path=NULL) {
                 
                 xx <- sub(".bed$",".tmp.gen",x)
                 y <- read.table(xx)
-                xx <- gsub("\\.tmp\\.gen$","",x)
+                xx <- gsub("\\.tmp\\.gen$","",xx)
                 y <- y[,-3,drop=FALSE]
                 xx <- paste0(xx,".gen")
-                write.table(y,file=xx,row.names=FALSE,col.names=FALSE)
-                return(xx)
-                
+                write.table(y,file=xx,row.names=FALSE,col.names=FALSE,
+                    quote=FALSE)
                 FALSE
             },error=function(e) {
                 message("Caught error: ",e$message)
