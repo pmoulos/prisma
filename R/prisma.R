@@ -43,6 +43,7 @@ prisma <- function(
     runId=NULL,
     evalOnSplit=c("original","new"),
     evalWith=c("vanilla","prscice"),
+    sitadelaDb=NULL,
     rc=NULL
 ) {
     # To be attached to output object
@@ -290,6 +291,12 @@ prisma <- function(
         )
         if (output == "full")
             outList[[m]]$iterations = dnResult
+        
+        # Annotate with genes if sitadela is present
+        for (nc in names(outList[[m]]$candidates))
+            outList[[m]]$candidates[[nc]] <- 
+                .assignGenesWorker(outList[[m]]$candidates[[nc]],genome(gwe),
+                    sitadelaDb)
     }
     
     disp("\n",strftime(Sys.time()),": Data processing finished!\n")
@@ -1260,6 +1267,61 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     }
     
     return(theResult)
+}
+
+assignGenes <- function(prismaOut,gv,sitDb) {
+    # Determine if we have a prisma output complete object or a list of 
+    # candidate PRSs
+    isPrismaOut <- is.list(prismaOut) && 
+        all(c("params","results") %in% names(prismaOut))
+    if (!isPrismaOut) # Check the list of PRSs as it may be manual
+        prismaOut <- .checkPrismaSelectionsOutput(prismaOut)
+    
+    disp("Assigning gene names to PRISMA output")
+    if (isPrismaOut) {
+        for (m in names(prismaOut$results)) {
+            disp("  for ",m," results")
+            for (n in names(prismaOut$results[[m]]$candidates)) {
+                disp("    for the ",m," SNPs candidate")
+                prismaOut$results[[m]]$candidates[[n]] <- 
+                    .assignGenesWorker(prismaOut$results[[m]]$candidates[[n]],
+                        gv,sitDb)
+            }
+        }
+    }
+    else {
+        for (i in seq_along(prismaOut))
+            prismaOut[[i]] <- .assignGenesWorker(prismaOut[[i]],gv,sitDb)
+    }
+    
+    return(prismaOut)
+}
+
+.assignGenesWorker <- function(x,gv,sitDb) {
+    if (!requireNamespace("sitadela")) # sitadela not here, return input
+        return(x)
+    
+    db <- ifelse(is.null(sitDb),sitadela::getDbPath(),sitDb)
+    ann <- loadAnnotation(gv,"refseq",type="gene",version="auto",db=db)
+    
+    tmp <- x
+    names(tmp)[2] <- "start"
+    tmp$end <- tmp$start
+    tmp <- GRanges(tmp)
+    
+    tmp <- tryCatch({
+        seqlevelsStyle(tmp) <- seqlevelsStyle(ann)
+    },error=function(e) {
+        if (!grepl("chr",as.character(seqnames(tmp)[1])))
+            seqlevels(tmp) <- paste0("chr",seqlevels(tmp))
+        return(tmp)
+    },finally="")
+    
+    # Find overlaps
+    o <- findOverlaps(tmp,ann)
+    x$locus_name[queryHits(o)] <- ann$gene_name[subjectHits(o)]
+    
+    return(x)
 }
 
 .getR2 <- function(obj) {

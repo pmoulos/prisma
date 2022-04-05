@@ -137,9 +137,9 @@ prismaLookup <- function(prismaOut) {
 getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
     retries=5) {
     # Package checking, meaningless to continue
-    if (!require(gwasrapidd))
+    if (!requireNamespace("gwasrapidd"))
         stop("R package gwasrapidd is required!")
-    if (!require(jsonlite))
+    if (!requireNamespace("jsonlite"))
         stop("R package jsonlite is required!")
     
     # Input checking and sanitization
@@ -312,9 +312,9 @@ getGWASVariants <- function(efoId=NULL,efoTrait=NULL,removeUnknownRisk=TRUE,
 getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
     retries=5,validateLoc=FALSE) {
     # Package checking, meaningless to continue
-    if (!require(quincunx))
+    if (!requireNamespace("quincunx"))
         stop("R package quincunx is required!")
-    if (!require(jsonlite))
+    if (!requireNamespace("jsonlite"))
         stop("R package jsonlite is required!")
     
     # Input checking and sanitization
@@ -625,8 +625,9 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
             
         if (a %in% c("hg19","hg38")) {
             host <- ifelse(a=="hg38","www.ensembl.org","grch37.ensembl.org")
-            mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,
-                dataset="hsapiens_snp")
+            #mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,
+            #    dataset="hsapiens_snp")
+            mart <- useEnsembl(biomart="snps",host=host,dataset="hsapiens_snp")
             snpInfo <- getBM(attributes=attrs,filters=filters,values=values,
                 mart=mart)
             tmp <- which(!(subdf$position %in% snpInfo$chrom_start))
@@ -635,7 +636,9 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
                 offend <- c(offend,tmp)
         }
         else { # We must check both assemblies...
-            mart1 <- useMart(biomart="ENSEMBL_MART_SNP",host="www.ensembl.org",
+            #mart1 <- useMart(biomart="ENSEMBL_MART_SNP",host="www.ensembl.org",
+            #    dataset="hsapiens_snp")
+            mart1 <- useEnsembl(biomart="snps",host="www.ensembl.org",
                 dataset="hsapiens_snp")
             snpInfo1 <- getBM(attributes=attrs,filters=filters,values=values,
                 mart=mart1)
@@ -644,8 +647,10 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
             if (length(tmp1) != nrow(subdf))
                 offend <- c(offend,tmp1)
             
-            mart2 <- useMart(biomart="ENSEMBL_MART_SNP",
-                host="grch37.ensembl.org",dataset="hsapiens_snp")
+            #mart2 <- useMart(biomart="ENSEMBL_MART_SNP",
+            #    host="grch37.ensembl.org",dataset="hsapiens_snp")
+            mart2 <- useEnsembl(biomart="snps",host="grch37.ensembl.org",
+                dataset="hsapiens_snp")
             snpInfo2 <- getBM(attributes=attrs,filters=filters,values=values,
                 mart=mart2)
             tmp2 <- which(!(subdf$position %in% snpInfo2$chrom_start))
@@ -660,7 +665,6 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
     #filters=c("snp_filter","variation_source")
     #values=list(snp_filter="rs6025",variation_source="dbSNP")
 }
-
 
 # Will return only good indexes
 .checkSuppAsms <- function(x) {
@@ -749,9 +753,8 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     
     # Check the rest variables required for a complete object
     if (is.null(sf$locus_name))
-        # TODO: Finish .tryAssignLocusName
-        # sf <- .tryAssignLocusName(sf,gb)
-        sf$locus_name <- rep(NA,length(sf))
+        sf <- .tryAssignLocusName(sf,gb)
+        #sf$locus_name <- rep(NA,length(sf))
     
     if (is.null(sf$reference_allele)) {
         disp("    trying to infer reference allele",level="full")
@@ -781,16 +784,38 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
 }
 
 # TxDb very limited... sitadela!!! WIP
-.tryAssignLocusName <- function(gp,gv=c("hg19","hg38")) {
+.tryAssignLocusName <- function(gp,gv=c("hg19","hg38"),sitDb=NULL) {
     gv <- gv[1]
     
     gp$locus_name <- rep(NA,length(gp))
     if (!(gv %in% c("hg19","hg38"))) # Nothing can be done
         return(gp)
     
-    if (!requireNamespace("sitadela"))
-        stop("Bioconductor package sitadela is required!")
+    if (!requireNamespace("sitadela")) { # Sitadela is required
+        warning("Bioconductor package sitadela is required! Returning NAs...")
+        return(gp)
+    }
     
+    # Let's use RefSeq annotation by default
+    db <- ifelse(is.null(sitDb),sitadela::getDbPath(),sitDb)
+    ann <- loadAnnotation(gv,"refseq",type="gene",version="auto",db=db)
+    # We need the same seqlevels styles - for some reason seqlevelsStyles fail
+    gptmp <- gp
+    gptmp <- tryCatch({
+        seqlevelsStyle(gptmp) <- seqlevelsStyle(ann)
+    },error=function(e) {
+        if (!grepl("chr",as.character(seqnames(gptmp)[1]))) {
+            seqlevels(gptmp) <- paste0("chr",seqlevels(gptmp))
+            seqnames(gptmp) <- paste0("chr",seqnames(gptmp))
+        }
+        return(gptmp)
+    },finally="")
+    
+    # Find overlaps
+    o <- findOverlaps(gptmp,ann)
+    gp$locus_name[queryHits(o)] <- ann$gene_name[subjectHits(o)]
+    
+    return(gp)
 }
 
 .tryInferRefAllele <- function(gp,gv=c("hg19","hg38")) {
@@ -991,7 +1016,8 @@ rsLocsFromEnsembl <- function(rs,gv=c("hg38","hg19"),canonical=TRUE) {
     values <- list(snp_filter=unique(rs),variation_source="dbSNP")
     
     host <- ifelse(gv=="hg38","www.ensembl.org","grch37.ensembl.org")
-    mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,dataset="hsapiens_snp")
+    #mart <- useMart(biomart="ENSEMBL_MART_SNP",host=host,dataset="hsapiens_snp")
+    mart <- useEnsembl(biomart="snps",host=host,dataset="hsapiens_snp")
     snpInfo <- getBM(attributes=attrs,filters=filters,values=values,mart=mart)
     
     # Keep only canonical chromosomes?

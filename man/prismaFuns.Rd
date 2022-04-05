@@ -51,6 +51,7 @@
         runId = NULL,
         evalOnSplit = c("original", "new"),
         evalWith = c("vanilla", "prscice"),
+        sitadelaDb = NULL,
         rc = NULL
     )
     
@@ -221,6 +222,10 @@
     \item{runId}{}
     
     \item{evalWith}{}
+    
+    \item{sitadelaDb}{Either \code{NULL} or a sitadela SQLite 
+    database with at least human RefSeq annotations for hg19
+    and hg38.}
     
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no

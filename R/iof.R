@@ -59,7 +59,7 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             gdsfile <- paste0(gdsfile,".gds")
         }
     }
-    if (backend == "bigsnpr" && !requireNamespace("snpStats"))
+    if (backend == "bigsnpr" && !requireNamespace("bigsnpr"))
         stop("Bioconductor package bigsnpr is required!")
     
     if (!is.null(phenos)) {
@@ -124,6 +124,42 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
         #snpObj <- ... snp_readSth
     }
         
+}
+
+writeGdsFile <- function(obj,gdsfile=NULL) {
+    if (!is(obj,"GWASExperiment"))
+        stop("Input object must be a GWASExperiment")
+    if (is.null(gdsfile))
+        gdsfile <- tempfile()
+    
+    map <- as.data.frame(gfeatures(obj))
+    fam <- as.data.frame(gsamples(obj))
+    geno <- t(genotypes(obj))
+    tmpBase <- tempfile()
+    
+    write.plink(
+        file.base=tmpBase,
+        snps=geno,
+        pedigree=fam$pedigree,
+        id=rownames(fam),
+        father=fam$father,
+        mother=fam$mother,
+        sex=fam$sex,
+        phenotype=fam$affected,
+        chromosome=map$chromosome,
+        position=map$position,
+        allele.1=map$allele.1,
+        allele.2=map$allele.2
+    )
+    
+    snpgdsBED2GDS(paste0(tmpBase,".bed"),paste0(tmpBase,".fam"),
+        paste0(tmpBase,".bim"),gdsfile,family=TRUE)
+        
+    unlink(paste0(tmpBase,".bed"),recursive=TRUE,force=TRUE)
+    unlink(paste0(tmpBase,".bim"),recursive=TRUE,force=TRUE)
+    unlink(paste0(tmpBase,".fam"),recursive=TRUE,force=TRUE)
+    
+    return(gdsfile)
 }
 
 .writeGdsFile <- function(input,snpObj,gdsfile,selection) {
@@ -352,7 +388,8 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
             write.plink(
                 file.base=outBase,
                 snps=gen[,!na],
-                pedigree=fam$pedigree,
+                #pedigree=fam$pedigree,
+                pedigree=rownames(fam),
                 id=rownames(fam),
                 father=fam$father,
                 mother=fam$mother,

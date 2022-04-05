@@ -1,8 +1,12 @@
 \name{downloadExternalFuns}
 \alias{downloadExternalTools}
+\alias{downloadGtool}
+\alias{downloadImpute}
 \alias{downloadPlink}
 \alias{downloadPrsice}
 \alias{downloadSnptest}
+\alias{downloadQctool}
+\alias{download1000GP3}
 \title{Functions to download external GWA and PRS tools}
 \usage{
     downloadExternalTools(tools = c("snptest", "plink", "prsice"),
@@ -14,6 +18,9 @@
     
     downloadSnptest( ver = c("v2.5.6", "v2.5.4", "v2.5.2"),
         path = NULL)
+    
+    
+    download1000GP3(path = NULL)
 }
 \arguments{
     \item{y}{}

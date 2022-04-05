@@ -1,21 +1,71 @@
+# Preflight - 100 samples is the minimum for SNPTEST to run
+dat <- makeSimData(nsnp=100,nsam=100,nphe=3,csnp=10)
+gwe <- GWASExperiment(
+    genotypes=dat$snp,
+    features=dat$feature,
+    samples=dat$sample,
+    phenotypes=dat$pheno
+)
+map <- gfeatures(gwe)
+gwe <- gwe[order(map$chromosome,map$position),]
+gdsgwe <- writeGdsFile(gwe)
+gdsfile(gwe) <- gdsgwe
+gwe <- calcPcaCovar(gwe,method="hubert",npc=1)
+
 test_that("gwa works",{
     # Maybe with a real test dataset or a test "thing"
 })
 
 test_that("gwaGlm works",{
-    # Maybe with a real test dataset or a test "thing"
+    glmOut1 <- gwaGlm(gwe,response="Trait_1",covariates=c("Trait_2","Trait_3"),
+        pcs=FALSE)
+    glmOut2 <- gwaGlm(gwe,response="Trait_1",covariates=c("Trait_2","Trait_3"),
+        pcs=TRUE)
+    p1 <- glmOut1[,4] < 0.05
+    p2 <- glmOut2[,4] < 0.05
+    expect_false(identical(p1,p2))
 })
 
 test_that("gwaBlup works",{
-    # Maybe with a real test dataset or a test "thing"
+    # Just test that run...
+    expect_warning(bluOut1 <- gwaBlup(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),usepc="rrint",npcs=2))
+    expect_warning(bluOut3 <- gwaBlup(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),usepc="none"))
 })
 
 test_that("gwaStatgen works",{
-    # Maybe with a real test dataset or a test "thing"
+    stOut1 <- gwaStatgen(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),pcs=FALSE)
+    stOut2 <- gwaStatgen(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),pcs=TRUE)
+    p1 <- stOut1[,3] < 0.05
+    p2 <- stOut2[,3] < 0.05
+    expect_false(identical(p1,p2))
 })
 
 test_that("gwaSnptest works",{
-    # Maybe with a real test dataset or a test "thing"
+    # For the time being, just that runs
+    skip_if(is.null(.EXTERNALS[["snptest"]]$exec))
+    snpOut1 <- gwaSnptest(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),pcs=FALSE)
+    snpOut2 <- gwaSnptest(gwe,response="Trait_1",
+        covariates=c("Trait_2","Trait_3"),pcs=TRUE)
+    p1 <- snpOut1[,3] < 0.05
+    p2 <- snpOut2[,3] < 0.05
+    expect_false(identical(p1,p2))
+})
+
+test_that("gwaPlink works",{
+    # For the time being, just that runs
+    skip_if(is.null(.EXTERNALS[["plink"]]$exec))
+    plOut1 <- gwaPlink(gwe,response="Trait_1",covariates=c("Trait_2","Trait_3"),
+        pcs=FALSE)
+    plOut2 <- gwaPlink(gwe,response="Trait_1",covariates=c("Trait_2","Trait_3"),
+        pcs=TRUE)
+    p1 <- plOut1[,3] < 0.05
+    p2 <- plOut2[,3] < 0.05
+    expect_false(identical(p1,p2))
 })
 
 test_that(".gwaGlmWorker works",{
@@ -23,7 +73,9 @@ test_that(".gwaGlmWorker works",{
 })
 
 test_that(".canRunGwa works",{
-    # Simple dummy data test
+    input <- .gimmeTestFiles()
+    err <- importGWAS(input,backend="snpStats",writeGds=FALSE)
+    expect_error(.canRunGwa(err))
 })
 
 test_that(".prepareGenotypesForBlup works",{

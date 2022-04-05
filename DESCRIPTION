@@ -21,11 +21,13 @@ Imports:
     islasso
     jsonlite
     kableExtra
+    lassosum
     liftOver
     magrittr
     methods
     openxlsx
     parallel
+    PhenotypeSimulator
     quincunx
     R.utils
     rmarkdown
@@ -45,7 +47,8 @@ Imports:
     utils
 Suggests:
     knitr,
-    testthat
+    testthat,
+    data.table
 Description: prisma is an R package for the semi-automated construction and
 evaluation of Polygenic Risk Scores (PRS) with data from multiple summary 
 statistics and PRS extraction algorithms. prisma supports several Genome Wide

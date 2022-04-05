@@ -5,17 +5,35 @@ import(ggplot2)
 import(magrittr)
 import(parallel)
 import(scales)
+import(SNPRelate)
+import(snpStats)
+import(SummarizedExperiment)
 
 importFrom("akmedoids",elbow_point)
 
-importFrom("glmnet",)
+importFrom("BSgenome",getBSgenome)
+importFrom("BSgenome",inferRefAndAltAlleles)
+importFrom("BSgenome",snpsById)
+importFrom("BSgenome",snpsByOverlaps)
+
+importFrom("GenomeInfoDb",seqinfo)
+importFrom("GenomeInfoDb",Seqinfo)
+importFrom("GenomeInfoDb",seqlevels)
+importFrom("GenomeInfoDb",seqlengths)
+importFrom("GenomeInfoDb","seqlengths<-")
+importFrom("GenomeInfoDb",seqlevelsStyle)
+importFrom("GenomeInfoDb","seqlevelsStyle<-")
+
+importFrom("gwasrapidd",get_associations)
+importFrom("gwasrapidd",get_traits)
+importFrom("gwasrapidd",get_variants)
 
 importFrom("harmonicmeanp",hmp.stat)
 importFrom("harmonicmeanp",p.hmp)
 
-importFrom("htmltools",tags)
-
 importFrom("islasso",islasso)
+
+importFrom("htmltools",tags)
 
 importFrom("jsonlite",fromJSON)
 importFrom("jsonlite",toJSON)
@@ -25,6 +43,10 @@ importFrom("lassosum",p2cor)
 importFrom("lassosum",lassosum.pipeline)
 importFrom("lassosum",validate)
 importFrom("lassosum",splitvalidate)
+
+importFrom("liftOver",liftOver)
+
+importFrom("quincunx",get_scores)
 
 importFrom("RMTstat",ptw)
 
@@ -37,7 +59,11 @@ importFrom("rmarkdown",render)
 
 importFrom("rmdformats",robobook)
 
+importFrom("rtracklayer",import.chain)
+
 importFrom("S4Vectors",DataFrame)
+
+importFrom("sitadela",loadAnnotation)
 
 importFrom("statgenGWAS",createGData)
 importFrom("statgenGWAS",runSingleTraitGwas)
@@ -85,8 +111,12 @@ importFrom("stats",wilcox.test)
 
 importFrom("survcomp",combine.test)
 
+importFrom("rrcov",getEigenvalues)
+importFrom("rrcov",getLoadings)
 importFrom("rrcov",PcaGrid)
 importFrom("rrcov",PcaHubert)
+
+importFrom("rsnps",ncbi_snp_query)
 
 importFrom("tools",R_user_dir)
 
@@ -103,6 +133,7 @@ importFrom("utils",zip)
 
 export(adjustPrsWeights)
 export(aggregatePrsMarkers)
+export(assignGenes)
 export(combineHarmonic)
 export(combineMaxp)
 export(combineMinp)
@@ -111,15 +142,20 @@ export(combineWeight)
 export(createSplit)
 export(cvSummary)
 export(downloadExternalTools)
+export(downloadGtool)
+export(downloadImpute)
 export(downloadPlink)
 export(downloadPrsice)
+export(downloadQctool)
 export(downloadSnptest)
 export(enrichScoreFile)
+export(extendGWAS)
 export(filterGWAS)
 export(fisherMethod)
 export(getDefaults)
 export(getGWASVariants)
 export(getPGSScores)
+export(guessHumanGenomeVersion)
 export(gwa)
 export(gwaBlup)
 export(gwaGlm)
@@ -127,6 +163,7 @@ export(gwaPlink)
 export(GWASExperiment)
 export(GWASExperiment2GDS)
 export(GWASExperiment2gData)
+export(GWASExperimentLiftOver)
 export(gwaSnptest)
 export(gwaStatgen)
 export(harvestWorkspace)
@@ -135,6 +172,7 @@ export(imputeGWAS)
 export(lassosumPRS)
 export(listGwa)
 export(listPrs)
+export(makeSimData)
 export(mergeGWAS)
 export(normalityCheck)
 export(partitionGWAS)
@@ -156,5 +194,5 @@ export(selectPrs)
 export(SnpMatrix)
 export(summarizeCvMetrics)
 export(twTest)
+export(writeGdsfile)
 export(writePlink)
-

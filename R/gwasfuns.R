@@ -776,6 +776,10 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
         needCov <- FALSE
     
     # What PLINK expects
+    if (!("FID" %in% colnames(p)))
+        p$FID <- rownames(p)
+    if (!("IID" %in% colnames(p)))
+        p$IID <- rownames(p)
     pheno <- p[,c("FID","IID",response)]
     if (needCov)
         covar <- p[,c("FID","IID",covariates)]

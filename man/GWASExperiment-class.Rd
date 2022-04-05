@@ -643,41 +643,65 @@
 }
 
 \examples{
-nrows <- 200; ncols <- 6
-counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-colData <- DataFrame(Treatment=rep(c("ChIP", "Input"), 3),
-                     row.names=LETTERS[1:6])
-se0 <- SummarizedExperiment(assays=SimpleList(counts=counts),
-                            colData=colData)
-se0
-dim(se0)
-dimnames(se0)
-assayNames(se0)
-head(assay(se0))
-assays(se0) <- endoapply(assays(se0), asinh)
-head(assay(se0))
+library(PhenotypeSimulator)
 
-rowData(se0)
-colData(se0)
+# Simulate some data
+dat1 <- makeSimData(nsnp=100,nsam=10,nphe=3,csnp=10)
 
-se0[, se0$Treatment == "ChIP"]
-subset(se0, select = Treatment == "ChIP")
+# Simple GWASExperiment object
+gwe1 <- GWASExperiment(
+    genotypes=dat1$snp,
+    features=dat1$feature,
+    samples=dat1$sample,
+    phenotypes=dat1$pheno
+)
 
-## cbind() combines objects with the same features of interest
-## but different samples:
-se1 <- se0
-se2 <- se1[,1:3]
-colnames(se2) <- letters[seq_len(ncol(se2))]
-cmb1 <- cbind(se1, se2)
-dim(cmb1)
-dimnames(cmb1)
+# With pseudo-effects and pseudo-pvalues
+pspval <- matrix(runif(200),100,2)
+rownames(pspval) <- rownames(dat1$snp)
+colnames(pspval) <- c("test1","test2")
 
-## rbind() combines objects with the same samples but different
-## features of interest:
-se1 <- se0
-se2 <- se1[1:50,]
-rownames(se2) <- letters[seq_len(nrow(se2))]
-cmb2 <- rbind(se1, se2)
-dim(cmb2)
-dimnames(cmb2)
+# Pseudo-effects and directions
+pseff <- matrix(runif(200,min=0,max=2),100,2)
+dire <- matrix(FALSE,100,2)
+dire[sample(nrow(dire),50),1] <- TRUE
+dire[sample(nrow(dire),50),2] <- TRUE
+pseff[dire[,1],1] <- -pseff[dire[,1],1]
+pseff[dire[,2],2] <- -pseff[dire[,2],2]
+rownames(pseff) <- rownames(dat1$snp)
+colnames(pseff) <- c("test1","test2")
+
+# Assign effects and p-values to the object, assuming a model
+# with 'Trait_1' as response and 'Trait_2', 'Trait_3' as
+# covariates has been fit
+pvalues(gwe1,response="Trait_1",
+    covariates=c("Trait_2","Trait_3")) <- pspval
+effects(gwe1,response="Trait_1",
+    covariates=c("Trait_2","Trait_3")) <- pseff
+
+# Add SNPs (rbind)
+dat2 <- makeSimData(nsnp=100,nsam=10,nphe=3,csnp=10)
+rownames(dat2$snp) <- rownames(dat2$feature) <- 
+    paste("snp",101:200,sep="_")
+gwe2 <- GWASExperiment(
+    genotypes=dat2$snp,
+    features=dat2$feature,
+    samples=dat1$sample,
+    phenotypes=dat1$pheno
+)
+# p-values and effects will be dropped with warning
+gwe12 <- suppressWarnings(rbind(gwe1,gwe2))
+
+# Add samples (cbind)
+dat3 <- makeSimData(nsnp=100,nsam=10,nphe=3,csnp=10)
+rownames(dat3$sample) <- rownames(dat3$pheno) <- 
+    colnames(dat3$snp) <- paste("sample",11:20,sep="_")
+gwe3 <- GWASExperiment(
+    genotypes=dat3$snp,
+    features=dat1$feature,
+    samples=dat3$sample,
+    phenotypes=dat3$pheno
+)
+# p-values and effects will be dropped with warning
+gwe13 <- suppressWarnings(cbind(gwe1,gwe3))
 }

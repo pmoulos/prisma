@@ -1,8 +1,9 @@
 # This will download in default paths... If another path is desired, use 
 # individual download functions directly
-downloadExternalTools <- function(tools=c("snptest","plink","prsice"),
-    ver=getDefaults("externalTools"),path=NULL) {
-    .checkTextArgs("tools",tools,c("snptest","plink","prsice"),multiarg=TRUE)
+downloadExternalTools <- function(tools=c("snptest","plink","prsice","impute",
+    "gtool","qctool"),ver=getDefaults("externalTools"),path=NULL) {
+    .checkTextArgs("tools",tools,c("snptest","plink","prsice","impute",
+        "gtool","qctool"),multiarg=TRUE)
     
     if ("snptest" %in% tools)
         downloadSnptest(ver=ver$snptest,path=path)
@@ -12,6 +13,10 @@ downloadExternalTools <- function(tools=c("snptest","plink","prsice"),
         downloadPrsice(ver=ver$prsice,path=path)
     if ("impute" %in% tools)
         downloadImpute(ver=ver$impute,path=path)
+    if ("gtool" %in% tools)
+        downloadGtool(ver=ver$gtool,path=path)
+    if ("qctool" %in% tools)
+        downloadGtool(ver=ver$qctool,path=path)
 }
 
 downloadSnptest <- function(ver=c("v2.5.6","v2.5.4","v2.5.2"),path=NULL) {

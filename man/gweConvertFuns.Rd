@@ -1,6 +1,8 @@
 \name{gweConvertFuns}
 \alias{GWASExperiment2gData}
 \alias{GWASExperiment2GDS}
+\alias{GWASExperimentLiftOver}
+\alias{guessHumanGenomeVersion}
 \title{Functions to convert GWASExperiment to other classes}
 \usage{
     GWASExperiment2gData(obj, covariates = NULL, pcs = FALSE,

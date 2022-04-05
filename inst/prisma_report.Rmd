@@ -1028,11 +1028,15 @@ cat("</div></div><br/>")
 for (m in names(prismaOut$results)) {
     for (n in names(prismaOut$results[[m]]$candidates)) {
         snps <- prismaOut$results[[m]]$candidates[[n]]
-        snps <- snps[,-c(6,8,9)]
+        snps <- snps[,-c(8,9)]
         snps[,"effect_weight"] <- round(snps[,"effect_weight"],5)
         snps[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
             "/snp/",snps[,"variant_id"],"' target='_blank'>",
             snps[,"variant_id"],"</a>",sep="")
+        na <- is.na(snps$locus_name)
+        snps[!na,"locus_name"] <- paste("<a href='https://www.genenames.org/",
+            "data/gene-symbol-report/#!/symbol/",snps[!na,"locus_name"],
+            "' target='_blank'>",snps[!na,"locus_name"],"</a>",sep="")
         colnames(snps)[1] <- "chrom"
         colnames(snps)[5] <- "ref_allele"
         

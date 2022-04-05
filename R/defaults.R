@@ -64,7 +64,8 @@ getDefaults <- function(what) {
                 plink="v1.90",
                 prsice="v2.3.3",
                 impute="v2.3.2",
-                gtool="v0.7.5"
+                gtool="v0.7.5",
+                qctool="v2.2.0"
             ))
         },
         lassosum = {

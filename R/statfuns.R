@@ -138,7 +138,8 @@ twTest <- function(eigv,p=0.05,tol=1e-8) {
 
 # TODO: Plot histogram with overlayed normal curve + Q-Q plot
 normalityCheck <- function(x,pval=0.05,tests=c("sw","ks","jb"),lower=30,
-    forceTest=TRUE,combine=c("fisher","simes","max","min"),nsample=1000) {
+    #forceTest=TRUE,
+    combine=c("fisher","simes","max","min"),nsample=1000) {
     # upper not implemented
     if ("jb" %in% tests && !requireNamespace("tseries"))
         stop("R package tseries is required for Jarque-Bera test!")
@@ -149,8 +150,8 @@ normalityCheck <- function(x,pval=0.05,tests=c("sw","ks","jb"),lower=30,
         c("fisher","simes","max","min"),multiarg=TRUE)
     .checkNumArgs("Lower sample size",lower,"numeric",0,"gt")
     .checkNumArgs("Resampling iterations",nsample,"numeric",0,"gt")
-    if (!is.logical(forceTest))
-        stop("Testing above upper sample size (forceTest) must be logical!")
+    #if (!is.logical(forceTest))
+    #    stop("Testing above upper sample size (forceTest) must be logical!")
     
     n <- length(x)
     p <- s <- numeric(length(tests))

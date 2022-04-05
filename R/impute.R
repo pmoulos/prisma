@@ -152,7 +152,7 @@
     disp(length(smIndMiss)," samples have missing genotypes in ",
         length(missSnps)," SNPs in total.")
     disp(ncol(train)," samples with ",length(noMissSnps)," SNPs with complete ",
-     "presence will be used to train the impute model.")
+        "presence will be used to train the impute model.")
     
     return(rules)
 }
