@@ -1052,7 +1052,7 @@ aggregatePrsMarkers <- function(gwaList,mode=c("intersect","union"),qcut=0.9,
     if (assoc == "auto") {
         pri <- .getGwaLinArgPrior()
         if (any(pri %in% colnames(tmpe)))
-            assoc <- colnames(tmpe)[which(pri %in% colnames(tmpe))[1]]
+            assoc <- pri[which(pri %in% colnames(tmpe))[1]]
     }
     
     # TODO: lassosum effects from lassosum
@@ -1298,8 +1298,8 @@ assignGenes <- function(prismaOut,gv,sitDb) {
 }
 
 .assignGenesWorker <- function(x,gv,sitDb) {
-    if (!requireNamespace("sitadela")) # sitadela not here, return input
-        return(x)
+    if (!requireNamespace("sitadela",quietly=TRUE)) 
+        return(x) # sitadela not here, return input
     
     db <- ifelse(is.null(sitDb),sitadela::getDbPath(),sitDb)
     ann <- loadAnnotation(gv,"refseq",type="gene",version="auto",db=db)

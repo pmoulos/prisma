@@ -111,6 +111,8 @@ lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         pheno[,"IID"] <- pheno[,"FID"]
         covar[,"IID"] <- covar[,"FID"]
     }
+    
+    npcs <- 0
     if (pcs) { # Include robust PCs in the model
         if (.hasPcaCovariates(target)) {
             pcov <- pcaCovariates(target)
@@ -233,6 +235,8 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
         pheno[,"IID"] <- pheno[,"FID"]
         covar[,"IID"] <- covar[,"FID"]
     }
+    
+    npcs <- 0
     if (pcs) { # Include robust PCs in the model
         if (.hasPcaCovariates(target)) {
             pcov <- pcaCovariates(target)
@@ -547,7 +551,7 @@ prsicePRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
 }
 
 .getGwaLinArgPrior <- function() {
-    return(c("snptest","statgen","plink","glm","rrblup"))
+    return(c("snptest","plink","statgen","glm","rrblup"))
 }
 
 .canRunPrs <- function(o,p,isBase=FALSE) {

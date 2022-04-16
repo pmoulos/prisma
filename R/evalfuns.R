@@ -597,7 +597,7 @@ cvSummary <- function(M,nsnp,scr=TRUE,out=FALSE) {
             formatC(theStats["ttest_full_reduced_pred_cor"],
             format="e",digits=3))
         disp("Wilcoxon test  : ",
-            formatC(theStats["ttest_full_reduced_pred_cor"],
+            formatC(theStats["wilcox_full_reduced_pred_cor"],
             format="e",digits=3))
         disp("Empirical test : ",theStats["empirical_full_reduced_pred_cor"])
         disp(.symbolBar("-",64),"\n")
@@ -822,7 +822,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     y <- diff(c(-.Machine$integer.max, x)) > 0L
     y <- cumsum(rle(y)$lengths)
     y <- y[seq.int(1L, length(y), 2L)]
-    if (x[[1]] == x[[2]])
+    if (length(x) > 1 && x[[1]] == x[[2]])
         y <- y[-1]
     return(y)
 }

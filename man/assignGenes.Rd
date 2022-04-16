@@ -18,7 +18,8 @@
     \code{locus_name} column of PRS candidates.
 }
 \description{
-    
+    This function assigns gene names in the SNPs of a
+    \code{\link{prisma}} output list.
 }
 \details{
     If the sitadela database is not found in the provided location,
@@ -27,7 +28,12 @@
     \code{sitDb=NULL}, no annotation will be performed.
 }
 \examples{
-    
+\dontrun{
+    data(toy,package="prisma")
+    data(prisma_out,package="prisma")
+
+    prismaOut <- assignGenes(prismaOut,gv=genome(toy))
+}
 }
 \author{
     Panagiotis Moulos
