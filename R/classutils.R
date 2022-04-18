@@ -141,3 +141,58 @@ guessHumanGenomeVersion <- function(o) {
     else
         return("hg38")
 }
+
+## We need an own split fun because default split does not handle the structure
+## of p-values, effects etc.
+#splitGWAS <- function(obj,by,across=c("features","samples"),rc=NULL) {
+#   ..acrossWhat <- function(a,o) {
+#       if (a == "features")
+#           return(nrow(o))
+#       else if (a == "samples")
+#           return(ncol(o))
+#   }
+#   
+#   if (!is(obj,"GWASExperiment"))
+#       stop("Input object must be a GWASExperiment object!")
+#   if (!missing(by) && !is.character(by) && !is.numeric(by))
+#       stop("by argument must be a single character or a single numeric")
+#   
+#   across <- across[1]
+#   .checkTextArgs("Split dimension (across)",across,c("features","samples"),
+#       multiarg=FALSE)
+#   by <- by[1]
+#   
+#   if (across == "features")
+#       map <- gfeatures(obj)
+#   else if (across == "samples")
+#       map <- gsamples(obj)
+#   
+#   if (!missing(by)) {
+#       if (is.character(by)) { # Split per feature/sample name
+#           if (!(by %in% colnames(map)))
+#               stop(by," was requested as a splitting factor but cannot ",
+#                   "found in ",across,"!")
+#       }
+#       else if (is.numeric(by)) {
+#           if (by > ncol(map))
+#               stop(across," do not have ",by," columns!")
+#           by <- colnames(map)[by]
+#       }
+#       fac <- map[,by]
+#   }
+#   else
+#       fac <- .splitFactorForParallel(..acrossWhat(across,obj),rc)
+#   
+#   sList <- split(seq_len(..acrossWhat(across,obj)),fac)
+#       
+#   if (across == "features")
+#       out <- lapply(sList,function(i) {
+#           return(obj[i,])
+#       })
+#   else if (across == "samples")
+#       out <- lapply(sList,function(i) {
+#           return(obj[,i])
+#       })
+#   
+#   return(out)
+#}

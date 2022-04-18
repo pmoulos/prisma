@@ -13,7 +13,9 @@ gdsfile(gwe) <- gdsgwe
 gwe <- calcPcaCovar(gwe,method="hubert",npc=1)
 
 test_that("gwa works",{
-    # Maybe with a real test dataset or a test "thing"
+    
+    gwe1 <- gwa(gwe,response="Trait_1",covariates=c("Trait_2","Trait_3"),
+        pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
 })
 
 test_that("gwaGlm works",{

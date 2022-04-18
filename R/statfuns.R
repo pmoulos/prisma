@@ -294,7 +294,7 @@ fisherMethod <- function(pvals,zerofix=NULL) {
     pvals[pvals == 0] <- zeroSub
     
     fisher.sums <- data.frame(do.call(rbind,apply(pvals,1,fisherSum,
-        zeroSub=zeroSub,na.rm=na.rm)))
+        zeroSub=zeroSub,na.rm=TRUE)))
     rownames(fisher.sums) <- rownames(pvals)
     fisher.sums$p.value <- 1-pchisq(fisher.sums$S,df=2*fisher.sums$num.p)
     fisher.sums$p.adj <- fisher.sums$p.value

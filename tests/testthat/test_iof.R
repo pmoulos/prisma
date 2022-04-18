@@ -3,7 +3,7 @@ test_that("GWASExperiment from snpStats PLINK works",{
     sample <- snpStats::read.plink(input$bed,input$bim,input$fam)
     
     # Without phenotypes
-    gwe <- importGWAS(input,backend="snpStats")
+    gwe <- importGWAS(input,backend="snpStats",writeGds=FALSE)
     expect_true(is(gwe,"GWASExperiment"))
     expect_equal(nrow(gwe),nrow(sample$map))
     expect_equal(ncol(gwe),nrow(sample$fam))
@@ -21,9 +21,35 @@ test_that("GWASExperiment from snpStats PLINK works",{
         cont=round(runif(nrow(sample$fam)),3),
         row.names=rownames(sample$fam)
     )
-    gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats")
+    gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats",
+        writeGds=FALSE)
     expect_true(is(gwe,"GWASExperiment"))
     expect_identical(phenotypes(gwe),pseudopheno)
+})
+
+test_that("GWASExperiment snpStats imputation works",{
+    data(toy,package="prisma")
+    
+    # Make some genotypes missing
+    set.seed(42)
+    toMiss <- lapply(seq_len(ncol(toy)),function(j) {
+        n <- sample(20,1)
+        miss <- logical(nrow(toy))
+        miss[sample(nrow(toy),n)] <- TRUE
+        return(miss)
+    })
+    
+    G <- as(genotypes(toy),"numeric") + 1
+    mode(G) <- "integer"
+    for (j in seq_len(ncol(toy)))
+        G[toMiss[[j]],j] <- 0L
+    G <- SnpMatrix(G)
+    genotypes(toy) <- G
+    
+    toyI <- imputeGWAS(toy,fail="none")
+    before <- length(which(is.na(genotypes(toy))))
+    after <- length(which(is.na(genotypes(toyI))))
+    expect_true(before>after)
 })
 
 test_that("writePlink from GWAS experiment works",{

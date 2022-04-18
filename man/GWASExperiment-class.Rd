@@ -92,6 +92,9 @@
 \alias{rbind,GWASExperiment-method}
 \alias{cbind,GWASExperiment-method}
 
+% Split
+\alias{gsplit,GWASExperiment-method}
+
 \title{GWASExperiment objects}
 
 \description{
@@ -196,6 +199,9 @@
     prsbetas(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...) <- value
     allPrsbetas(x, i = seq_len(ncol(x)))
+    
+    gsplit(x, by, across = c("features", "samples"), 
+        rc = NULL)
 
     genome(x)
     genome(x) <- value
@@ -594,6 +600,19 @@
     one of the supporting methods within the package. Users will
     usually only access the PCA covariates while setting them using
     the \code{\link{calcPcaCovars}} function.}
+    
+    \item{\code{prsbetas(x, by, across = c("features", "samples"), 
+    rc = NULL}:{Split an object by column names stored in the
+    \code{gfeatures} or \code{gsamples}. If the former, the object
+    is split row-wise while if the former, it is split column-wise.
+    \code{by} is either the name of the \code{gfeatures} or
+    \code{gsamples} column, or its index. If \code{by} is missing,
+    then the object is split according to the \code{rc} variable
+    which prepares the object for parallel calculatios and the
+    split is done according to the number of available cores
+    to use (\code{rc}). If \code{rc=NULL} and also \code{by} is
+    missing, then there is no split and the object is returned
+    in a lenght-one list.}
 }
 
 \section{Subsetting}{
@@ -632,6 +651,15 @@
         depend on the population which changes with object 
         combination.
     }
+}
+
+\section{Splitting}{
+    The splitting operations differ from the classic 
+    SummarizedExperiment in the sense that a GWASExperiment
+    object may curry multiple associated GWA and PRS analyses
+    using different sets of covariates. These can be preserved
+    by using the \code{gsplit} function which operates across
+    feature properties or sample properties.
 }
 
 \author{

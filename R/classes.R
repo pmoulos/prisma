@@ -107,6 +107,8 @@ setGeneric("gdsfile<-",function(x,...,value) standardGeneric("gdsfile<-"))
 
 setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
 
+setGeneric("gsplit",function(x,...) standardGeneric("gsplit"))
+
 setGeneric("pcaCovariates<-",
     function(x,...,value) standardGeneric("pcaCovariates<-"))
 
@@ -377,6 +379,61 @@ setReplaceMethod("pcaCovariates","GWASExperiment",function(x,...,value) {
         return(x)
 })
 
+setMethod("gsplit","GWASExperiment",function(x,by,across=c("features",
+    "samples"),rc=NULL) {
+    ..acrossWhat <- function(a,o) {
+        if (a == "features")
+            return(nrow(o))
+        else if (a == "samples")
+            return(ncol(o))
+    }
+    
+    if (!missing(by)) {
+        if (!is.character(by) && !is.numeric(by))
+            stop("by argument must be a single character or a single numeric")
+        by <- by[1]
+    }
+
+    across <- across[1]
+    if (!across %in% c("features","samples"))
+        stop("Split dimension (across) must be one of 'features' or ",
+            "'samples'!")
+    
+    if (across == "features")
+        map <- gfeatures(x)
+    else if (across == "samples")
+        map <- gsamples(x)
+    
+    if (!missing(by)) {
+        if (is.character(by)) { # Split per feature/sample name
+            if (!(by %in% colnames(map)))
+                stop(by," was requested as a splitting factor but cannot ",
+                    "found in ",across,"!")
+        }
+        else if (is.numeric(by)) {
+            if (by > ncol(map))
+                stop(across," do not have ",by," columns!")
+            by <- colnames(map)[by]
+        }
+        fac <- map[,by]
+    }
+    else
+        fac <- .splitFactorForParallel(..acrossWhat(across,x),rc)
+    
+    sList <- split(seq_len(..acrossWhat(across,obj)),fac)
+        
+    if (across == "features")
+        y <- lapply(sList,function(i) {
+            return(x[i,])
+        })
+    else if (across == "samples")
+        y <- lapply(sList,function(i) {
+            return(x[,i])
+        })
+    
+    return(y)
+})
+
 setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     p <- phenotypes(x,withDimnames=FALSE)
     #v <- pvalues(x,withDimnames=FALSE)
@@ -421,7 +478,13 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     # There must be an option to recalculate, set with R options. We keep 
     # filters for now. Whether deleted or not, will be controlled by various
     # levels of this R option.
-    if (!missing(i) || !missing(j)) {
+    # 18/4/2022: This behavior can be a problem when just splitting for
+    # calculations... That is we want to run GWA and take into account the
+    # PCA structure but split association analysis per chromosome. By dropping
+    # PCs, we lose the total population structure. So we might restrict such
+    # behavior to j
+    #if (!missing(i) || !missing(j)) {
+    if (!missing(j)) {
         m <- metadata(x)
         m$LDsnps <- m$pcaCov <- m$PCs <- NULL
         metadata(x) <- m
@@ -483,7 +546,8 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     
     # Similarly as above, if i or j not missing, values have been replaced and
     # some metadata values are no longer valid.
-    if (!missing(i) || !missing(j)) {
+    #if (!missing(i) || !missing(j)) {
+    if (!missing(j)) {
         m <- metadata(x)
         m$LDsnps <- m$pcaCov <- m$PCs <- NULL
         metadata(x) <- m
@@ -989,12 +1053,14 @@ SnpMatrix <- function(snp) {
 .listAction <- function(obj,action) {
     # action is one of "gwa","prs"
     if (action == "gwa") {
-        num <- effects(obj)
+        #num <- effects(obj)
+        num <- obj@effects
         wh <- "GWA"
         var <- "[SNP]"
     }
     else if (action == "prs") {
-        num <- prsbetas(obj)
+        #num <- prsbetas(obj)
+        num <- obj@prsbetas
         wh <- "PRS"
         var <- "[PRS]"
     }
@@ -1022,13 +1088,17 @@ SnpMatrix <- function(snp) {
                 hm <- as.numeric(parts$npcs)
                 pcFor <- paste0(paste("PC",seq_len(hm),sep=""),collapse=" + ")
             }
-            allCovs <- paste0(cvsFor,pcFor,var,sep=" + ")
+            if (pcFor == "")
+                allCovs <- paste(cvsFor,var,sep=" + ")
+            else
+                allCovs <- paste(cvsFor,pcFor,var,sep=" + ")
             message(i," -> ","Phenotype: ",parts$res," | Covariates: ",cvsMsg,
                 " | PCs: ",pcMsg)
-            message("    Putative formula: ",paste(res,allCovs,sep=" ~ "))
+            message("     Putative formula: ",paste(parts$res,allCovs,
+                sep=" ~ "))
         },names(num))
         message("\nNote: The PC variables have putative names based on the ",
-            "number of PCs included in the model. For example, instead of ",
+            "number of PCs included in the model.\nFor example, instead of ",
             "PC1, PC2, PC3 the actual PCs may be PC1, PC3, PC4")
     }
 }

@@ -47,11 +47,9 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
     # Splits the association analysis per chromosome, ortherwise, some chunks
     map <- gfeatures(obj)
     if ("chromosome" %in% names(map))
-        parts <- split(obj,map$chromosome)
-    else {
-        splitFactor <- .splitFactorForParallel(nrow(obj),rc)
-        parts <- split(obj,splitFactor)
-    }
+        parts <- gsplit(obj,by="chromosome",across="features")
+    else
+        parts <- gsplit(obj,across="features",rc=rc)
     
     # Parallelization inside chunks where possible
     disp("\nStarting GWA analysis in ",length(parts)," chunks with ",
@@ -166,8 +164,7 @@ gwa <- function(obj,response,covariates=NULL,pcs=FALSE,psig=0.05,
         disp("\nCombining p-values from multi-GWAS using ",combine," method")
         switch(combine,
             fisher = {
-                tmp <- fisherMethod(pMatrix,p.corr="none",
-                    zeroSub=.Machine$double.xmin)
+                tmp <- fisherMethod(pMatrix)
                 pComb <- tmp$p.value
             },
             simes = {

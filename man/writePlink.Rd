@@ -2,37 +2,46 @@
 \title{PLINK files from GWASExperiment}
 \usage{
     writePlink(obj, pheno = NULL, outBase = NULL, salvage = FALSE,
-        reverse = FALSE)
+        reverse = FALSE, perChr = FALSE, overwrite = TRUE)
 }
 \arguments{
-    \item{obj}{an object of GWASExperiment class}
+    \item{obj}{An object of GWASExperiment class with at
+    least genotypic data.}
     
-    \item{pheno}{the name of the phenotype to be written to
+    \item{pheno}{The name of the phenotype to be written to
     the respective FAM column.}
     
-    \item{outBase}{}
+    \item{outBase}{The full path to the base of the PLINK 
+    files triplet. I.e. not with any extension \code{.bim},
+    \code{.bed} or \code{.fam}.}
     
     \item{salvage}{try to salvage SNPs with missing locations?
     Defaults to \code{FALSE}. See also Details.}
     
-    \item{reverse}{}
+    \item{reverse}{Reverse allele genotypes prior to write?
+    Defaults to \code{FALSE}.}
+    
+    \item{perChr}{Write one PLINK triplet per chromosome?
+    Defaults to \code{FALSE}.}
+    
+    \item{overwrite}{Overwrite previous files with the same
+    name? Defaults to \code{TRUE}.}
 }
 \value{
-    
+    This function does not return anything, just writes the
+    PLINK files to the desired location.
 }
 \description{
-    
-}
-\details{
-    
+    This function writes a \code{GWASExperiment} object to
+    a triplet of PLINK BID/BED/BAM file(s). A split per
+    chromosome is also possible. The \code{pheno} argument
+    controls which phenotype will be written (if desired)
+    to the respective column of the FAM file.
 }
 \examples{
-    x <- rnorm(20)
-    
-    o1 <- normalityCheck(x)
-    o2 <- normalityCheck(x,combine="simes")
-    # Two instead of 3 tests
-    o3 <- normalityCheck(x,tests=c("sw","jb"),combine="simes")
+    data(toy,package="prisma")
+    out <- tempfile()
+    writePlink(toy,pheno="BMI",outBase=out)
 }
 \author{
     Panagiotis Moulos
