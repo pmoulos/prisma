@@ -1,5 +1,6 @@
 test_that("downloadSnptest works",{
     # Simple dummy data test
+    expect_true(TRUE)
 })
 
 test_that(".tryNumerize works",{

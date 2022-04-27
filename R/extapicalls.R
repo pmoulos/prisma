@@ -547,7 +547,7 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
                     s <- .splitPath(x)
                     return(file.path(b,s[3],s[2],s[1]))
                 },base))
-                names(sfs) <- pid
+                names(sfs) <- names(asm) <- pid
             }
             
             theScores <- tryCatch({
@@ -923,10 +923,10 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         chainFile <- system.file(package="liftOver","extdata",
             "hg38ToHg19.over.chain")
     else if (from == "hg19" && to == "hg38") {
-        #chainFile <- system.file(package="prisma","extdata",
-        #   "hg19ToHg38.over.chain")
+        chainFile <- system.file(package="prisma","extdata",
+           "hg19ToHg38.over.chain")
         #chgz <- "C:/software/prisma/inst/extdata/hg19ToHg38.over.chain.gz"
-        chgz <- "/media/raid/software/prisma/inst/extdata/hg19ToHg38.over.chain.gz"
+        #chgz <- "/media/raid/software/prisma/inst/extdata/hg19ToHg38.over.chain.gz"
         chainFile <- file.path(tempdir(),"hg19ToHg38.over.chain")
         if (!file.exists(chainFile))
             R.utils::gunzip(chgz,destname=chainFile,remove=FALSE)

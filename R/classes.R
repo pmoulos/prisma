@@ -420,7 +420,7 @@ setMethod("gsplit","GWASExperiment",function(x,by,across=c("features",
     else
         fac <- .splitFactorForParallel(..acrossWhat(across,x),rc)
     
-    sList <- split(seq_len(..acrossWhat(across,obj)),fac)
+    sList <- split(seq_len(..acrossWhat(across,x)),fac)
         
     if (across == "features")
         y <- lapply(sList,function(i) {
@@ -949,6 +949,16 @@ SnpMatrix <- function(snp) {
         return(new("SnpMatrix",matrix(as.raw(0),0,0)))
     else
         return(new("SnpMatrix",snp))
+    #else {
+    #   if (all(snp %in% c(0L,1L,2L,3L)))
+    #       return(new("SnpMatrix",snp))
+    #   else {
+    #       mode(snp) <- "integer"
+    #       snp <- snp + 1L
+    #       snp[is.na(snp)] <- 0L
+    #       return(new("SnpMatrix",snp))
+    #   }
+    #}
 }
 
 # test: all(names(out) %in% ...)

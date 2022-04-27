@@ -103,8 +103,8 @@ test_that(".GWASVariantsWorker works",{
 
 # Test suite for getGWASVariants
 test_that("getPGSScores works",{
-    #base <- file.path(system.file(package="prisma"),"extdata")
-    base <- "/media/raid/software/prisma/inst/extdata/scores"
+    base <- file.path(system.file(package="prisma"),"extdata")
+    #base <- "/media/raid/software/prisma/inst/extdata/scores"
     
     pgsId <- c("PGS000034","PGS000299")
     efoId <- c("EFO_0004340","EFO_0007788")
@@ -153,8 +153,8 @@ test_that(".iterPGSVariantsAPICall works",{
         expect_true(nrow(x[[2]]) == 0)
     }
     
-    #base <- file.path(system.file(package="prisma"),"extdata")
-    base <- "/media/raid/software/prisma/inst/extdata/scores"
+    base <- file.path(system.file(package="prisma"),"extdata")
+    #base <- "/media/raid/software/prisma/inst/extdata/scores"
     
     inputId <- c("PGS000034","PGS000299")
     test <- .iterPGSScoreAPICall(input=inputId,type="pgs",base=base)
@@ -181,8 +181,8 @@ test_that(".iterPGSVariantsAPICall works",{
 # Test suite for .GWASVariantsWorker
 test_that(".PGSScoreWorker works",{
     # Should return data rows if API call succesful
-    #base <- file.path(system.file(package="prisma"),"extdata")
-    base <- "/media/raid/software/prisma/inst/extdata/scores"
+    base <- file.path(system.file(package="prisma"),"extdata")
+    #base <- "/media/raid/software/prisma/inst/extdata/scores"
     
     inputId <- "PGS000034"
     test <- .PGSScoreWorker(input=inputId,type="pgs",base=base)
@@ -236,8 +236,8 @@ test_that(".emptyVariantsDf works",{
 
 # Test suite for .score2GPos
 test_that(".retrieveScoreFile and .score2GPos work",{
-    #base <- file.path(system.file(package="prisma"),"extdata")
-    base <- "/media/raid/software/prisma/inst/extdata/scores"
+    base <- file.path(system.file(package="prisma"),"extdata")
+    #base <- "/media/raid/software/prisma/inst/extdata/scores"
     id <- "PGS000034"
     tmp <- .retrieveScoreFile(file.path(base,id,"ScoringFiles",
         paste0(id,".txt.gz")))

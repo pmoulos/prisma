@@ -188,8 +188,7 @@ normalityCheck <- function(x,pval=0.05,tests=c("sw","ks","jb"),lower=30,
                         pp <- combineMaxp(p)
                     },
                     fisher = {
-                        tmp <- fisherMethod(t(as.matrix(p)),p.corr="none",
-                            zeroSub=.Machine$double.xmin)
+                        tmp <- fisherMethod(t(as.matrix(p)))
                         pp <- tmp$p.value
                     },
                     simes = {

@@ -53,7 +53,7 @@
     iterations. If \code{p >= pval}, \code{x} can be 
     considered to follow the normal distribution.
     
-    Regarding the \combine{argument}, it determines how
+    Regarding the \code{combine} argument, it determines how
     the outcomes of multiple tests will be combined. When
     \code{"fisher"} or \code{"simes"}, then the Fisher or
     Simes method for p-value combination is used. For

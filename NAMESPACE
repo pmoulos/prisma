@@ -44,14 +44,14 @@ importFrom("lassosum",lassosum.pipeline)
 importFrom("lassosum",validate)
 importFrom("lassosum",splitvalidate)
 
-importFrom("liftOver",liftOver)
+#importFrom("liftOver",liftOver)
 
 importFrom("quincunx",get_scores)
 
 importFrom("RMTstat",ptw)
 
-importFrom("rrblup",GWAS)
-importFrom("rrblup",mixed.solve)
+importFrom("rrBLUP",GWAS)
+importFrom("rrBLUP",mixed.solve)
 
 importFrom("pander",pandoc.header)
 
@@ -60,6 +60,7 @@ importFrom("rmarkdown",render)
 importFrom("rmdformats",robobook)
 
 importFrom("rtracklayer",import.chain)
+importFrom("rtracklayer",liftOver)
 
 importFrom("S4Vectors",DataFrame)
 
@@ -155,6 +156,7 @@ export(fisherMethod)
 export(getDefaults)
 export(getGWASVariants)
 export(getPGSScores)
+export(getPrsCandidates)
 export(guessHumanGenomeVersion)
 export(gwa)
 export(gwaBlup)
@@ -166,6 +168,7 @@ export(GWASExperiment2gData)
 export(GWASExperimentLiftOver)
 export(gwaSnptest)
 export(gwaStatgen)
+export(gwaTests)
 export(harvestWorkspace)
 export(importGWAS)
 export(imputeGWAS)

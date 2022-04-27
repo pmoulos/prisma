@@ -255,12 +255,12 @@ test_that("GWASExperiment validation works - single errors",{
     # Should not throw error as withDimnames=TRUE and assay rownames are always
     # replacing pvalues rownames
     thing <- .makeThingData(error="pval_name")
-    expect_silent(GWASExperiment(
+    expect_error(GWASExperiment(
         genotypes=thing$snp,
         features=thing$feature,
         samples=thing$sample,
         phenotypes=thing$pheno,
-        pvalues=thing$pval
+        pvalues=SimpleList(thing$pval)
     ))
 })
 
@@ -296,7 +296,7 @@ test_that("GWASExperiment getters work",{
         features=thing$feature,
         samples=thing$sample,
         phenotypes=thing$pheno,
-        pvalues=thing$pval
+        pvalues=SimpleList(thing$pval)
     )
     
     expect_identical(assay(GWASthing,1),genotypes(GWASthing))
@@ -353,7 +353,7 @@ test_that("GWASExperiment setters work",{
     phenotypes(GWASthing) <- thingNew$pheno
     expect_identical(phenotypes(GWASthing),thingNew$pheno)
     
-    pvalues(GWASthing) <- thingNew$pval
+    pvalues(GWASthing,1) <- thingNew$pval
     expect_identical(pvalues(GWASthing),thingNew$pval)
     
     genome(GWASthing) <- "hg19"
@@ -377,7 +377,7 @@ test_that("GWASExperiment cbind works",{
         features=thing1$feature,
         samples=thing1$sample,
         phenotypes=thing1$pheno,
-        pvalues=thing1$pval
+        pvalues=SimpleList(thing1$pval)
     )
     
     set.seed(43)
@@ -389,14 +389,14 @@ test_that("GWASExperiment cbind works",{
         features=thing1$feature,
         samples=thing2$sample,
         phenotypes=thing2$pheno,
-        pvalues=thing2$pval
+        pvalues=SimpleList(thing2$pval)
     )
     GWASthingF <- GWASExperiment(
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing2$sample,
         phenotypes=thing2$pheno,
-        pvalues=thing2$pval
+        pvalues=SimpleList(thing2$pval)
     )
     
     expect_identical(rowData(GWASthing1),rowData(GWASthing2))
@@ -486,12 +486,15 @@ test_that("GWASExperiment2gData works",{
 
 test_that("listGwa works",{
     # Stub
+    expect_true(TRUE)
 })
 
 test_that("listPrs works",{
     # Stub
+    expect_true(TRUE)
 })
 
 test_that(".listAction works",{
     # Stub
+    expect_true(TRUE)
 })

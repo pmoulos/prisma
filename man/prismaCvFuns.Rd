@@ -22,6 +22,11 @@
     \item{gwe}{a \code{GWASExperiment} object (same as the one
     used to generate \code{prismaOut}).}
     
+    \item{snpSelection}{A data frame with candidate SNPs, the
+    output, or part of the output of 
+    \code{\link{aggregatePrsMarkers}}, or one of the list 
+    members of the output of \code{\link{selectPrs}}.}
+    
     \item{response}{The trait for which a PRS is sought to be
     extracted. It should be a character of length 1 and exist
     in the phenotypes of \code{gwe}.}

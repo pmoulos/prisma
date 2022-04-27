@@ -137,7 +137,7 @@
 }
 \arguments{
     \item{gwe}{A GWASExperiment object with GWA tests performed.
-    In other words, \code{\link{gwa} must have been applied.}
+    In other words, \code{\link{gwa}} must have been applied.}
     
     \item{dnList}{A list resulting from a \emph{de novo} PRS 
     extraction pipeline. See also Details.}
@@ -405,8 +405,8 @@
         method.
         \item Wrap up of the data to feed the later PRISMA
         report and basic evaluation graphics.
-        \output of an object containing all the results and
-        input to the PRISMA reporting function.
+        \item Output of an object containing all the results 
+        and input to the PRISMA reporting function.
     }
     
     \code{prsPipeline} is the iterator of the PRISMA 

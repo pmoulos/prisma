@@ -5,7 +5,7 @@
     
     # Imputation per chromosome
     map <- gfeatures(obj)
-    if ("chromosome" %in% names(map))
+    if ("chromosome" %in% names(map) && !any(is.na(map$chromosome)))
         parts <- split(obj,map$chromosome)
     else {
         splitFactor <- .splitFactorForParallel(nrow(obj),rc)

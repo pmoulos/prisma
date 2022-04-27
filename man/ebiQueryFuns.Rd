@@ -1,6 +1,7 @@
 \name{ebiQueryFuns}
 \alias{getGWASVariants}
 \alias{getPGSScores}
+\alias{prismaLookup}
 \title{Functions to query EBI GWAS and PGS Catalogs}
 \usage{
     getGWASVariants(efoId = NULL, efoTrait = NULL, 
@@ -8,6 +9,8 @@
     
     getPGSScores(pgsId = NULL, efoId = NULL, pubmedId = NULL,
         base = NULL, retries = 5, validateLoc = FALSE)
+    
+    prismaLookup(prismaOut)
 }
 \arguments{
     \item{efoId}{One or more EFO ids in proper format. See
@@ -33,6 +36,9 @@
     
     \item{validateLoc}{Validate SNP locations in retrieved
     PGS scores? Defaults to \code{FALSE}, see also Details.}
+    
+    \item{prismaOut}{An output object from \code{\link{prisma}}
+    or a list of PRS candidate data frames.}
 }
 \value{
     A data frame such as the one from 
@@ -40,6 +46,11 @@
     \code{GWASExperiment} object as accompanying input,
     with as many values filled as possible (e.g. GWAS
     Catalog does not record variant regression effects.)
+    
+    For \code{prismaLookup}, a list of lists. The outer
+    level is named with the GWA methods in \code{prismaOut}.
+    The inner level is named according to the PRS candidate
+    names for each GWA method in \code{prismaOut}.
 }
 \description{
     These functions can be used to retrieve PRS candidates
@@ -131,6 +142,9 @@
     
     pgsId <- "PGS000034"
     test3 <- getPGSScores(pgsId=pgsId)
+    
+    data(prisma_out,package="prisma")
+    lookup <- prismaLookup(prismaOut)
 }
 \author{
     Panagiotis Moulos

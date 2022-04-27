@@ -4,60 +4,61 @@ Title: Automated Polygenic Risk Score modeling and evaluation
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
 Depends:
-    R (>= 4.1.0)
-    lassosum
-    SummarizedExperiment
-    snpStats
+    R (>= 4.0.0),
+    lassosum,
+    SummarizedExperiment,
+    snpStats,
     SNPRelate
 Imports:
-    akmedoids
-    Biobase
-    biomaRt
-    BSgenome
-    GenomicRanges
-    ggplot
-    gwasrapidd
-    harmonicmeanp
-    islasso
-    jsonlite
-    kableExtra
-    lassosum
-    liftOver
-    magrittr
-    methods
-    openxlsx
-    parallel
-    PhenotypeSimulator
-    quincunx
-    R.utils
-    rmarkdown
-    rmdformats
-    RMTstat
-    rrBLUP
-    rrcov
-    rsnps
-    rtracklayer
-    S4Vectors
-    scales
-    scrime
-    statgenGWAS
-    stats
-    survcomp
-    tseries
+    akmedoids,
+    Biobase,
+    biomaRt,
+    BSgenome,
+    GenomicRanges,
+    ggplot2,
+    gwasrapidd,
+    harmonicmeanp,
+    islasso,
+    jsonlite,
+    kableExtra,
+    lassosum,
+    liftOver,
+    magrittr,
+    methods,
+    openxlsx,
+    parallel,
+    PhenotypeSimulator,
+    quincunx,
+    R.utils,
+    rmarkdown,
+    rmdformats,
+    RMTstat,
+    rrBLUP,
+    rrcov,
+    rsnps,
+    rtracklayer,
+    S4Vectors,
+    scales,
+    scrime,
+    statgenGWAS,
+    stats,
+    survcomp,
+    tseries,
     utils
 Suggests:
     knitr,
     testthat,
     data.table
 Description: prisma is an R package for the semi-automated construction and
-evaluation of Polygenic Risk Scores (PRS) with data from multiple summary 
-statistics and PRS extraction algorithms. prisma supports several Genome Wide
-Association (GWA) tests for the calculation of summary statistics and integrates 
-the results of multiple PRS algorithms. In addition, it offers multiple PRS 
-evaluation criteria and a semi-automated optimal PRS selection process through
-the local maximization of evaluation criteria. Finally, it integrates GWA 
-effects with linear programming and helps the user select the best PRS through
-a rich report of the results and online search in the GWAS Catalog.
+    evaluation of Polygenic Risk Scores (PRS) with data from multiple summary 
+    statistics and PRS extraction algorithms. prisma supports several Genome 
+    Wide Association (GWA) tests for the calculation of summary statistics and
+    integrates the results of multiple PRS algorithms. In addition, it offers
+    multiple PRS evaluation criteria and a semi-automated optimal PRS selection
+    process through the local maximization of evaluation criteria. Finally, it
+    integrates GWA effects with linear programming and helps the user select the
+    best PRS through a rich report of the results and online search in the GWAS
+    Catalog.
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: false
@@ -66,12 +67,14 @@ biocViews: Software, WorkflowStep, BiomedicalInformatics
 VignetteBuilder: knitr
 BugReports: https://github.com/pmoulos/prisma/issues
 Version: 0.0.1
-Date: 2021-11-15
+Date: 2022-04-27
 Collate:
     'classes.R'
+    'classutils.R'
     'defaults.R'
     'evalfuns.R'
     'extapicalls.R'
+    'extend.R'
     'externals.R'
     'gwasfilters-bs.R'
     'gwasfilters-ss.R'

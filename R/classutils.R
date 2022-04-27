@@ -142,6 +142,35 @@ guessHumanGenomeVersion <- function(o) {
         return("hg38")
 }
 
+getPrsCandidates <- function(prismaOut,method,index=NULL) {
+    if (!("results" %in% names(prismaOut)))
+        stop("The main input does not seem to be an output from the prisma ",
+            "function!")
+    if (missing(method))
+        stop("The GWA method used to generate PRS candidate must be provided! ",
+            "Use gwaTests() to see the available ones.")
+    
+    if (is.null(index)) {
+        out <- prismaOut$results[[method]][["candidates"]]
+        if (is.null(out))
+            disp("There is no ",method," method in the PRISMA output!")
+    }
+    else {
+        out <- prismaOut$results[[method]][["candidates"]][[index]]
+        if (is.null(out))
+            disp("There is no #",index," PRS candidate for ",method)
+    }
+    
+    return(out)
+}
+
+gwaTests <- function(prismaOut) {
+    if (!("results" %in% names(prismaOut)))
+        stop("The main input does not seem to be an output from the prisma ",
+            "function!")
+    return(names(prismaOut$results))
+}
+
 ## We need an own split fun because default split does not handle the structure
 ## of p-values, effects etc.
 #splitGWAS <- function(obj,by,across=c("features","samples"),rc=NULL) {

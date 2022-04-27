@@ -459,13 +459,13 @@
     all the analyses results.
 }
 
-\section{Constructor} {
+\section{Constructor}{
     GWASExperiment instances are constructed using the
     \code{GWASExperiment} function with arguments outlined 
     above.
 }
 
-\section{Accessors} {
+\section{Accessors}{
     In the following code snippets, \code{x} is a GWASExperiment
     object. We do not describe standard \link{SummarizedExperiment}
     accessors such as \code{rowData}, \code{colData}, \code{dim}
@@ -473,6 +473,7 @@
     patterns such as that row data must have \code{NULL} or identical
     row names as with the main matrix object (here, the genotypes)
     are assumed.
+
 
 \describe{
     \item{\code{genotypes(x)}, \code{genotypes(x) <- value}:}{Get 
@@ -496,8 +497,8 @@
     phenotypes in the experiment.}
     
     \item{\code{pvalues(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE)}, pvalues(x, response = 1L, 
-    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    npcs = 0, withDimnames = TRUE), pvalues(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the p-values after the application of one or more
     genotype-phenotype association tests. \code{response} is the
     phenotype for which the association test is performed. It can be
@@ -525,14 +526,14 @@
     test types performed (e.g. SNPTEST and statgenGWAS) and are
     named accordingly.}
     
-    \item{\code{allPvalues(x, i = seq_len(ncol(x)))} will
+    \item{\code{allPvalues(x, i = seq_len(ncol(x)))}:}{This will
     retrieve (access-only) either all the p-value matrices
     attached to \code{x} or as many as requested by \code{i},
     assuming at least \code{i} tests have been performed.}
     
     \item{\code{effects(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE)}, effects(x, response = 1L, 
-    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    npcs = 0, withDimnames = TRUE), effects(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the SNP effects with respect to the phenotype after 
     the application of one or more genotype-phenotype association 
     tests. The effects are essentially regression coefficients or
@@ -543,14 +544,14 @@
     types performed (e.g. SNPTEST and statgenGWAS) and are named
     accordingly.}
     
-    \item{\code{allEffects(x, i = seq_len(ncol(x)))} will
+    \item{\code{allEffects(x, i = seq_len(ncol(x)))}:}{This will
     retrieve (access-only) either all the effect matrices
     attached to \code{x} or as many as requested by \code{i},
     assuming at least \code{i} tests have been performed.}
     
     \item{\code{prsbetas(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE)}, prsbetas(x, response = 1L, 
-    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:{
+    npcs = 0, withDimnames = TRUE), prsbetas(x, response = 1L, 
+    covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the beta coefficients (or odd ratios) effects 
     derived after the application of a Polygenic Risk Scores
     algorithm, with respect to the phenotype tested with one or
@@ -564,12 +565,12 @@
     0 otherwise. This matrix has as many columns as the different 
     PRS algorithms executed on \code{x} and are named accordingly.}
     
-    \item{\code{allPrsbetas(x, i = seq_len(ncol(x)))} will
+    \item{\code{allPrsbetas(x, i = seq_len(ncol(x)))}:}{This will
     retrieve (access-only) either all the PRS beta matrices
     attached to \code{x} or as many as requested by \code{i},
     assuming at least \code{i} tests have been performed.}
     
-    \item{\code{genome(x), \code{genome(x) <- value}:}{Get or set
+    \item{\code{genome(x), genome(x) <- value}:}{Get or set
     the genome build where the features (SNPs, other variations)
     are mapped to. Typically, one of \code{"hg19"} or \code{"hg38"}
     as the class is designed mainly for human data. Other genomes
@@ -578,14 +579,14 @@
     retrieval from dbSNP and/or Ensembl, and also enrichment of
     PGS score files.}
     
-    \item{\code{gdsfile(x), \code{gdsfile(x) <- value}:}{Get or set
+    \item{\code{gdsfile(x), gdsfile(x) <- value}:}{Get or set
     the supporting GDS file location. This is required by the 
     package SNPRelate to perform certain functionalities such as
     Linkage Disequilibrium (LD) pruning, Identity By Descent (IBD)
     filtering and others. If not provided, these functionalities
     will not be available.}
     
-    \item{\code{filterRecord(x), \code{filterRecord(x) <- value}:}{
+    \item{\code{filterRecord(x), filterRecord(x) <- value}:}{
     Get or set a data frame holding a record of the filters applied
     to \code{x}, the cutoff values and the filtering results (i.e.
     how many SNPs where filtered). This data frame has a specific
@@ -593,7 +594,7 @@
     only access the filter records. To see the structure of this
     data frame, call \code{filterRecord(x)}.}
     
-    \item{\code{pcaCovariates(x), \code{pcaCovariates(x) <- value}:}{
+    \item{\code{pcaCovariates(x), pcaCovariates(x) <- value}:}{
     Get or set the PCA covariates that capture underlying population
     stratification structures. The PCA covariates are typically
     calculated using the \code{\link{calcPcaCovars}} function with
@@ -602,7 +603,7 @@
     the \code{\link{calcPcaCovars}} function.}
     
     \item{\code{prsbetas(x, by, across = c("features", "samples"), 
-    rc = NULL}:{Split an object by column names stored in the
+    rc = NULL}:}{Split an object by column names stored in the
     \code{gfeatures} or \code{gsamples}. If the former, the object
     is split row-wise while if the former, it is split column-wise.
     \code{by} is either the name of the \code{gfeatures} or
@@ -613,6 +614,7 @@
     to use (\code{rc}). If \code{rc=NULL} and also \code{by} is
     missing, then there is no split and the object is returned
     in a lenght-one list.}
+}
 }
 
 \section{Subsetting}{

@@ -1,6 +1,6 @@
 test_that("partitionGWAS works",{
     input <- .gimmeTestFiles()    
-    gwe <- importGWAS(input,backend="snpStats")
+    gwe <- importGWAS(input,backend="snpStats",gdsfile=tempfile())
     n1 <- ceiling(ncol(gwe)/3)
     n2 <- 2*floor(ncol(gwe)/3)
     ph <- data.frame(x=round(runif(ncol(gwe))),y=c(rep("A",n1),rep("B",n2)),
@@ -126,7 +126,7 @@ test_that(".checkNumArgs works",{
 test_that("Getting test files works",{
     input <- .gimmeTestFiles()
     expect_equal(length(input),3)
-}
+})
 
 test_that(".isEmpty works",{
     x1 <- NULL
@@ -149,7 +149,7 @@ test_that(".isEmpty works",{
     
     x7 <- list(a=42)
     expect_false(.isEmpty(x7))
-}
+})
 
 test_that(".validateBinaryForBinomial works",{
     x1 <- c(rep("A",5),rep("B",5))

@@ -731,13 +731,16 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
         n <- rownames(snpset)
         freq <- snpset$freq[nrow(snpset)]
         
+        efn <- ifelse("effect_weight" %in% colnames(sdf),"effect_weight",
+            "effect")
+        
         # Failsafe, NA in effects, may arrive!!! Convert to zero effect
-        ill <- .illegalEffs(sdf[n,"effect"])
+        ill <- .illegalEffs(sdf[n,efn])
         if (length(ill) > 0)
-            sdf[ill,"effect"] <- 0
+            sdf[ill,efn] <- 0
         
         disp("  testing PRS with SNPs from ",n[1]," to ",n[length(n)])
-        thePrs <- .prs(snps[,n],sdf[n,"effect"])
+        thePrs <- .prs(snps[,n],sdf[n,efn])
         dat <- cbind(p,thePrs)
         colnames(dat)[ncol(dat)] <- "PRS"
         

@@ -102,6 +102,7 @@ mergeGWAS <- function(gwe1,gwe2,output=c("common","all"),mafResolve=NULL,
     toResolve <- setdiff(seq_along(nm),investigate)
     
     # If not investigate further as there are major/minor allele discrepancies
+    toReverse <- FALSE
     if (length(toResolve) > 0) { # Further investigation
         disp("  Found ",length(toResolve)," SNPs with potentially reversed ",
             "minor/major alleles")

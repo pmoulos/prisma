@@ -54,9 +54,9 @@
         \item \code{OR}: The \code{effect_weight} 
         transformed to Odds Ratio
         \item \code{asm}: The genome assembly (\code{"hg19"}
-        or \code{"hg38"} or \code("nr") if unknown)
+        or \code{"hg38"} or \code{"nr"} if unknown)
         \item \code{freq}: The number of appearances in the
-        \code{prsPipeline iterative process}
+        \code{prsPipeline} iterative process
     }
     
     If \code{gwe} is \code{NULL}, a simpler data frame of
@@ -107,7 +107,7 @@
     the final effects for the calculation of weighted PRS. 
     When \code{"mean"} (default), the final effect for a SNP 
     is the mean off all its effects across the iterations
-    and when it appears. When \code{"median"}, it's the 
+    and when it appears. When \code{"median"}, it is the 
     respective median while when \code{"weight"}, the SNP 
     effects are weighted by 1 minus the recorded PRS R^2 so 
     that the "best" runs can be given more value.
