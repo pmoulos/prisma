@@ -21,7 +21,6 @@ Imports:
     islasso,
     jsonlite,
     kableExtra,
-    lassosum,
     liftOver,
     magrittr,
     methods,

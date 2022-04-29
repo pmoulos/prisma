@@ -1,0 +1,12 @@
+---
+title: "Introduction to the prisma package"
+author: "Panagiotis Moulos"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to the prisma package}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+Lorem ipsum
