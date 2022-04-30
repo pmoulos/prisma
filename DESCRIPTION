@@ -25,6 +25,7 @@ Imports:
     magrittr,
     methods,
     openxlsx,
+    pander,
     parallel,
     PhenotypeSimulator,
     quincunx,

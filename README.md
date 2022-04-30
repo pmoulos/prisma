@@ -49,7 +49,7 @@ The following packages are either on CRAN or on Bioconductor:
 pkgs <- c("akmedoids","Biobase","biomaRt","BSgenome","data.table",
     "GenomicRanges","ggplot2","gwasrapidd","harmonicmeanp","islasso",
     "jsonlite","kableExtra","knitr","liftOver","Matrix","magrittr","methods",
-    "openxlsx","parallel","PhenotypeSimulator","quincunx","R.utils",
+    "openxlsx","pander","parallel","PhenotypeSimulator","quincunx","R.utils",
     "rmarkdown","rmdformats","RcppArmadillo","RMTstat","rrBLUP","rrcov","rsnps",
     "rtracklayer","S4Vectors","scales","scrime","snpStats","SNPRelate",
     "statgenGWAS","SummarizedExperiment","survcomp","testthat","tseries",
