@@ -19,6 +19,18 @@ extraction. See the more detailed
 [installation](#) 
 guide for more information and step-by-step process.
 
+## System packages
+
+Some or all of these may be already installed on the system. There might be
+additional ones depending on the Linux distribution prisma is being installed
+to. This list will be maintained and updated.
+
+```
+sudo apt install -y apt-transport-https software-properties-common \
+    build-essential zlib1g-dev libdb-dev libcurl4-openssl-dev libssl-dev \
+    libxml2-dev apache2 libfontconfig1-dev libjpeg-dev
+```
+
 ## R packages
 
 ### Basic installation of Bioconductor
@@ -60,15 +72,121 @@ in the system's `PATH` environmental variable.
 
 ### Summary statistics
 
-* SNPTEST
-* PLINK
+* [SNPTEST](https://www.well.ox.ac.uk/~gav/snptest/)
+* [PLINK](https://www.cog-genomics.org/plink/)
 
 ### PRS extraction
 
-* PRSice-2
+* [PRSice-2](https://www.prsice.info/)
 
 ### Other tools
 
-* GTOOL
-* QCTOOL
-* IMPUTE2
+* [GTOOL](https://www.well.ox.ac.uk/~cfreeman/software/gwas/gtool.html)
+* [QCTOOL](https://www.well.ox.ac.uk/~gav/qctool_v2/)
+* [IMPUTE2](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html)
+
+## Installation of PRISMA
+
+PRISMA can be installed from GitHub for the time being:
+
+```
+library(devtools)
+install_github("pmoulos/prisma")
+```
+
+# Quickstart
+
+The following depict the very basic PRISMA PRS extraction pipeline. For full
+documentation see the package vignettes and also 
+[online](#) documentation.
+
+```
+library(prisma)
+
+data(toy,package="prisma")
+
+# Lose filters for the toy dataset
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- FALSE
+filts$inbreed <- NA
+
+# Workspace
+d1 <- tempfile()
+wspace1 <- file.path(tempdir(),d1)
+
+# Traits
+response <- "BMI"
+covariates <- c("Case_Control","Gender","Age")
+
+# Complete 4-iteration PRS pipeline - ~1 min to run with 4 cores - no PCA
+prismaOut <- prisma(
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods=c("glm","statgen"),
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace1,
+    cleanup="intermediate",
+    logging="file",
+    output="normal",
+    rc=0.25
+)
+
+# Below, individual wrapper steps implemented in prisma as whole
+# Output only of the discovery PRS pipeline with statgenGWAS
+d2 <- tempfile()
+wspace2 <- file.path(tempdir(),d2)
+dnList <- prsPipeline(
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods="statgen",
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace2,
+    cleanup="intermediate",
+    logging="file",
+    rc=0.25
+)
+
+# After, calculate the evaluation metrics
+d3 <- tempfile()
+wspace3 <- file.path(tempdir(),d3)
+evalMetrics <- prsSelection(
+    dnList=dnList,
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods="statgen",
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace3,
+    cleanup="intermediate",
+    logging="file",
+    output="summary",
+    useDenovoWorkspace=dnList,
+    rc=0.25
+)
+```

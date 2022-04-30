@@ -372,9 +372,8 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
                     disp("  imputation info file ",paste0(outBase,"_",n,
                         ".impinfo")," exists! Skipping...")
                 else {
-                    impinfo <- map[ii,c("snp.name","info")]
-                    names(impinfo)[1] <- "snp_namedu -sjls
-                    "
+                    impinfo <- as.data.frame(map[ii,c("snp.name","info")])
+                    names(impinfo)[1] <- "snp_name"
                     write.table(impinfo,paste0(outBase,"_",n,".impinfo"),
                         sep="\t",quote=FALSE,row.names=FALSE)
                 }
@@ -407,7 +406,7 @@ writePlink <- function(obj,pheno=NULL,outBase=NULL,salvage=FALSE,
                 disp("  imputation info file ",paste0(outBase,".impinfo"),
                     " exists! Skipping...")
             else {
-                impinfo <- map[!na,c("snp.name","info")]
+                impinfo <- as.data.frame(map[!na,c("snp.name","info")])
                 names(impinfo)[1] <- "snp_name"
                 write.table(impinfo,paste0(outBase,".impinfo"),sep="\t",
                     quote=FALSE,row.names=FALSE)
