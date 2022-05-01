@@ -215,8 +215,8 @@
 
     ## Quick colData access
 
-    \S4method{$}{GWASExperiment}(x, name)
-    \S4method{$}{GWASExperiment}(x, name) <- value
+    #\S4method{$}{GWASExperiment}(x, name)
+    #\S4method{$}{GWASExperiment}(x, name) <- value
     \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...)
     \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...) <- value
 

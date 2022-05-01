@@ -60,8 +60,10 @@ importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
             gdsfile <- paste0(gdsfile,".gds")
         }
     }
-    if (backend == "bigsnpr" && !requireNamespace("bigsnpr"))
-        stop("Bioconductor package bigsnpr is required!")
+    #if (backend == "bigsnpr" && !requireNamespace("bigsnpr"))
+    #    stop("Bioconductor package bigsnpr is required!")
+    if (backend == "bigsnpr")
+        stop("Import with bigsnpr will be soon supported.")
     
     if (!is.null(phenos)) {
         if (!is.character(phenos) && !is.data.frame(phenos)

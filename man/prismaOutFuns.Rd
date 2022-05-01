@@ -30,6 +30,10 @@
     
     \item{lookupOut}{The output from \code{\link{prismaLookup}} 
     function.}
+    
+    \item{path}{The path to write the interactive prisma 
+    report. Defaults to \code{NULL} for auto-generation in
+    the current path (\code{getwd()}).}
 }
 \value{
     A data frame or a list of data frame with SNPs comprising

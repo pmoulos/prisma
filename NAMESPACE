@@ -1,7 +1,10 @@
 import(Biobase)
+import(BiocGenerics)
 import(biomaRt)
 import(GenomicRanges)
 import(ggplot2)
+import(liftOver)
+import(kableExtra)
 import(magrittr)
 import(parallel)
 import(scales)
@@ -19,6 +22,7 @@ importFrom("BSgenome",snpsByOverlaps)
 importFrom("GenomeInfoDb",seqinfo)
 importFrom("GenomeInfoDb",Seqinfo)
 importFrom("GenomeInfoDb",seqlevels)
+importFrom("GenomeInfoDb","seqlevels<-")
 importFrom("GenomeInfoDb",seqlengths)
 importFrom("GenomeInfoDb","seqlengths<-")
 importFrom("GenomeInfoDb",seqlevelsStyle)
@@ -89,6 +93,8 @@ importFrom("sitadela",loadAnnotation)
 importFrom("statgenGWAS",createGData)
 importFrom("statgenGWAS",runSingleTraitGwas)
 
+importFrom("SNPlocs.Hsapiens.dbSNP151.GRCh38",SNPlocs.Hsapiens.dbSNP151.GRCh38)
+
 importFrom("stats",anova)
 importFrom("stats",as.formula)
 importFrom("stats",coefficients)
@@ -152,6 +158,44 @@ importFrom("utils",unzip)
 importFrom("utils",write.table)
 importFrom("utils",zip)
 
+importFrom("openxlsx",write.xlsx)
+
+exportClasses(
+    GWASExperiment,
+    data.frame_OR_matrix,
+    data.frame_OR_matrix_OR_NULL,
+    data.frame_OR_DataFrame_OR_NULL
+)
+
+exportMethods(
+    genotypes,"genotypes<-",
+    gfeatures,"gfeatures<-",
+    gsamples,"gsamples<-",
+    phenotypes,"phenotypes<-",
+    pvalues,"pvalues<-",allPvalues,
+    effects,"effects<-",allEffects,
+    prsbetas,"prsbetas<-",allPrsbetas,
+    filterRecord,"filterRecord<-",
+    gdsfile,"gdsfile<-",
+    genome,"genome<-",
+    pcaCovariates,"pcaCovariates<-",
+    gsplit
+)
+
+export(
+    genotypes,"genotypes<-",
+    gfeatures,"gfeatures<-",
+    gsamples,"gsamples<-",
+    phenotypes,"phenotypes<-",
+    pvalues,"pvalues<-",allPvalues,
+    effects,"effects<-",allEffects,
+    prsbetas,"prsbetas<-",allPrsbetas,
+    filterRecord,"filterRecord<-",
+    gdsfile,"gdsfile<-",
+    genome,"genome<-",
+    pcaCovariates,"pcaCovariates<-",
+    gsplit
+)
 
 export(adjustPrsWeights)
 export(aggregatePrsMarkers)

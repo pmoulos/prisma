@@ -12,6 +12,7 @@ Depends:
 Imports:
     akmedoids,
     Biobase,
+    BiocGenerics,
     biomaRt,
     BSgenome,
     GenomeInfoDb,
@@ -41,8 +42,8 @@ Imports:
     rtracklayer,
     S4Vectors,
     scales,
-    scrime,
     sitadela,
+    SNPlocs.Hsapiens.dbSNP151.GRCh38,
     statgenGWAS,
     stats,
     survcomp,

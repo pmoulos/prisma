@@ -105,6 +105,10 @@ setGeneric("gdsfile",function(x,...) standardGeneric("gdsfile"))
 
 setGeneric("gdsfile<-",function(x,...,value) standardGeneric("gdsfile<-"))
 
+setGeneric("genome",function(x,...) standardGeneric("genome"))
+
+setGeneric("genome<-",function(x,...,value) standardGeneric("genome<-"))
+
 setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
 
 setGeneric("gsplit",function(x,...) standardGeneric("gsplit"))
@@ -359,6 +363,19 @@ setMethod("gdsfile","GWASExperiment",function(x) {
 setReplaceMethod("gdsfile","GWASExperiment",function(x,...,value) {
     m <- metadata(x)
     m$gdsfile <- value
+    metadata(x) <- m
+    if (validObject(x))
+        return(x)
+})
+
+setMethod("genome","GWASExperiment",function(x) {
+    m <- metadata(x)
+    return(m$genome)
+})
+
+setReplaceMethod("genome","GWASExperiment",function(x,...,value) {
+    m <- metadata(x)
+    m$genome <- value
     metadata(x) <- m
     if (validObject(x))
         return(x)

@@ -1,4 +1,6 @@
-\name{imputeGWAS}\title{Genotype imputation for GWASExperiment objects}
+\name{imputeGWAS}
+\alias{imputeGWAS}
+\title{Genotype imputation for GWASExperiment objects}
 \usage{
     imputeGWAS(obj, mode = c("single", "split"),
         failed = c("scrime", "none"), rc = NULL)

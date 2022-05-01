@@ -1,4 +1,5 @@
 \name{importGWAS}
+\alias{importGWAS}
 \title{Create GWASExperiments from PLINK files}
 \usage{
     importGWAS(input, phenos = NULL, backend = c("snpStats",

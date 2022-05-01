@@ -24,7 +24,7 @@
     downloadSnptest( ver = c("v2.5.6", "v2.5.4", "v2.5.2"),
         path = NULL)
     
-    downloadQctool(ver = c("v2.3.2", "v2.0.8"), path = NULL)
+    downloadQctool(ver = c("v2.2.2", "v2.0.8"), path = NULL)
     
     download1000GP3(path = NULL)
 }

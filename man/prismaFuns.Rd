@@ -327,7 +327,7 @@
     \item{runId}{A unique run id for the run. If not given,
     it will be auto-generated.}
     
-    \item{evalWith}{Which data split to use to evaluate the
+    \item{evalOnSplit}{Which data split to use to evaluate the
     PRS. \code{"original"} (default) uses the original split 
     and SNP effect calculations, while \code{"new"} creates
     a new split taking much more time.}
@@ -341,6 +341,11 @@
     \item{sitadelaDb}{Either \code{NULL} or a sitadela SQLite 
     database with at least human RefSeq annotations for hg19
     and hg38. It is used to add gene names to PRS SNP loci.}
+    
+    \item{snpSelection}{A data frame with candidate SNPs, the
+    output, or part of the output of 
+    \code{\link{aggregatePrsMarkers}}, or one of the list 
+    members of the output of \code{\link{selectPrs}}.}
     
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no

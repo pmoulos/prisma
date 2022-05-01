@@ -9,7 +9,7 @@
     \item{gwe1}{A \code{GWASExperiment} object from the first
     dataset.}
     
-    \item{gwe1}{A \code{GWASExperiment} object from the second
+    \item{gwe2}{A \code{GWASExperiment} object from the second
     dataset.}
     
     \item{output}{One of \code{"common"} (default) to operate

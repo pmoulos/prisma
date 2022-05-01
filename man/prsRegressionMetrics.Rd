@@ -39,6 +39,9 @@
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no
     parallelization.}
+    
+    \item{...}{Further arguments passed to \code{glm}
+    regression functions.}
 }
 \value{
     A data frame with regression fit metrics, containing the

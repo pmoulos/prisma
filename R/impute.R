@@ -173,8 +173,8 @@
 }
 
 .internalImputeKnn <- function(x) {
-    if (!requireNamespace("scrime"))
-        stop("R package scrime is required!")
+    #if (!requireNamespace("scrime"))
+    #    stop("R package scrime is required!")
     
     ximp <- tryCatch({
         ..knncatimputeLarge(x,nn=5,
@@ -219,7 +219,8 @@
     else {
         rs <- rowSums(is.na(mat.na))
         if (any(rs == 0))
-            stop("At least one of the rows of mat.na does not contain missing values.")
+            stop("At least one of the rows of mat.na does not contain missing ",
+                "values.")
         rs <- rowSums(is.na(data))
         if (any(rs > 0))
             stop("At least one of the rows of data contains missing values.")
