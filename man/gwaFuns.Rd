@@ -26,7 +26,8 @@
         size = 1, rc = NULL, ...)
         
     gwaPlink(obj, response, covariates = NULL, pcs = TRUE,
-        psig = 0.05, seed = 42, wspace = NULL, rc = NULL)
+        psig = 0.05, seed = 42, cliopts = NULL, wspace = NULL, 
+        rc = NULL)
     
     gwaStatgen(obj, response, covariates = NULL, pcs = TRUE, 
         psig = 0.05, rc = NULL)
@@ -102,7 +103,14 @@
     
     \item{test}{One of supported test types for SNPTEST. It
     can be \code{"frequentist"} (default) or 
-    \code{"bayesian"}. See also SNPTEST documentation.} 
+    \code{"bayesian"}. See also SNPTEST documentation.}
+    
+    \item{seed}{A random seed for PLINK resampling 
+    operations. Defaults to \code{42}.}
+    
+    \item{cliopts}{A string with additional command-line
+    parameters to pass to the PLINK executable. Defaults
+    to \code{NULL}.}
     
     \item{model}{One of the supported genotype modeling
     types for SNPTEST. It can be one of \code{"additive"}
@@ -151,14 +159,14 @@
         is returned instead of the input 
         \code{GWASExperiment}.
         \item \code{rrblup}: In this case, the 
-        \code{\link{GWAS} function from the package
+        \code{\link{GWAS}} function from the package
         rrBLUP is used to model the associations, the
         effects and the significance of each SNP using
         Ridge Regression. The function can be used
         independently by directly using \code{gwaBlup}.
         In this case, a data frame of ridge regression 
         summary statistics is returned instead of the 
-        input \code{GWASExperiment}.}
+        input \code{GWASExperiment}.
         \item \code{statgen}: In this case, the
         \code{\link{runSingleTraitGwas}} function from
         the statgenGWAS package is used to model the 
@@ -253,7 +261,7 @@
         \item \code{seed}: A seed for PLINK randomized 
         operations such as resampling and permuting.
         Defaults to \code{42}.
-        \item \code{cliops}: Further options to be passed
+        \item \code{cliopts}: Further options to be passed
         to \code{plink} command, as these would be given
         to the command line. Please note that these should
         be switched and options accepting numbers or srings

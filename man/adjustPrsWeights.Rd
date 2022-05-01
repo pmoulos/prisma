@@ -1,4 +1,5 @@
 \name{adjustPrsWeights}
+\alias{adjustPrsWeights}
 \title{PRS weight adjustment through final regression}
 \usage{
     adjustPrsWeights(snpSelection, gwe, response, 

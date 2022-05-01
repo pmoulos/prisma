@@ -1,4 +1,5 @@
 \name{assignGenes}
+\alias{assignGenes}
 \title{Assign genes to a PRISMA output or list of PRS candidates}
 \usage{
     assignGenes(prismaOut, gv = c("hg19","hg38"), sitDb = NULL)

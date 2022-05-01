@@ -1,4 +1,5 @@
 \name{rsLocsFromEnsembl}
+\alias{rsLocsFromEnsembl}
 \title{Fill up missing SNP locations using biomaRt}
 \usage{
     rsLocsFromEnsembl(rs, gv = c("hg38", "hg19"), 

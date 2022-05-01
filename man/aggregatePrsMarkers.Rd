@@ -1,4 +1,5 @@
 \name{aggregatePrsMarkers}
+\alias{aggregatePrsMarkers}
 \title{Aggregate PRS candidate SNPs from iterative extraction}
 \usage{
     aggregatePrsMarkers(gwaList, mode = c("intersect", 

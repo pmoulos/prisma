@@ -1,4 +1,5 @@
 \name{normalityCheck}
+\alias{normalityCheck}
 \title{Enrichment of PGS Catalog retrieved scores}
 \usage{
     normalityCheck(x, pval = 0.05, tests = c("sw", "ks", "jb"),

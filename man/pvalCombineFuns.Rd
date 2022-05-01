@@ -10,7 +10,7 @@
     combineHarmonic(p, w = NULL, zerofix = NULL)
     combineMaxp(p)
     combineMinp(p)
-    combineSimes(p)
+    combineSimes(p, zerofix = NULL)
     combineWeight(p, w = NULL, zerofix = NULL)
     
     fisherMethod(p, zerofix = NULL)
@@ -37,7 +37,7 @@
 \details{
     The \code{combineHarmonic} function combines a vector
     of p-values using the method of Wilson, 2019 
-    \link{https://www.pnas.org/content/116/4/1195} and
+    \url{https://www.pnas.org/content/116/4/1195} and
     user- or prisma- provided weights.
     
     The \code{combineMaxp}, \code{combineMinp} functions 

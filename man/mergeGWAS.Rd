@@ -1,4 +1,5 @@
 \name{mergeGWAS}
+\alias{mergeGWAS}
 \title{Merge GWASExperiments from different populations}
 \usage{
     mergeGWAS(gwe1, gwe2, output = c("common", "all"), 

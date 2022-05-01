@@ -1,4 +1,5 @@
 \name{harvestWorkspace}
+\alias{harvestWorkspace}
 \title{Reconstruct various prisma outputs from a workspace}
 \usage{
     harvestWorkspace(wspace, rid, denovo = TRUE, fast = FALSE)

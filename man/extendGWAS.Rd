@@ -1,4 +1,5 @@
 \name{extendGWAS}
+\alias{extendGWAS}
 \title{External imputation of GWAS data using IMPUTE2}
 \usage{
     extendGWAS(obj, intSize = 1e+6, wspace = NULL, 

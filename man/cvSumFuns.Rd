@@ -1,6 +1,7 @@
 \name{cvSumFuns}
-\alias{summarizeCvMetrics}
 \alias{cvSummary}
+\alias{plotCvMetrics}
+\alias{summarizeCvMetrics}
 \title{Functions to summarize PRS cross-validations}
 \usage{
     summarizeCvMetrics(cvm)

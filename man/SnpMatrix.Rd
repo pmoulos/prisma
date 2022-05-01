@@ -1,4 +1,5 @@
 \name{SnpMatrix}
+\alias{SnpMatrix}
 \title{Simple SnpMatrix object constructor}
 \usage{
     SnpMatrix(snp) 

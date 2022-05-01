@@ -1,12 +1,19 @@
-\name{writePlink}
-\title{PLINK files from GWASExperiment}
+\name{writeFuns}
+\alias{writeGdsFile}
+\alias{writePlink}
+\title{PLINK and GDS files from GWASExperiment}
 \usage{
+    writeGdsFile(obj, gdsfile = NULL)
+    
     writePlink(obj, pheno = NULL, outBase = NULL, salvage = FALSE,
         reverse = FALSE, perChr = FALSE, overwrite = TRUE)
 }
 \arguments{
     \item{obj}{An object of GWASExperiment class with at
     least genotypic data.}
+    
+    \item{gdsfile}{The path to the GDS file to be written.
+    If \code{NULL} (unadvised!), will be \code{tempfile}.}
     
     \item{pheno}{The name of the phenotype to be written to
     the respective FAM column.}
@@ -42,6 +49,9 @@
     data(toy,package="prisma")
     out <- tempfile()
     writePlink(toy,pheno="BMI",outBase=out)
+    
+    gdsf <- tempfile()
+    writeGdsFile(toy,gdsfile=gdsf)
 }
 \author{
     Panagiotis Moulos

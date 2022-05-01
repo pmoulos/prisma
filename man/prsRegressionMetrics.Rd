@@ -1,4 +1,5 @@
 \name{prsRegressionMetrics}
+\alias{prsRegressionMetrics}
 \title{Calculate PRS evaluation metrics}
 \usage{
     prsRegressionMetrics(snpSelection, gwe, response, 

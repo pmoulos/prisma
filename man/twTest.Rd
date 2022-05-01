@@ -1,4 +1,5 @@
 \name{twTest}
+\alias{twTest}
 \title{Tracy-Widom test for selection of PCs}
 \usage{
     twTest(eigv, p = 0.05, tol = 1e-8)

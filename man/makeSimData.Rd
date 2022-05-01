@@ -1,4 +1,5 @@
 \name{makeSimData}
+\alias{makeSimData}
 \title{Function to create basic simulated GWAS data}
 \usage{
     makeSimData(nsnp = 10000, nsam = 100, nphe = 3,

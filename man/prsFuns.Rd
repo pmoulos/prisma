@@ -1,5 +1,6 @@
 \name{prsFuns}
 \alias{lassosumPRS}
+\alias{PRS}
 \alias{prsicePRS}
 \alias{runPRS}
 \title{Functions to extract PRS candidates with various algorithms}
@@ -7,6 +8,8 @@
     lassosumPRS(base, target = base, response, covariates = NULL,
         pcs = FALSE, wspace = NULL, anc = c("eur", "asn", "afr"),
         valid = c("auto", "stack", "split"))
+    
+    PRS(gwe, snpSelection, type = c("avg", "sum", "std"))
     
     prsicePRS(base, target = base, response, covariates = NULL,
         pcs = FALSE, mode = c("calculate", "apply"), wspace = NULL,
@@ -58,6 +61,17 @@
     \item{valid}{Validation mode for lassosum PRS extraction. 
     One of \code{"auto"} (default), \code{"split"} or 
     \code{"stack"}. See also the lassosum package.}
+    
+    \item{gwe}{A code{GWASExperiment} object with the
+    slot \code{effects} and/or \code{prsbetas} filled.}
+    
+    \item{snpSelection}{A data frame with candidate SNPs, the
+    output, or part of the output of 
+    \code{\link{aggregatePrsMarkers}}, or one of the list 
+    members of the output of \code{\link{selectPrs}}.}
+    
+    \item{type}{Same as \code{score} in \code{prsicePRS}
+    function (first three cases).}
     
     \item{clump_kb}{The genomic interval (in kbs) within 
     which PRSice2 performs clumping. Defaults to 

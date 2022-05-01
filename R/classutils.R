@@ -122,9 +122,9 @@ GWASExperimentLiftOver <- function(obj,from,to) {
     return(obj)
 }
 
-guessHumanGenomeVersion <- function(o) {
+guessHumanGenomeVersion <- function(obj) {
     # Sample 5 random SNPs... If not with rs, then no possibility
-    s <- sample(rownames(o),5)
+    s <- sample(rownames(obj),5)
     s <- s[grepl("^rs",s)]
     if (length(s) == 0) {
         warning("Cannot determine genome version without rs ids!",
@@ -134,7 +134,7 @@ guessHumanGenomeVersion <- function(o) {
         
     # rsnps fetch from hg38
     hits <- suppressWarnings(rsnps::ncbi_snp_query(s))
-    pos <- gfeatures(o)[s,"position"]
+    pos <- gfeatures(obj)[s,"position"]
     hpo <- hits$bp
     if (!all(pos %in% hpo))
         return("hg19")

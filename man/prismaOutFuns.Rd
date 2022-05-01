@@ -8,7 +8,8 @@
     
     gwaTests(prismaOut)
     
-    prismaReport(gwe, prismaOut, cvMetrics, lookup)
+    prismaReport(gwe, prismaOut, cvMetricsOut, lookupOut,
+        path = NULL)
 }
 \arguments{
     \item{prismaOut}{An output object from \code{\link{prisma}}
@@ -24,10 +25,10 @@
     \item{gwe}{The GWASExperiment object used to generate the
     \code{prismaOut}.}
     
-    \item{cvMetrics}{The output from 
+    \item{cvMetricsOut}{The output from 
     \code{\link{prismaCrossValidate}} function.}
     
-    \item{lookup}{The output from \code{\link{prismaLookup}} 
+    \item{lookupOut}{The output from \code{\link{prismaLookup}} 
     function.}
 }
 \value{

@@ -283,18 +283,18 @@ combineMaxp <- function(p) {
     return(max(p))
 }
 
-fisherMethod <- function(pvals,zerofix=NULL) {
-    stopifnot(all(pvals>=0 & all(pvals<=1)))
+fisherMethod <- function(p,zerofix=NULL) {
+    stopifnot(all(p>=0 & all(p<=1)))
     
-    if (is.null(dim(pvals)))
-        stop("pvals must have a dim attribute")
+    if (is.null(dim(p)))
+        stop("p must have a dim attribute")
     
-    zeroSub <- min(apply(pvals,1,.zeroFix,zerofix))
-    pvals[pvals == 0] <- zeroSub
+    zeroSub <- min(apply(p,1,.zeroFix,zerofix))
+    p[p == 0] <- zeroSub
     
-    fisher.sums <- data.frame(do.call(rbind,apply(pvals,1,fisherSum,
+    fisher.sums <- data.frame(do.call(rbind,apply(p,1,fisherSum,
         zeroSub=zeroSub,na.rm=TRUE)))
-    rownames(fisher.sums) <- rownames(pvals)
+    rownames(fisher.sums) <- rownames(p)
     fisher.sums$p.value <- 1-pchisq(fisher.sums$S,df=2*fisher.sums$num.p)
     fisher.sums$p.adj <- fisher.sums$p.value
     return(fisher.sums)

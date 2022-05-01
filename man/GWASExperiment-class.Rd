@@ -177,9 +177,9 @@
     genotypes(x, ...)
     genotypes(x, ...) <- value
     gfeatures(x, withDimnames=TRUE, ...)
-    gfeatures(x, withDimnames=TRUE, ...) <- value
+    gfeatures(x, ...) <- value
     gsamples(x, withDimnames=TRUE, ...)
-    gsamples(x, withDimnames=TRUE, ...) <- value
+    gsamples(x, ...) <- value
 
     phenotypes(x, withDimnames=TRUE, ...)
     phenotypes(x, withDimnames=TRUE, ...) <- value
@@ -424,12 +424,12 @@
     technologies. Apart from the related SummarizedExperiment data
     accessor functions, the data are accessed using the 
     \code{genotypes} function, described below. This returns a
-    \link{SnpMatrix} or \link{bigSNP} object. A \link{SimpleList} 
+    \link{SnpMatrix} or bigSNP object. A \link{SimpleList} 
     object with genotypic data from potentially different 
     experiment can be accessed with \code{\link{assays}}. 
     \code{genotypes} returns the first one, but typically, this is 
     what is being used. Each element of the list must itself either 
-    a \code{SnpMatrix} or a {bigSNP} object and must have 
+    a \code{\link{SnpMatrix}} or a code{bigSNP} object and must have 
     dimensions that are the same as the dimensions of the
     GWASExperiment in which they are stored. Row and column
     names of each object must either be \code{NULL} or match those 

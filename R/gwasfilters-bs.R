@@ -1,3 +1,3 @@
-.filterWithBigSnpr <- function(obj,filters) {
+.filterWithBigSnpr <- function(obj,filters,imputeMissing=FALSE) {
     # Stub
 }

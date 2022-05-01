@@ -1,9 +1,4 @@
-prismaReport <- function(gwe,prismaOut,cvMetricsOut,lookupOut,
-    methods=names(prismaOut$results),path=NULL) {
-    # Check the desired algorithms to report
-    .checkTextArgs("GWAS methods to report (methods)",methods,
-        names(prismaOut$results),multiarg=TRUE)
-
+prismaReport <- function(gwe,prismaOut,cvMetricsOut,lookupOut,path=NULL) {
     if (is.null(path)) { # prsWorkspace from prismaOut
         path <- paste0("prisma_report_",format(Sys.time(),"%Y%m%d%H%M%S"))
         if (!is.null(prismaOut$params$args$prsWorkspace))

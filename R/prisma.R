@@ -1269,7 +1269,7 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
     return(theResult)
 }
 
-assignGenes <- function(prismaOut,gv,sitDb) {
+assignGenes <- function(prismaOut,gv=c("hg19","hg38"), sitDb=NULL) {
     # Determine if we have a prisma output complete object or a list of 
     # candidate PRSs
     isPrismaOut <- is.list(prismaOut) && 

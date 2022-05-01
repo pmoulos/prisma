@@ -1,4 +1,5 @@
 \name{enrichScoreFile}
+\alias{enrichScoreFile}
 \title{Enrichment of PGS Catalog retrieved scores}
 \usage{
     enrichScoreFile(sf, gb = c("hg19", "hg38", "nr"),

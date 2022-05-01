@@ -37,7 +37,8 @@
 # input may be a prefix of bim, bed, fam or a list with each
 importGWAS <- function(input,phenos=NULL,backend=c("snpStats","bigsnpr"),
     selection=NULL,genome=NA_character_,alleleOrder=c("plink","reverse"),
-    writeGds=TRUE,gdsfile=NULL,gdsOverwrite=TRUE) {
+    writeGds=TRUE,gdsfile=ifelse(backend=="snpStats",tempfile(),NA),
+    gdsOverwrite=TRUE) {
     backend <- backend[1]
     alleleOrder <- alleleOrder[1]
     if (!(backend %in% c("snpStats","bigsnpr")))

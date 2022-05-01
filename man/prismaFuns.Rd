@@ -324,7 +324,8 @@
     PRS in the initial dataset splits or generate new ones.
     Defaults to \code{NULL}, see also Details.}
     
-    \item{runId}{}
+    \item{runId}{A unique run id for the run. If not given,
+    it will be auto-generated.}
     
     \item{evalWith}{Which data split to use to evaluate the
     PRS. \code{"original"} (default) uses the original split 
@@ -381,7 +382,7 @@
     function) and lookup in the GWAS catalog 
     (\code{\link{prismaLookup}} function). These three 
     elements are required to build a prisma report
-    (\code{\link{prismaeport}} function).
+    (\code{\link{prismaReport}} function).
 }
 \description{
     These functions comprises the main PRISMA workhorse as 

@@ -1,4 +1,5 @@
 \name{filterGWAS}
+\alias{filterGWAS}
 \title{Aggregate PRS candidate SNPs from iterative extraction}
 \usage{
     filterGWAS(obj, filters = getDefaults("filters"),

@@ -1,4 +1,5 @@
 \name{getDefaults}
+\alias{getDefaults}
 \title{Get default parameters for several prisma functions}
 \usage{
     getDefaults(what)

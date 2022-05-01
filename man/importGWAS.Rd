@@ -3,7 +3,7 @@
 \usage{
     importGWAS(input, phenos = NULL, backend = c("snpStats",
         "bigsnpr"), selection = NULL, genome = NA_character_,
-        alleleOrder = c("plink", "reverse"),
+        alleleOrder = c("plink", "reverse"), writeGds = TRUE,
         gdsfile = ifelse(backend == "snpStats", tempfile(), NA),
         gdsOverwrite = TRUE)
 }
@@ -32,6 +32,11 @@
     
     \item{alleleOrder}{Should the alleles be reversed? If yes
     choose \code{"reverse"}.}
+    
+    \item{writeGds}{Write a GDS supporting file while 
+    importing PLINK files? In some cases such as reading
+    files for external imputation is not needed. Defaults 
+    to \code{TRUE}.}
     
     \item{gdsfile}{A GDS file supported by the package
     SNPRelate is necessary for some operations like
