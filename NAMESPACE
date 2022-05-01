@@ -80,11 +80,11 @@ importFrom("S4Vectors",subjectHits)
 
 importFrom("sitadela",loadAnnotation)
 
-importFrom("SNPRelate",add.gdsn)
-importFrom("SNPRelate",closefn.gds)
-importFrom("SNPRelate",index.gdsn)
-importFrom("SNPRelate",openfn.gds)
-importFrom("SNPRelate",read.gdsn)
+#importFrom("SNPRelate",add.gdsn)
+#importFrom("SNPRelate",closefn.gds)
+#importFrom("SNPRelate",index.gdsn)
+#importFrom("SNPRelate",openfn.gds)
+#importFrom("SNPRelate",read.gdsn)
 
 importFrom("statgenGWAS",createGData)
 importFrom("statgenGWAS",runSingleTraitGwas)
