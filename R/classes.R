@@ -66,17 +66,21 @@ setGeneric("genotypes",function(x,...) standardGeneric("genotypes"))
 
 setGeneric("genotypes<-",function(x,...,value) standardGeneric("genotypes<-"))
 
-setGeneric("gfeatures",function(x,...) standardGeneric("gfeatures"))
+setGeneric("gfeatures",function(x,withDimnames=TRUE,...) 
+    standardGeneric("gfeatures"))
 
 setGeneric("gfeatures<-",function(x,...,value) standardGeneric("gfeatures<-"))
 
-setGeneric("gsamples",function(x,...) standardGeneric("gsamples"))
+setGeneric("gsamples",function(x,withDimnames=TRUE,...) 
+    standardGeneric("gsamples"))
 
 setGeneric("gsamples<-",function(x,...,value) standardGeneric("gsamples<-"))
 
-setGeneric("phenotypes",function(x,...) standardGeneric("phenotypes"))
+setGeneric("phenotypes",function(x,withDimnames=TRUE,...) 
+    standardGeneric("phenotypes"))
 
-setGeneric("phenotypes<-",function(x,...,value) standardGeneric("phenotypes<-"))
+setGeneric("phenotypes<-",function(x,withDimnames=TRUE,...,value) 
+    standardGeneric("phenotypes<-"))
 
 setGeneric("pvalues",function(x,...) standardGeneric("pvalues"))
 

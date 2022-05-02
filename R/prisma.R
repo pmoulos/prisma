@@ -1154,8 +1154,9 @@ harvestWorkspace <- function(wspace,rid,denovo=TRUE,fast=FALSE) {
         disp("  Loading result from ",x)
         resFile <- file.path(x,paste0(pat,"result.RData"))
         if (file.exists(resFile)) {
-            load(file.path(x,paste0(pat,"result.RData")))
-            return(result)
+            .env <- new.env(parent=emptyenv())
+            load(file.path(x,paste0(pat,"result.RData")),envir=.env)
+            return(.env$result)
         }
         #else
         #   disp("  Warning: File ",resFile," does not exist! Have all ",

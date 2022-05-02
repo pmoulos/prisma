@@ -52,8 +52,8 @@ pkgs <- c("akmedoids","Biobase","biomaRt","BSgenome","data.table",
     "openxlsx","pander","parallel","PhenotypeSimulator","quincunx","R.utils",
     "rmarkdown","rmdformats","RcppArmadillo","RMTstat","rrBLUP","rrcov","rsnps",
     "rtracklayer","S4Vectors","scales","scrime","snpStats","SNPRelate",
-    "statgenGWAS","SummarizedExperiment","survcomp","testthat","tseries",
-    "utils")    
+    "SNPlocs.Hsapiens.dbSNP151.GRCh38","statgenGWAS","SummarizedExperiment",
+    "survcomp","testthat","tseries","utils")    
 
 BiocManager::install(pkgs)
 ```

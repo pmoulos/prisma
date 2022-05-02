@@ -12,7 +12,6 @@ Depends:
 Imports:
     akmedoids,
     Biobase,
-    BiocGenerics,
     biomaRt,
     BSgenome,
     GenomeInfoDb,

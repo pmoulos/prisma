@@ -35,12 +35,13 @@
     \code{normal}, a logical indicating the output of the test.)
 }
 \description{
-    This function uses three distinct tests to assess normality
-    of a numeric vector, namely the Shapiro-Wilk test, the
-    Kolmogorov Smirnov test against the normal distribution
-    (\code{y="pnorm"} in the \code{\link{ks}} function) and the
-    Jarque-Bera test implemented in the package tseries. If the
-    latter is not present, the test is not available.
+    This function uses three distinct tests to assess 
+    normality of a numeric vector, namely the Shapiro-Wilk 
+    test, the Kolmogorov Smirnov test against the normal 
+    distribution (\code{y="pnorm"} in the 
+    \code{\link{ks.test}} function) and the Jarque-Bera test 
+    implemented in the package tseries. If the latter is not 
+    present, the test is not available.
 }
 \details{
     Regarding the \code{lower} argument, it represents a 

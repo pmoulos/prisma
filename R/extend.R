@@ -621,7 +621,7 @@ extendGWAS <- function(obj,intSize=1e+6,wspace=NULL,refSpace=NULL,
                 format(x[2],scientific=FALSE)))
         }))
         warning("A problem occured during imputation for interval(s) ",
-            past(faTxt,collapse=", "),". Please check!",immediate.=TRUE)
+            paste(faTxt,collapse=", "),". Please check!",immediate.=TRUE)
     }
 }
 

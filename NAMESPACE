@@ -1,5 +1,4 @@
 import(Biobase)
-import(BiocGenerics)
 import(biomaRt)
 import(GenomicRanges)
 import(ggplot2)
@@ -19,6 +18,7 @@ importFrom("BSgenome",inferRefAndAltAlleles)
 importFrom("BSgenome",snpsById)
 importFrom("BSgenome",snpsByOverlaps)
 
+importFrom("GenomeInfoDb",dropSeqlevels)
 importFrom("GenomeInfoDb",seqinfo)
 importFrom("GenomeInfoDb",Seqinfo)
 importFrom("GenomeInfoDb",seqlevels)
@@ -37,6 +37,10 @@ importFrom("harmonicmeanp",p.hmp)
 
 importFrom("islasso",islasso)
 
+importFrom("jsonlite",fromJSON)
+importFrom("jsonlite",toJSON)
+importFrom("jsonlite",write_json)
+
 importFrom("htmltools",tags)
 
 importFrom("jsonlite",fromJSON)
@@ -54,6 +58,13 @@ importFrom("methods",is)
 importFrom("methods",new) 
 importFrom("methods",validObject) 
 
+importFrom("PhenotypeSimulator",correlatedBgEffects)
+importFrom("PhenotypeSimulator",geneticBgEffects)
+importFrom("PhenotypeSimulator",geneticFixedEffects)
+importFrom("PhenotypeSimulator",getCausalSNPs)
+importFrom("PhenotypeSimulator",getKinship)
+importFrom("PhenotypeSimulator",noiseBgEffects)
+importFrom("PhenotypeSimulator",noiseFixedEffects)
 importFrom("PhenotypeSimulator",readStandardGenotypes)
 importFrom("PhenotypeSimulator",rescaleVariance)
 importFrom("PhenotypeSimulator",setModel)
@@ -79,7 +90,9 @@ importFrom("rtracklayer",liftOver)
 importFrom("S4Vectors",coolcat)
 importFrom("S4Vectors",endoapply)
 importFrom("S4Vectors",DataFrame)
+importFrom("S4Vectors",metadata)
 importFrom("S4Vectors",queryHits)
+importFrom("S4Vectors",SimpleList)
 importFrom("S4Vectors",subjectHits)
 
 importFrom("sitadela",loadAnnotation)
@@ -128,6 +141,7 @@ importFrom("stats",rnorm)
 importFrom("stats",rmultinom)
 importFrom("stats",runif)
 importFrom("stats",sd)
+importFrom("stats",setNames)
 importFrom("stats",shapiro.test)
 importFrom("stats",quantile)
 importFrom("stats",t.test)
@@ -160,12 +174,13 @@ importFrom("utils",zip)
 
 importFrom("openxlsx",write.xlsx)
 
-exportClasses(
-    GWASExperiment,
-    data.frame_OR_matrix,
-    data.frame_OR_matrix_OR_NULL,
-    data.frame_OR_DataFrame_OR_NULL
-)
+exportClasses(GWASExperiment)
+#exportClasses(
+#    GWASExperiment,
+#    data.frame_OR_matrix,
+#    data.frame_OR_matrix_OR_NULL,
+#    data.frame_OR_DataFrame_OR_NULL
+#)
 
 exportMethods(
     genotypes,"genotypes<-",

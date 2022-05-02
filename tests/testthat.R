@@ -1,4 +1,4 @@
 library(testthat)
 library(usethis)
 
-test_check("pgscatalogR")
+test_check("prisma")

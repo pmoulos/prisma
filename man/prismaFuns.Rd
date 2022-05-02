@@ -383,10 +383,9 @@
     }
     
     This object can be saved in and .rda file and later used
-    with cross-validation metrics (\code{\link{cvMetrics}}
-    function) and lookup in the GWAS catalog 
-    (\code{\link{prismaLookup}} function). These three 
-    elements are required to build a prisma report
+    with cross-validation metrics and lookup in the GWAS 
+    catalog (\code{\link{prismaLookup}} function). These 
+    three elements are required to build a prisma report
     (\code{\link{prismaReport}} function).
 }
 \description{

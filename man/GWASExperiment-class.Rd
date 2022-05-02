@@ -18,12 +18,14 @@
 \alias{gfeatures<-}
 \alias{gfeatures<-,DataFrame-method}
 \alias{gfeatures<-,data.frame-method}
+\alias{gfeatures<-,GWASExperiment-method}
 
 \alias{gsamples}
 \alias{gsamples,GWASExperiment-method}
 \alias{gsamples<-}
 \alias{gsamples<-,DataFrame-method}
 \alias{gsamples<-,data.frame-method}
+\alias{gsamples<-,GWASExperiment-method}
 
 \alias{phenotypes}
 \alias{phenotypes,GWASExperiment-method}
@@ -51,6 +53,7 @@
 \alias{genome,GWASExperiment-method}
 \alias{genome<-}
 \alias{genome<-,character-method}
+\alias{genome,GWASExperiment-method}
 
 \alias{gdsfile}
 \alias{gdsfile,GWASExperiment-method}
@@ -215,8 +218,6 @@
 
     ## Quick colData access
 
-    #\S4method{$}{GWASExperiment}(x, name)
-    #\S4method{$}{GWASExperiment}(x, name) <- value
     \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...)
     \S4method{[[}{GWASExperiment,ANY,missing}(x, i, j, ...) <- value
 
@@ -245,7 +246,11 @@
 
     \item{i, j}{for \code{genotypes}, \code{genotypes<-}, 
     \code{i} is an integer or numeric scalar, see Details 
-    for additional constraints.
+    for additional constraints and for \code{i} in functions
+    like \code{pvalues}. Brifely, for the latter it is a 
+    scalar or vector of indices for which to retrieve
+    statistical scores, corresponding to a number of models 
+    fit to \code{x}.
 
     For \code{[,GWASExperiment}, \code{[,GWASExperiment<-}, 
     \code{i}, \code{j} are subscripts that can act to subset the 
@@ -330,9 +335,15 @@
     \item{npcs}{the number of PCs included in the covariates
     in a GWA test. See also Details.}
     
-    \item{i}{a scalar or vector of indices for which to retrieve
-    statistical scores, corresponding to a number of models fit
-    to \code{x}. See also Details.}
+    \item{by}{the name of the sample or SNP attribute to be
+    used as the splitting factor.}
+    
+    \item{across}{split a GWASExperiment accross 
+    \code{"features"} (default) or \code{"samples"}, according
+    to the attribute defined by \code{by}.}
+    
+    \item{rc}{fraction of available cores to use for 
+    splitting.}
 }
 
 \details{
@@ -602,7 +613,7 @@
     usually only access the PCA covariates while setting them using
     the \code{\link{calcPcaCovars}} function.}
     
-    \item{\code{prsbetas(x, by, across = c("features", "samples"), 
+    \item{\code{gsplit(x, by, across = c("features", "samples"), 
     rc = NULL}:}{Split an object by column names stored in the
     \code{gfeatures} or \code{gsamples}. If the former, the object
     is split row-wise while if the former, it is split column-wise.

@@ -98,6 +98,14 @@
     regression. By default (\code{NULL}), it is guessed from
     the form of the \code{response} variable.}
     
+    \item{penalized}{Use penalized (LASSO) regression for
+    GLM. Defaults to \code{FALSE}.}
+    
+    \item{size}{The number of SNPs to include in a GLM 
+    model, usually utilized with \code{penalized=TRUE}.
+    Defaults to \code{1} for models with 1 SNP as 
+    covariate.}
+    
     \item{wspace}{A path to create workspaces and temporary
     files for SNPTEST and PLINK which operate outside R.}
     
@@ -296,6 +304,7 @@
 }
 \examples{
     data(toy,package="prisma")
+    gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
     
     # Only 1 PC will be returned because of dataset size
     toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))

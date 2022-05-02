@@ -68,7 +68,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     
     nc <- ifelse(length(cvo[[1]]) > 5,2,3)
     
-    g <- ggplot(ggdata,aes(x=Index,y=Mean,colour=Metric)) +
+    g <- ggplot(ggdata,aes_string(x="Index",y="Mean",colour="Metric")) +
         geom_line() + 
         geom_point(size=2) +
         geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.2,size=0.25) +
@@ -119,10 +119,11 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     if (length(cvm) > 1) {
         ggdata$Type <- c(rep("Main",length(nams)),
             rep("Others",length(nams)*(length(cvm)-1)))
-        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source,linetype=Type))
+        g <- ggplot(ggdata,aes_string(x="X",y="Mean",fill="Source",
+            linetype="Type"))
     }
     else
-        g <- ggplot(ggdata,aes(x=X,y=Mean,fill=Source))
+        g <- ggplot(ggdata,aes(x="X",y="Mean",fill="Source"))
         
     
     g <- g + geom_bar(stat="identity",position=position_dodge(width=0.6),
@@ -178,8 +179,8 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     }
     
     # PRS R2 vs #SNPs and siginificance
-    g1 <- ggplot(ggdata,aes(x=NFSNP,y=PR2)) + 
-        geom_bar(aes(fill=Significance),stat="identity",width=0.7) +
+    g1 <- ggplot(ggdata,aes_string(x="NFSNP",y="PR2")) + 
+        geom_bar(aes_string(fill="Significance"),stat="identity",width=0.7) +
         scale_fill_gradient2(low="#264653",mid="#E9C46A",high="#FD3025") +
         geom_errorbar(aes(ymin=PR2-SD,ymax=PR2+SD),width=0.2,colour="#264653") +
         geom_hline(yintercept=mean(base),colour="#727272",linetype="longdash",
@@ -198,8 +199,8 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
         )
     
     # Adjusted (our) PRS R2 vs #SNPs and siginificance
-    g2 <- ggplot(ggdata,aes(x=NFSNP,y=APR2)) + 
-        geom_point(aes(colour=Significance),size=3) +
+    g2 <- ggplot(ggdata,aes_string(x="NFSNP",y="APR2")) + 
+        geom_point(aes_string(colour="Significance"),size=3) +
         #scale_colour_gradient2(low="#E00000",mid="#FFAA28",high="#00E000") +
         scale_colour_gradient2(low="#264653",mid="#E9C46A",high="#FD3025") +
         xlab("\nNumber of PRS candidate SNPs (# appearances)") +
@@ -214,8 +215,8 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
         )
     
     # PRS R2 vs #SNPs and frequency
-    g3 <- ggplot(ggdata,aes(x=N,y=PR2)) + 
-        geom_point(aes(colour=Frequency),size=3) +
+    g3 <- ggplot(ggdata,aes_string(x="N",y="PR2")) + 
+        geom_point(aes_string(colour="Frequency"),size=3) +
         scale_x_log10(labels=comma) +
         xlab("\nNumber of SNPs in PRS") +
         ylab(yl1) +
@@ -234,8 +235,8 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
 .plotPrsTrait <- function(x,y,n) {
     ggdata <- data.frame(PRS=x,Y=y)
     
-    p1 <- ggplot(ggdata,aes(x=PRS,y=Y)) + 
-        geom_point(aes(colour=PRS),size=2) +
+    p1 <- ggplot(ggdata,aes_string(x="PRS",y="Y")) + 
+        geom_point(aes_string(colour="PRS"),size=2) +
         scale_colour_gradient(low="#00A000",high="#A00000") +
         xlab("\nPolygenic Risk Score") +
         ylab(n) +
@@ -247,7 +248,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
             axis.text.y=element_text(size=12,face="bold")
         )
     
-    p2 <- ggplot(ggdata,aes(x=PRS,fill=..x..)) + 
+    p2 <- ggplot(ggdata,aes_string(x="PRS",fill="..x..")) + 
         geom_histogram(color="black",size=0.5) +
         scale_fill_gradient(low="#00A000",high="#A00000",name="Risk") +
         xlab("\nPolygenic Risk Score") +
@@ -280,11 +281,12 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
             sum(lengths(qu)))),levels=c("Selection","Analysis"))
     )
 
-    g <- ggplot(ggdata,aes(x=PR2)) +
+    g <- ggplot(ggdata,aes_string(x="PR2")) +
         geom_density(data=ggdata[ggdata$Type=="Selection",],
-            aes(colour=Source)) +
-        geom_density(data=ggdata[ggdata$Type=="Analysis",],aes(colour=Source),
-            colour="black",linetype="longdash",size=0.8) +
+            aes_string(colour="Source")) +
+        geom_density(data=ggdata[ggdata$Type=="Analysis",],
+            aes_string(colour="Source"),colour="black",linetype="longdash",
+            size=0.8) +
         xlim(-0.05,round(max(ggdata$PR2),digits=1)+0.05) +
         xlab("PRSice adjusted R2") +
         ylab("Density") +

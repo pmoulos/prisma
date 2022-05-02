@@ -59,7 +59,7 @@ prismaLookup <- function(prismaOut) {
             if (all(is.na(x$gene_name)))
                 return(NA)
             else if (any(is.na(x$gene_name)))
-                return(paste0(x$gene_name[!is.na(gene_name)],collapse=", "))
+                return(paste0(x$gene_name[!is.na(x$gene_name)],collapse=", "))
             else
                 return(paste0(x$gene_name,collapse=", "))
         })

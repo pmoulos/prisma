@@ -199,11 +199,11 @@
                 },error=function(e) {
                 disp("Caught error ",e$message)
                 disp("Closing GDS file connection")
-                snpgdsClose(handle)
+                snpgdsClose(gdsHandle)
             },interrupt=function(i) {
                 disp("Caught keyboard interruption!")
                 disp("Closing GDS file connection")
-                snpgdsClose(handle)
+                snpgdsClose(gdsHandle)
             },finally="")
         
         disp("Performing IBD selection...")
