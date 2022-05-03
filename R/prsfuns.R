@@ -80,7 +80,8 @@ runPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
 }
 
 lassosumPRS <- function(base,target=base,response,covariates=NULL,pcs=FALSE,
-    wspace=NULL,anc=c("eur","asn","afr"),valid=c("auto","stack","split")) {
+    wspace=NULL,anc=c("eur","asn","afr"),valid=c("auto","stack","split"),
+    rc=NULL) {
     # Can run PRS? Has necessary fields?
     .canRunPrs(base,response)
     .canRunPrs(target,response,isBase=FALSE)

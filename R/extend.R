@@ -876,7 +876,7 @@ download1000GP3 <- function(path=NULL) {
     
     if (any(genOut))
         stop("A problem occured during the generation of GEN files ",
-            paste(pedFiles[genOut],collapse=", "),". Please check!")
+            paste(bedFiles[genOut],collapse=", "),". Please check!")
     
     genFiles <- dir(inputDir,pattern="\\.gen$")
     #genFiles <- dir(inputDir,pattern="\\.gen$",full.names=TRUE)

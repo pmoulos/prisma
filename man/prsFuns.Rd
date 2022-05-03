@@ -7,7 +7,7 @@
 \usage{
     lassosumPRS(base, target = base, response, covariates = NULL,
         pcs = FALSE, wspace = NULL, anc = c("eur", "asn", "afr"),
-        valid = c("auto", "stack", "split"))
+        valid = c("auto", "stack", "split"), rc = NULL)
     
     PRS(gwe, snpSelection, type = c("avg", "sum", "std"))
     

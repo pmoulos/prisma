@@ -68,7 +68,7 @@
     with a \code{GWASExperiment} object and either a PRISMA
     external validation pipeline with PRScice2 (takes longer)
     or with vanilla R regression and cross-validation using
-    e.g. \code{\link{prsCrossValidation}} to check their
+    e.g. \code{\link{prsCrossValidate}} to check their
     performance against one or more traits present in the
     \code{GWASExperiment} object.
 }

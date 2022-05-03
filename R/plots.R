@@ -63,7 +63,9 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
         SD=SD,
         Metric=metricLab,
         NSNP=nsnpLab,
-        Index=index
+        Index=index,
+        YMin=M-SD,
+        YMax=M+SD
     )
     
     nc <- ifelse(length(cvo[[1]]) > 5,2,3)
@@ -71,7 +73,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     g <- ggplot(ggdata,aes_string(x="Index",y="Mean",colour="Metric")) +
         geom_line() + 
         geom_point(size=2) +
-        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=0.2,size=0.25) +
+        geom_errorbar(aes_string(ymin="YMin",ymax="YMax"),width=0.2,size=0.25) +
         facet_wrap(. ~ NSNP,ncol=nc) +
         scale_x_continuous(breaks=seq_along(cvo[[1]]),
             labels=paste0(100*as.numeric(names(cvo[[1]])),"%")) +
@@ -114,7 +116,9 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
             levels=paste(names(cvm),"SNPs")),
         Mean=M,
         SD=S,
-        Source=factor(rep(nams,length(cvm)),levels=nams)
+        Source=factor(rep(nams,length(cvm)),levels=nams),
+        YMin=M-S,
+        YMax=M+S
     )
     if (length(cvm) > 1) {
         ggdata$Type <- c(rep("Main",length(nams)),
@@ -128,7 +132,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     
     g <- g + geom_bar(stat="identity",position=position_dodge(width=0.6),
         width=0.7,colour="black") +
-        geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),
+        geom_errorbar(aes_string(ymin="YMin",ymax="YMax"),
             position=position_dodge(width=0.6),width=0.3,colour="black",
             linetype="solid") +
         xlab("\nNumber of SNPs in PRS candidates") +
@@ -166,7 +170,9 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
         Significance=logp,
         NFSNP=factor(helpNames,levels=helpNames),
         N=metrics[,"n_snp"],
-        Frequency=fr
+        Frequency=fr,
+        YMin=r2-s,
+        YMax=r2+s
     )
     
     if (stat=="mean") {
@@ -182,7 +188,8 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     g1 <- ggplot(ggdata,aes_string(x="NFSNP",y="PR2")) + 
         geom_bar(aes_string(fill="Significance"),stat="identity",width=0.7) +
         scale_fill_gradient2(low="#264653",mid="#E9C46A",high="#FD3025") +
-        geom_errorbar(aes(ymin=PR2-SD,ymax=PR2+SD),width=0.2,colour="#264653") +
+        geom_errorbar(aes_string(ymin="YMin",ymax="YMax"),width=0.2,
+            colour="#264653") +
         geom_hline(yintercept=mean(base),colour="#727272",linetype="longdash",
             size=0.75) +
         geom_hline(yintercept=mean(base)+sd(base),linetype="dotted") +
@@ -275,7 +282,7 @@ plotCvMetrics <- function(cvo,what=c("r2","rmse","mae","pr2","crl"),
     
     ggdata <- data.frame(
         PR2=c(base,unlist(qu)),
-        Source=factor(c(rep("Baseline",length(bnase)),rep(names(qu),
+        Source=factor(c(rep("Baseline",length(base)),rep(names(qu),
             lengths(qu))),levels=c("Baseline",names(qu))),
         Type=factor(c(rep("Analysis",length(base)),rep("Selection",
             sum(lengths(qu)))),levels=c("Selection","Analysis"))

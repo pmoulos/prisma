@@ -129,6 +129,9 @@
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no
     parallelization.}
+    
+    \item{...}{Additional arguments passed to regression
+    functions.}
 }
 \value{
     Depending on the function used, either a data frame

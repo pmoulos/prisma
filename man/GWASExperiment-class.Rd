@@ -33,27 +33,31 @@
 \alias{phenotypes<-,DataFrame-method}
 \alias{phenotypes<-,data.frame-method}
 \alias{phenotypes<-,NULL-method}
+\alias{phenotypes<-,GWASExperiment-method}
 
 \alias{pvalues}
 \alias{pvalues,GWASExperiment-method}
 \alias{pvalues<-}
 \alias{pvalues<-,SimpleList-method}
+\alias{pvalues<-,GWASExperiment-method}
 
 \alias{effects}
 \alias{effects,GWASExperiment-method}
 \alias{effects<-}
 \alias{effects<-,SimpleList-method}
+\alias{effects<-,GWASExperiment-method}
 
 \alias{prsbetas}
 \alias{prsbetas,GWASExperiment-method}
 \alias{prsbetas<-}
 \alias{prsbetas<-,SimpleList-method}
+\alias{prsbetas<-,GWASExperiment-method}
 
 \alias{genome}
 \alias{genome,GWASExperiment-method}
 \alias{genome<-}
 \alias{genome<-,character-method}
-\alias{genome,GWASExperiment-method}
+\alias{genome<-,GWASExperiment-method}
 
 \alias{gdsfile}
 \alias{gdsfile,GWASExperiment-method}
@@ -64,18 +68,23 @@
 \alias{filterRecord,GWASExperiment-method}
 \alias{filterRecord<-}
 \alias{filterRecord<-,data.frame-method}
+\alias{filterRecord<-,GWASExperiment-method}
 
 \alias{pcaCovariates}
 \alias{pcaCovariates,GWASExperiment-method}
 \alias{pcaCovariates<-}
 \alias{pcaCovariates<-,matrix-method}
+\alias{pcaCovariates<-,GWASExperiment-method}
 
 \alias{allPvalues}
 \alias{allPvalues,SimpleList-method}
+\alias{allPvalues,GWASExperiment-method}
 \alias{allEffects}
 \alias{allEffects,SimpleList-method}
+\alias{allEffects,GWASExperiment-method}
 \alias{allPrsbetas}
 \alias{allPrsbetas,SimpleList-method}
+\alias{allPrsbetas,GWASExperiment-method}
 
 % Subsetting
 \alias{[,GWASExperiment-method}

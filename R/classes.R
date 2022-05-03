@@ -546,7 +546,7 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
         }
         i <- as.vector(i)
         
-        v <- lapply(v,..internalSubsetSL)
+        #v <- lapply(v,..internalSubsetSL)
         #v[i,] <- pvalues(value,withDimnames=FALSE)
         #e[i,] <- effects(value,withDimnames=FALSE)
         #s[i,] <- prsbetas(value,withDimnames=FALSE)

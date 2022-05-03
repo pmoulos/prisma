@@ -815,7 +815,7 @@ for (m in names(prismaOut$results)) {
 }
 ```
 
-```{r cv_basic_pct, fig.width=14, fig.height=8, eval=FALSE}
+```{r cv_basic_pct, fig.width=14, fig.height=8, eval=TRUE}
 if (!is.null(cvMetricsOut)) {
     pandoc.header("Cross validation {.tabset .tabset-pills}",level=1)
     

@@ -729,8 +729,12 @@ gwaPlink <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     ctr <- character(ncol(r))
     for (i in seq_len(ncol(r))) {
         tmp <- r[,i]
-        if (is.numeric(tmp))
-            ctr[i] <- "P"
+        if (is.numeric(tmp)) {
+            if (length(unique(tmp)) == 2)
+                ctr[i] <- "B"
+            else
+                ctr[i] <- "P"
+        }
         else if (is.integer(tmp) || is.character(tmp) || is.factor(tmp)) {
             if (length(unique(tmp)) == 2)
                 ctr[i] <- "B"
