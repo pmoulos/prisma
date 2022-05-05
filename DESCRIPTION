@@ -41,6 +41,7 @@ Imports:
     rtracklayer,
     S4Vectors,
     scales,
+    signal,
     sitadela,
     SNPlocs.Hsapiens.dbSNP151.GRCh38,
     statgenGWAS,
