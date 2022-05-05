@@ -521,6 +521,9 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     # 1b. obj to PLINK through snpStats::write.plink
     # 1c. Necessary phenotypes and covariates to SNPTEST sample file
     prepList <- .preparePlinkInputForSnptest(obj,response,covariates,pcs,wspace)
+    # 1d. Check if binary response because the columns of the output changes
+    p <- phenotypes(obj)
+    isBin <- .maybeBinaryForBinomial(p[,response])
     
     # 2. Run the SNPTEST command
     disp("\nPerforming GWAS with SNPTEST")
@@ -566,7 +569,10 @@ gwaSnptest <- function(obj,response,covariates=NULL,pcs=TRUE,psig=0.05,
     
     # 3. Read and gather SNPTEST output in a table similar to others
     tmp <- read.table(file.path(wspace,"snptest.out"),header=TRUE,sep=" ")
-    res <- tmp[,c(23,24,21)]
+    if (!isBin)
+        res <- tmp[,c(23,24,21)]
+    else
+        res <- tmp[,c(44,45,42)]
     colnames(res) <- c("effect","se","pvalue")
     rownames(res) <- rownames(obj)
     

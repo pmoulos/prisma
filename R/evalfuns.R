@@ -41,8 +41,8 @@ selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
     .checkTextArgs("PRS R2 for selection (r2type)",r2type,c("adjusted","raw"),
         multiarg=TRUE)
     
-    if (!requireNamespace("akmedoids"))
-        stop("R package akmedoids is required!")
+    if (method == "elbow" && !requireNamespace("signal"))
+        stop("R package signal is required!")
     
     # Is snpSelection sorted by frequency (required for elbow)
     if (is.unsorted(rev(snpSelection$freq)))
@@ -87,7 +87,7 @@ selectPrs <- function(metrics,snpSelection,gwe,method=c("maxima","elbow"),
     
     if (method == "elbow") {
         # Now, find elbow...
-        E <- elbow_point(x,y)
+        E <- .elbow_point(x,y)
         # ...and get the SNPs as well as other metrics
         disp("The optimal number of markers for PRS based on ",crit," is ",
             round(E$x)," at ",crit,"=",round(E$y,5))
@@ -883,6 +883,92 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     nan <- which(is.nan(x))
     inf <- which(is.infinite(x))
     return(union(na,union(nan,inf)))
+}
+
+.elbow_point <- function (x, y) {
+    input_x <- x
+    input_y <- y
+    
+    is.invalid <- function(x) {
+        any((!is.numeric(x)) | is.infinite(x))
+    }
+    
+    if (is.invalid(x) || is.invalid(y))
+        stop("x and y must be finite and numeric. Missing values are not ",
+            "allowed.")
+    if (length(x) != length(y))
+        stop("x and y must be of equal length.")
+    
+    new.x <- seq(from = min(x), to = max(x), length.out = length(x))
+    sp <- smooth.spline(x, y)
+    new.yPred <- predict(sp, new.x)
+    new.y <- new.yPred$y
+    
+    largest.odd.num.lte <- function(x) {
+        x.int <- floor(x)
+        if (x.int%%2 == 0)
+            x.int - 1
+        else
+            x.int
+    }
+    
+    smoothen <- function(y,p=p,filt.length=NULL,...) {
+        ts <- (max(new.x) - min(new.x))/length(new.x)
+        p <- 3
+        if (is.null(filt.length))
+            filt.length <- min(largest.odd.num.lte(length(new.x)),7)
+        if (filt.length <= p)
+            stop("Need more points to find cutoff.")
+        signal::sgolayfilt(y,p=p,n=filt.length,ts=ts,...)
+    }
+    first.deriv <- smoothen(new.y,m=1)
+    second.deriv <- smoothen(new.y,m=2)
+    
+    pick.sign <- function(x) {
+        most.extreme <- which(abs(x) == max(abs(x),na.rm=TRUE))[1]
+        sign(x[most.extreme])
+    }
+    
+    first.deriv.sign <- pick.sign(first.deriv)
+    second.deriv.sign <- pick.sign(second.deriv)
+    x.sign <- 1
+    y.sign <- 1
+    if ((first.deriv.sign == -1) && (second.deriv.sign == -1))
+        x.sign <- -1
+    else if ((first.deriv.sign == -1) && (second.deriv.sign == 1))
+        y.sign <- -1
+    else if ((first.deriv.sign == 1) && (second.deriv.sign == 1)) {
+        x.sign <- -1
+        y.sign <- -1
+    }
+    if ((x.sign == -1) || (y.sign == -1)) {
+        results <- .elbow_point(x.sign * x, y.sign * y)
+        solution <- list(input.x = input_x, input.y = input_y,
+            fittedSpline = new.yPred, first.deriv = first.deriv,
+            second.deriv = second.deriv, x = x.sign * results$x,
+            y = y.sign * results$y)
+        return(solution)
+    }
+    cutoff.x <- NA
+    curvature <- abs(second.deriv)/(1 + first.deriv^2)^(3/2)
+    if (max(curvature) < min(curvature) | max(curvature) < max(curvature))
+        cutoff.x <- NA
+    else {
+        f <- approxfun(new.x, curvature, rule = 1)
+        cutoff.x <- optimize(function(new.x) abs(f(new.x) - max(curvature)),
+            range(new.x))$minimum
+    }
+    if (is.na(cutoff.x)) {
+        warning("Cutoff point is beyond range. Returning NA.")
+        list(x=NA,y=NA)
+    }
+    else {
+        solution <- list(input.x=input_x,input.y=input_y,
+            fittedSpline=new.yPred,first.deriv=first.deriv,
+            second.deriv=second.deriv,x=approx(new.x,new.y,
+                cutoff.x)$x,y=approx(new.x,new.y,cutoff.x)$y)
+        return(solution)
+    }
 }
 
 #~ .evalGlmWorker <- function(dat,res,red,fam,...) {

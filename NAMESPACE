@@ -11,8 +11,6 @@ import(SNPRelate)
 import(snpStats)
 import(SummarizedExperiment)
 
-importFrom("akmedoids",elbow_point)
-
 importFrom("BSgenome",getBSgenome)
 importFrom("BSgenome",inferRefAndAltAlleles)
 importFrom("BSgenome",snpsById)
@@ -94,6 +92,8 @@ importFrom("S4Vectors",metadata)
 importFrom("S4Vectors",queryHits)
 importFrom("S4Vectors",SimpleList)
 importFrom("S4Vectors",subjectHits)
+
+importFrom("signal",sgolayfilt)
 
 importFrom("sitadela",loadAnnotation)
 

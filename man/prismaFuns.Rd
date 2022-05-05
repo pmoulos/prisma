@@ -603,6 +603,7 @@
 }
 \examples{
 data(toy,package="prisma")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Lose filters for the toy dataset
 filts <- getDefaults("filters")
