@@ -177,18 +177,18 @@ setGeneric("filterRecord<-",function(x,...,value)
 
 setGeneric("gdsfile",function(x) standardGeneric("gdsfile"))
 
-setGeneric("gdsfile<-",function(x,value) standardGeneric("gdsfile<-"))
+setGeneric("gdsfile<-",function(x,...,value) standardGeneric("gdsfile<-"))
 
 setGeneric("genome",function(x) standardGeneric("genome"))
 
-setGeneric("genome<-",function(x,value) standardGeneric("genome<-"))
+setGeneric("genome<-",function(x,...,value) standardGeneric("genome<-"))
 
 setGeneric("pcaCovariates",function(x) standardGeneric("pcaCovariates"))
 
 setGeneric("gsplit",function(x,by,across=c("features","samples"),rc=NULL,...)
     standardGeneric("gsplit"))
 
-setGeneric("pcaCovariates<-",function(x,value) 
+setGeneric("pcaCovariates<-",function(x,...,value) 
     standardGeneric("pcaCovariates<-"))
 
 setMethod("genotypes","GWASExperiment",function(x,i=1) {
