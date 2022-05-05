@@ -216,13 +216,13 @@
         rc = NULL)
 
     genome(x)
-    genome(x) <- value
+    genome(x, ...) <- value
     gdsfile(x)
-    gdsfile(x) <- value
+    gdsfile(x, ...) <- value
     filterRecord(x)
-    filterRecord(x) <- value
+    filterRecord(x, ...) <- value
     pcaCovariates(x)
-    pcaCovariates(x) <- value
+    pcaCovariates(x, ...) <- value
 
 
     ## Quick colData access
