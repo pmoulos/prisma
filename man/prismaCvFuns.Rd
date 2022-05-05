@@ -162,8 +162,7 @@
     cvm <- prismaCrossValidate(prismaOut,toy,response=response,
         covariates=covariates,leaveOut=c(0.2,0.4),times=5)
     
-    can <- prismaOut$results$glm$candidates[[1]]
-    # can <- getPrsCandidates(prismaOut,"glm",1)
+    can <- getPrsCandidates(prismaOut,"glm",1)
     m <- prsCrossValidate(can,toy,response=response,
         covariates=covariates,leaveOut=0.2,times=5)
 }

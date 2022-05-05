@@ -65,7 +65,7 @@
 \examples{
     data(toy,package="prisma")
     
-    gd <- GWASExperiment2gData(obj)
+    gd <- GWASExperiment2gData(toy)
     
     gdsfile(toy) <- tempfile()
     GWASExperiment2GDS(toy)

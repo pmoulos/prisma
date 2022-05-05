@@ -131,6 +131,7 @@
     used or reported, then it should be \code{TRUE}.
 }
 \examples{
+\donttest{
     # Assume an internet connection!
     efoId <- c("EFO_0004566","EFO_0005937")
     efoTrait <- c("body weight gain",
@@ -145,6 +146,7 @@
     
     data(prisma_out,package="prisma")
     lookup <- prismaLookup(prismaOut)
+}
 }
 \author{
     Panagiotis Moulos

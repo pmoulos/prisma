@@ -45,8 +45,8 @@
     data(toy,package="prisma")
     data(prisma_out,package="prisma")
     
-    prs <- prismaOut$results$statgen$candidates[[1]]
-    #prs <- getCandidates(prs,"statgen",1)
+    prs <- getPrsCandidates(prismaOut,"statgen",1)
+    #prs <- prismaOut$results$statgen$candidates[[1]]
     
     prsa <- adjustPrsWeights(prs,toy,"BMI",
         c("Age","Gender","Case_Control"),pcs=FALSE)

@@ -586,8 +586,9 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsbetas=s,
-        check=FALSE)
+    #BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+    #    prsbetas=s,check=FALSE)
+    ..replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsbetas=s,check=FALSE)
 })
 
 setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
@@ -651,8 +652,9 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     }
 
     out <- callNextMethod()
-    BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsbetas=s,
-        check=FALSE)
+    #BiocGenerics:::replaceSlots(out,phenotypes=p,pvalues=v,effects=e,
+    #    prsbetas=s,check=FALSE)
+    ..replaceSlots(out,phenotypes=p,pvalues=v,effects=e,prsbetas=s,check=FALSE)
 })
 
 # cbind means adding samples - phenotypes may not be identical

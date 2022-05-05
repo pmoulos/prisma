@@ -39,11 +39,11 @@
     will try to use enrichment information from hg38.
 }
 \examples{
-    pgsId <- "PGS000299"
-    pgs <- getPGSScores(pgsId)
+    scoreFile <- system.file(package="prisma","extdata","PGS000299.txt.gz")
+    pgs <- read.delim(scoreFile,comment.char="#")
     pgse <- enrichScoreFile(pgs)
+    is(pgse,"GPos") # TRUE
 }
 \author{
     Panagiotis Moulos
 }
-

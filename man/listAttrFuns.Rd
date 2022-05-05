@@ -38,9 +38,9 @@
     prsiceOpts <- getDefaults("prsice")
     prsiceOpts$perm <- 100
     toy <- runPRS(base=toy,response="BMI",covariates=c("Age","Gender"),
-        pcs=TRUE)
+        pcs=TRUE,prsiceOpts=prsiceOpts)
     toy <- runPRS(base=toy,response="BMI",covariates=c("Age","Gender"),
-        pcs=FALSE)
+        pcs=FALSE,prsiceOpts=prsiceOpts)
         
     listPrs(toy)
 }

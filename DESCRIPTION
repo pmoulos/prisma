@@ -10,7 +10,6 @@ Depends:
     snpStats,
     SNPRelate
 Imports:
-    akmedoids,
     Biobase,
     biomaRt,
     BSgenome,

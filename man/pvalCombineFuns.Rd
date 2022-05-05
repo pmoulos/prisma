@@ -78,16 +78,16 @@
     p <- runif(3)
     
     pha <- combineHarmonic(p,w)
-    pma <- combineMax(p)
-    pmi <- combineMin(p)
+    pma <- combineMaxp(p)
+    pmi <- combineMinp(p)
     psi <- combineSimes(p)
     pwe <- combineWeight(p,w)
     
     pm <- matrix(runif(300),100,3)
     
     pha <- apply(pm,1,combineHarmonic,w)
-    pma <- apply(pm,1,combineMax)
-    pmi <- apply(pm,1,combineMin)
+    pma <- apply(pm,1,combineMaxp)
+    pmi <- apply(pm,1,combineMinp)
     psi <- apply(pm,1,combineSimes)
     pwe <- apply(pm,1,combineWeight,w)
     

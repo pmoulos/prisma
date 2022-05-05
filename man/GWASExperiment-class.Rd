@@ -63,6 +63,7 @@
 \alias{gdsfile,GWASExperiment-method}
 \alias{gdsfile<-}
 \alias{gdsfile<-,character-method}
+\alias{gdsfile<-,GWASExperiment-method}
 
 \alias{filterRecord}
 \alias{filterRecord,GWASExperiment-method}
@@ -105,6 +106,7 @@
 \alias{cbind,GWASExperiment-method}
 
 % Split
+\alias{gsplit}
 \alias{gsplit,GWASExperiment-method}
 
 \title{GWASExperiment objects}
@@ -200,21 +202,27 @@
         withDimnames = TRUE, ...)
     pvalues(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...) <- value
-    allPvalues(x, i = seq_len(ncol(x)))
+    allPvalues(x, i = seq_len(ncol(x)), ...)
     effects(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...)
     effects(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...) <- value
-    allEffects(x, i = seq_len(ncol(x)))
+    allEffects(x, i = seq_len(ncol(x)), ...)
     prsbetas(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...)
     prsbetas(x, response = 1L, covariates = NULL, npcs = 0,
         withDimnames = TRUE, ...) <- value
-    allPrsbetas(x, i = seq_len(ncol(x)))
+    allPrsbetas(x, i = seq_len(ncol(x)), ...)
+    
+    
+    ## Splitting
     
     gsplit(x, by, across = c("features", "samples"), 
-        rc = NULL)
+        rc = NULL, ...)
 
+
+    ## Elements
+    
     genome(x)
     genome(x, ...) <- value
     gdsfile(x)
@@ -617,10 +625,10 @@
     \item{\code{pcaCovariates(x), pcaCovariates(x) <- value}:}{
     Get or set the PCA covariates that capture underlying population
     stratification structures. The PCA covariates are typically
-    calculated using the \code{\link{calcPcaCovars}} function with
+    calculated using the \code{\link{calcPcaCovar}} function with
     one of the supporting methods within the package. Users will
     usually only access the PCA covariates while setting them using
-    the \code{\link{calcPcaCovars}} function.}
+    the \code{\link{calcPcaCovar}} function.}
     
     \item{\code{gsplit(x, by, across = c("features", "samples"), 
     rc = NULL}:}{Split an object by column names stored in the

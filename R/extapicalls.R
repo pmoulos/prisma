@@ -574,14 +574,17 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
                 disp("  processing ",n)
                 gb <- .assemblyToGv(tolower(A[n]))
                 pgsScores <- enrichScoreFile(S[[n]],gb,clean=TRUE)
-                names(mcols(pgsScores))[names(mcols(pgsScores))=="rsID"] <- 
-                    "variant_id"
-                names(mcols(pgsScores))[names(mcols(
-                    pgsScores))=="effect_allele"] <- "risk_allele"
+                #names(mcols(pgsScores))[names(mcols(pgsScores))=="rsID"] <- 
+                #    "variant_id"
+                #names(mcols(pgsScores))[names(mcols(
+                #    pgsScores))=="effect_allele"] <- "risk_allele"
                     
                 # Convert to data frame for compatibility with rest methods and
                 # statistical modeling
                 pgsScores <- as.data.frame(pgsScores)
+                names(pgsScores)[names(pgsScores)=="rsID"] <- "variant_id"
+                names(pgsScores)[names(pgsScores)=="effect_allele"] <- 
+                    "risk_allele"
                 pgsScores <- pgsScores[,names(pgsScores)!="strand"]
                 names(pgsScores)[c(1,2)] <- c("chromosome","position")
                 pgsScores$asm <- gb
@@ -791,7 +794,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     if (!(gv %in% c("hg19","hg38"))) # Nothing can be done
         return(gp)
     
-    if (!requireNamespace("sitadela")) { # Sitadela is required
+    if (!requireNamespace("sitadela",quietly=TRUE)) { # Sitadela is required
         warning("Bioconductor package sitadela is required! Returning NAs...")
         return(gp)
     }

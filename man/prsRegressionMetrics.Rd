@@ -86,8 +86,7 @@
     response <- "BMI"
     covariates <- c("Case_Control","Gender","Age")
     
-    can <- prismaOut$results$glm$candidates[[1]]
-    # can <- getPrsCandidates(prismaOut,"glm",1)
+    can <- getPrsCandidates(prismaOut,"glm",1)
     m <- prsRegressionMetrics(can,toy,response=response,
         covariates=covariates,pcs=FALSE)
 }
