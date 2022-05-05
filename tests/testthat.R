@@ -1,4 +1,4 @@
 library(testthat)
-library(usethis)
+library(prisma)
 
 test_check("prisma")

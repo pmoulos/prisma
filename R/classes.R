@@ -1,3 +1,64 @@
+# Some needed tricks... Import from BiocGenerics locally
+..replaceSlots <- function (object,...,check=TRUE) {
+    if (!is.logical(check))
+        stop("'check' must be TRUE or FALSE")
+    object <- ..unsafe_replaceSlots(object,...)
+    if (check)
+        validObject(object)
+    return(object)
+}
+
+..unsafe_replaceSlots <- function (object, ..., .slotList = list()) {
+    slots <- c(list(...), .slotList)
+    slots_names <- names(slots)
+    for (i in seq_along(slots)) {
+        slot_name <- slots_names[[i]]
+        if (slot_name == "mcols")
+            slot_name <- "elementMetadata"
+        old_slot_val <- slot(object, slot_name)
+        slot_val <- slots[[i]]
+        slot(object, slot_name, check = FALSE) <- slot_val
+    }
+    object
+}
+
+..charbound <- function(idx,txt,fmt) {
+    orig <- idx
+    idx <- match(idx,txt)
+    if (any(bad <- is.na(idx))) {
+        msg <- paste(..selectSome(orig[bad]),collapse=" ")
+        stop(sprintf(fmt,msg))
+    }
+    return(idx)
+}
+
+..selectSome <- function(obj,maxToShow=5,ellipsis="...",
+    ellipsisPos=c("middle","end","start"),quote=FALSE) {
+    if (is.character(obj) && quote)
+        obj <- sQuote(obj)
+    ellipsisPos <- match.arg(ellipsisPos)
+    len <- length(obj)
+    if (maxToShow < 3)
+        maxToShow <- 3
+    if (len > maxToShow) {
+        maxToShow <- maxToShow - 1
+        if (ellipsisPos == "end")
+            return(c(head(obj,maxToShow),ellipsis))
+        else if (ellipsisPos == "start")
+            return(c(ellipsis,tail(obj,maxToShow)))
+        else {
+            bot <- ceiling(maxToShow/2)
+            top <- len - (maxToShow - bot - 1)
+            nms <- obj[c(1:bot, top:len)]
+            return(c(as.character(nms[1:bot]),ellipsis,
+                as.character(nms[-c(1:bot)])))
+        }
+    }
+    else
+        return(obj)
+}
+
+
 # There will probably be another class for storing retrieved from public APIs
 
 setClassUnion("data.frame_OR_matrix",c("data.frame","matrix"))
@@ -82,43 +143,53 @@ setGeneric("phenotypes",function(x,withDimnames=TRUE,...)
 setGeneric("phenotypes<-",function(x,withDimnames=TRUE,...,value) 
     standardGeneric("phenotypes<-"))
 
-setGeneric("pvalues",function(x,...) standardGeneric("pvalues"))
+setGeneric("pvalues",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...) standardGeneric("pvalues"))
 
-setGeneric("pvalues<-",function(x,...,value) standardGeneric("pvalues<-"))
+setGeneric("pvalues<-",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...,value) standardGeneric("pvalues<-"))
 
-setGeneric("allPvalues",function(x,...) standardGeneric("allPvalues"))
+setGeneric("allPvalues",function(x,i=seq_len(ncol(x),...) 
+    standardGeneric("allPvalues"))
 
-setGeneric("effects",function(x,...) standardGeneric("effects"))
+setGeneric("effects",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...) standardGeneric("effects"))
 
-setGeneric("effects<-",function(x,...,value) standardGeneric("effects<-"))
+setGeneric("effects<-",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...,value) standardGeneric("effects<-"))
 
-setGeneric("allEffects",function(x,...) standardGeneric("allEffects"))
+setGeneric("allEffects",function(x,i=seq_len(ncol(x),...) 
+    standardGeneric("allEffects"))
 
-setGeneric("prsbetas",function(x,...) standardGeneric("prsbetas"))
+setGeneric("prsbetas",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...) standardGeneric("prsbetas"))
 
-setGeneric("prsbetas<-",function(x,...,value) standardGeneric("prsbetas<-"))
+setGeneric("prsbetas<-",function(x,response=1L,covariates=NULL,npcs=0,
+    withDimnames=TRUE,...,value) standardGeneric("prsbetas<-"))
 
-setGeneric("allPrsbetas",function(x,...) standardGeneric("allPrsbetas"))
+setGeneric("allPrsbetas",function(x,i=seq_len(ncol(x),...) 
+    standardGeneric("allPrsbetas"))
 
-setGeneric("filterRecord",function(x,...) standardGeneric("filterRecord"))
+setGeneric("filterRecord",function(x) standardGeneric("filterRecord"))
 
 setGeneric("filterRecord<-",function(x,...,value) 
     standardGeneric("filterRecord<-"))
 
-setGeneric("gdsfile",function(x,...) standardGeneric("gdsfile"))
+setGeneric("gdsfile",function(x) standardGeneric("gdsfile"))
 
-setGeneric("gdsfile<-",function(x,...,value) standardGeneric("gdsfile<-"))
+setGeneric("gdsfile<-",function(x,value) standardGeneric("gdsfile<-"))
 
-setGeneric("genome",function(x,...) standardGeneric("genome"))
+setGeneric("genome",function(x) standardGeneric("genome"))
 
-setGeneric("genome<-",function(x,...,value) standardGeneric("genome<-"))
+setGeneric("genome<-",function(x,value) standardGeneric("genome<-"))
 
-setGeneric("pcaCovariates",function(x,...) standardGeneric("pcaCovariates"))
+setGeneric("pcaCovariates",function(x) standardGeneric("pcaCovariates"))
 
-setGeneric("gsplit",function(x,...) standardGeneric("gsplit"))
+setGeneric("gsplit",function(x,by,across=c("features","samples"),rc=NULL,...)
+    standardGeneric("gsplit"))
 
-setGeneric("pcaCovariates<-",
-    function(x,...,value) standardGeneric("pcaCovariates<-"))
+setGeneric("pcaCovariates<-",function(x,value) 
+    standardGeneric("pcaCovariates<-"))
 
 setMethod("genotypes","GWASExperiment",function(x,i=1) {
     return(assay(x,i))
@@ -471,8 +542,10 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     if (!missing(i)) {
         if (is.character(i)) {
             fmt <- paste0("<",class(x),">[i,] index out of bounds: %s")
-            i <- SummarizedExperiment:::.SummarizedExperiment.charbound(i,
-                rownames(x),fmt)
+            #i <- SummarizedExperiment:::.SummarizedExperiment.charbound(i,
+            #    rownames(x),fmt)
+            i <- ..charbound(i,rownames(x),fmt)
+            
         }
         i <- as.vector(i)
         #v <- v[i,,drop=FALSE]
@@ -486,8 +559,9 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
     if (!missing(j)) {
         if (is.character(j)) {
             fmt <- paste0("<",class(x),">[,j] index out of bounds: %s")
-            j <- SummarizedExperiment:::.SummarizedExperiment.charbound(j,
-                colnames(x),fmt)
+            #j <- SummarizedExperiment:::.SummarizedExperiment.charbound(j,
+            #    colnames(x),fmt)
+            j <- ..charbound(j,colnames(x),fmt)
         }
         j <- as.vector(j)
         p <- p[j,,drop=FALSE]
@@ -541,8 +615,9 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     if (!missing(i)) {
         if (is.character(i)) {
             fmt <- paste0("<",class(x),">[i,] index out of bounds: %s")
-            i <- SummarizedExperiment:::.SummarizedExperiment.charbound(i,
-                rownames(x),fmt)
+            #i <- SummarizedExperiment:::.SummarizedExperiment.charbound(i,
+            #    rownames(x),fmt)
+            i <- ..charbound(i,rownames(x),fmt)
         }
         i <- as.vector(i)
         
@@ -558,8 +633,9 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
     if (!missing(j)) {
         if (is.character(j)) {
             fmt <- paste0("<",class(x),">[,j] index out of bounds: %s")
-            j <- SummarizedExperiment:::.SummarizedExperiment.charbound(j,
-                colnames(x),fmt)
+            #j <- SummarizedExperiment:::.SummarizedExperiment.charbound(j,
+            #    colnames(x),fmt)
+            j <- ..charbound(j,colnames(x),fmt)
         }
         j <- as.vector(j)
         p[j,] <- phenotypes(value,withDimnames=FALSE)
@@ -593,9 +669,9 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
             stop("Combining phenotype column names are not compatible")
     }
 
-    oldValidity <- S4Vectors:::disableValidity()
-    S4Vectors:::disableValidity(TRUE)
-    on.exit(S4Vectors:::disableValidity(oldValidity))
+    #oldValidity <- S4Vectors:::disableValidity()
+    #S4Vectors:::disableValidity(TRUE)
+    #on.exit(S4Vectors:::disableValidity(oldValidity))
 
     out <- callNextMethod()
     
@@ -609,8 +685,10 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
         warning("Previous association tests will be dropped during ",
             "cbind operation as the population changes!")
     
-    BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
-        effects=NULL,prsbetas=NULL,check=FALSE)
+    #BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
+    #    effects=NULL,prsbetas=NULL,check=FALSE)
+    ..replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,effects=NULL,
+        prsbetas=NULL,check=FALSE)
 })
 
 # rbind means adding SNPs - phenotypes must be identical
@@ -625,9 +703,9 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
             stop("Combining phenotypes must be identical")
     }
 
-    oldValidity <- S4Vectors:::disableValidity()
-    S4Vectors:::disableValidity(TRUE)
-    on.exit(S4Vectors:::disableValidity(oldValidity))
+    #oldValidity <- S4Vectors:::disableValidity()
+    #S4Vectors:::disableValidity(TRUE)
+    #on.exit(S4Vectors:::disableValidity(oldValidity))
 
     out <- callNextMethod()
     
@@ -641,8 +719,10 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
         warning("Previous association tests will be dropped during ",
             "rbind operation as the number of markers changes!")
     
-    BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
-        effects=NULL,prsbetas=NULL,check=FALSE)
+    #BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
+    #    effects=NULL,prsbetas=NULL,check=FALSE)
+    ..replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,effects=NULL,
+        prsbetas=NULL,check=FALSE)
 })
 
 setAs("SummarizedExperiment","GWASExperiment",function(from) {
