@@ -149,7 +149,7 @@ setGeneric("pvalues",function(x,response=1L,covariates=NULL,npcs=0,
 setGeneric("pvalues<-",function(x,response=1L,covariates=NULL,npcs=0,
     withDimnames=TRUE,...,value) standardGeneric("pvalues<-"))
 
-setGeneric("allPvalues",function(x,i=seq_len(ncol(x),...) 
+setGeneric("allPvalues",function(x,i=seq_len(ncol(x)),...)
     standardGeneric("allPvalues"))
 
 setGeneric("effects",function(x,response=1L,covariates=NULL,npcs=0,
@@ -158,7 +158,7 @@ setGeneric("effects",function(x,response=1L,covariates=NULL,npcs=0,
 setGeneric("effects<-",function(x,response=1L,covariates=NULL,npcs=0,
     withDimnames=TRUE,...,value) standardGeneric("effects<-"))
 
-setGeneric("allEffects",function(x,i=seq_len(ncol(x),...) 
+setGeneric("allEffects",function(x,i=seq_len(ncol(x)),...)
     standardGeneric("allEffects"))
 
 setGeneric("prsbetas",function(x,response=1L,covariates=NULL,npcs=0,
@@ -167,7 +167,7 @@ setGeneric("prsbetas",function(x,response=1L,covariates=NULL,npcs=0,
 setGeneric("prsbetas<-",function(x,response=1L,covariates=NULL,npcs=0,
     withDimnames=TRUE,...,value) standardGeneric("prsbetas<-"))
 
-setGeneric("allPrsbetas",function(x,i=seq_len(ncol(x),...) 
+setGeneric("allPrsbetas",function(x,i=seq_len(ncol(x)),...) 
     standardGeneric("allPrsbetas"))
 
 setGeneric("filterRecord",function(x) standardGeneric("filterRecord"))
