@@ -1,3 +1,10 @@
+# No other way, SNPRelate is a strange package...
+add.gdsn <- utils::getFromNamespace("add.gdsn","SNPRelate")
+closefn.gds <- utils::getFromNamespace("closefn.gds","SNPRelate")
+index.gdsn <- utils::getFromNamespace("index.gdsn","SNPRelate")
+openfn.gds <- utils::getFromNamespace("openfn.gds","SNPRelate")
+read.gdsn <- utils::getFromNamespace("read.gdsn","SNPRelate")
+
 .filterWithSnpStats <- function(obj,filters,imputeMissing=TRUE,
     imputeMode=c("single","split"),rc=NULL) {
     imputeMode <- imputeMode[1]
@@ -164,12 +171,12 @@
     disp("Reading GDS file ",m$gdsfile,"...")
     # New way 1st, fallback if fail
     gdsHandle <- tryCatch(snpgdsOpen(m$gdsfile,readonly=FALSE),
-        error=function(e) { SNPRelate::openfn.gds(m$gdsfile,readonly=FALSE) },
+        error=function(e) { openfn.gds(m$gdsfile,readonly=FALSE) },
         finally="")
     
-    gdsIds <- SNPRelate::read.gdsn(index.gdsn(gdsHandle,"sample.id"))
+    gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
-    SNPRelate::add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
+    add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
     if (!is.na(filters$LD)) {
@@ -234,7 +241,7 @@
     
     # Close GDS
     tryCatch(snpgdsClose(gdsHandle),error=function(e) {
-        SNPRelate::closefn.gds(gdsHandle)
+        closefn.gds(gdsHandle)
     },finally="")
     
     if (!is.null(ir))
@@ -317,9 +324,9 @@
     # Read GDS
     disp("Reading GDS file ",m$gdsfile,"...")
     gdsHandle <- snpgdsOpen(m$gdsfile,readonly=FALSE)
-    gdsIds <- SNPRelate::read.gdsn(index.gdsn(gdsHandle,"sample.id"))
+    gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
-    SNPRelate::add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
+    add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
     if (!is.na(filters$LD)) {

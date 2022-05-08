@@ -58,15 +58,6 @@
         return(obj)
 }
 
-..disableValidity <- function (disabled) {
-    if (missing(disabled))
-        return(get("disabled", envir = .validity_options))
-    disabled <- isTRUE(disabled)
-    assign("disabled", disabled, envir = .validity_options)
-    disabled
-}
-
-
 # There will probably be another class for storing retrieved from public APIs
 
 setClassUnion("data.frame_OR_matrix",c("data.frame","matrix"))
