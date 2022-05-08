@@ -1,9 +1,9 @@
-# No other way, SNPRelate is a strange package...
-add.gdsn <- utils::getFromNamespace("add.gdsn","SNPRelate")
-closefn.gds <- utils::getFromNamespace("closefn.gds","SNPRelate")
-index.gdsn <- utils::getFromNamespace("index.gdsn","SNPRelate")
-openfn.gds <- utils::getFromNamespace("openfn.gds","SNPRelate")
-read.gdsn <- utils::getFromNamespace("read.gdsn","SNPRelate")
+#~ # No other way, SNPRelate is a strange package...
+#~ add.gdsn <- utils::getFromNamespace("add.gdsn","SNPRelate")
+#~ closefn.gds <- utils::getFromNamespace("closefn.gds","SNPRelate")
+#~ index.gdsn <- utils::getFromNamespace("index.gdsn","SNPRelate")
+#~ openfn.gds <- utils::getFromNamespace("openfn.gds","SNPRelate")
+#~ read.gdsn <- utils::getFromNamespace("read.gdsn","SNPRelate")
 
 .filterWithSnpStats <- function(obj,filters,imputeMissing=TRUE,
     imputeMode=c("single","split"),rc=NULL) {

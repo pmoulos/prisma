@@ -13,6 +13,7 @@ Imports:
     Biobase,
     biomaRt,
     BSgenome,
+    gdsfmt,
     GenomeInfoDb,
     GenomicRanges,
     ggplot2,
