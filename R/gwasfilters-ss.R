@@ -164,12 +164,12 @@
     disp("Reading GDS file ",m$gdsfile,"...")
     # New way 1st, fallback if fail
     gdsHandle <- tryCatch(snpgdsOpen(m$gdsfile,readonly=FALSE),
-        error=function(e) { openfn.gds(m$gdsfile,readonly=FALSE) },
+        error=function(e) { SNPRelate::openfn.gds(m$gdsfile,readonly=FALSE) },
         finally="")
     
-    gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
+    gdsIds <- SNPRelate::read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
-    add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
+    SNPRelate::add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
     if (!is.na(filters$LD)) {
@@ -233,8 +233,9 @@
     metadata(obj) <- m
     
     # Close GDS
-    tryCatch(snpgdsClose(gdsHandle),error=function(e) {closefn.gds(gdsHandle)},
-        finally="")
+    tryCatch(snpgdsClose(gdsHandle),error=function(e) {
+        SNPRelate::closefn.gds(gdsHandle)
+    },finally="")
     
     if (!is.null(ir))
         return(obj[,-ir,drop=FALSE])
@@ -316,9 +317,9 @@
     # Read GDS
     disp("Reading GDS file ",m$gdsfile,"...")
     gdsHandle <- snpgdsOpen(m$gdsfile,readonly=FALSE)
-    gdsIds <- read.gdsn(index.gdsn(gdsHandle,"sample.id"))
+    gdsIds <- SNPRelate::read.gdsn(index.gdsn(gdsHandle,"sample.id"))
     gdsIds <- sub("-1","",gdsIds)
-    add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
+    SNPRelate::add.gdsn(gdsHandle,"sample.id",gdsIds,replace=TRUE)
     
     # LD pruning
     if (!is.na(filters$LD)) {

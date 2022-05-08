@@ -58,6 +58,14 @@
         return(obj)
 }
 
+..disableValidity <- function (disabled) {
+    if (missing(disabled))
+        return(get("disabled", envir = .validity_options))
+    disabled <- isTRUE(disabled)
+    assign("disabled", disabled, envir = .validity_options)
+    disabled
+}
+
 
 # There will probably be another class for storing retrieved from public APIs
 
@@ -662,7 +670,7 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
     args <- list(...)
     p <- lapply(args,phenotypes,withDimnames=FALSE)
     p <- do.call(rbind,p)
-
+    
     # Checks for identical column state.
     ref <- args[[1]]
     rp <- phenotypes(ref,withDimnames=FALSE)
@@ -670,22 +678,28 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
         if (!identical(colnames(rp),colnames(phenotypes(x,withDimnames=FALSE))))
             stop("Combining phenotype column names are not compatible")
     }
-
+    
     #oldValidity <- S4Vectors:::disableValidity()
     #S4Vectors:::disableValidity(TRUE)
     #on.exit(S4Vectors:::disableValidity(oldValidity))
-
-    out <- callNextMethod()
-    
-    # Drop most metadata    
-    m <- metadata(out)
-    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
-    metadata(out) <- m
     
     # pvalues must also be dropped as the population changes
     if (!is.null(pvalues(ref)) && length(pvalues(ref)) > 0)
         warning("Previous association tests will be dropped during ",
             "cbind operation as the population changes!")
+    
+    args <- endoapply(args,function(x) {
+        x@pvalues <- x@effects <- x@prsbetas <- x@phenotypes <- NULL
+        return(x)
+    })
+    
+    out <- do.call("callNextMethod",args)
+    #out <- callNextMethod()
+    
+    # Drop most metadata    
+    m <- metadata(out)
+    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
+    metadata(out) <- m
     
     #BiocGenerics:::replaceSlots(out,phenotypes=p,metadata=m,pvalues=NULL,
     #    effects=NULL,prsbetas=NULL,check=FALSE)
@@ -708,18 +722,24 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
     #oldValidity <- S4Vectors:::disableValidity()
     #S4Vectors:::disableValidity(TRUE)
     #on.exit(S4Vectors:::disableValidity(oldValidity))
-
-    out <- callNextMethod()
-    
-    # Drop most metadata    
-    m <- metadata(out)
-    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
-    metadata(out) <- m
     
     # pvalues must also be dropped as the population changes
     if (!is.null(pvalues(ref)) && length(pvalues(ref)) > 0)
         warning("Previous association tests will be dropped during ",
             "rbind operation as the number of markers changes!")
+    
+    args <- endoapply(args,function(x) {
+        x@pvalues <- x@effects <- x@prsbetas <- NULL
+        return(x)  
+    })
+    
+    out <- do.call("callNextMethod",args)
+    #out <- callNextMethod()
+    
+    # Drop most metadata    
+    m <- metadata(out)
+    m$LDsnps <- m$pcaRob <- m$pcaCov <- m$PCs <- m$filters <- NULL
+    metadata(out) <- m
     
     #BiocGenerics:::replaceSlots(out,phenotypes=rp,metadata=m,pvalues=NULL,
     #    effects=NULL,prsbetas=NULL,check=FALSE)
@@ -814,7 +834,7 @@ setValidity2("GWASExperiment",function(obj) {
 .checkPhenotypesValidity <- function(obj,msg) {
     p <- phenotypes(obj)
     if (!is.null(p) && nrow(p) > 0) {
-        if (nrow(p) != ncol(assays(obj)[[1]]) || nrow(p) < 1)
+        if (nrow(p) != ncol(assays(obj)[[1]]) || ncol(p) < 1)
             msg <- c(msg,paste0("When provided, phenotype data must have the ",
                 "same number of rows as the number of samples and at least ",
                 "one phenotype!"))

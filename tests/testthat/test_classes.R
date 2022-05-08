@@ -404,7 +404,7 @@ test_that("GWASExperiment cbind works",{
     expect_false(identical(phenotypes(GWASthing1),phenotypes(GWASthing2)))
     expect_false(identical(pvalues(GWASthing1),pvalues(GWASthing2)))
     
-    expect_error(GWASthing <- cbind(GWASthing1,GWASthingF))
+    expect_error(suppressWarnings(GWASthing <- cbind(GWASthing1,GWASthingF)))
     expect_warning(GWASthing <- cbind(GWASthing1,GWASthing2))
     expect_equal(length(GWASthing),length(GWASthing1))
     expect_equal(ncol(GWASthing),ncol(GWASthing1) + ncol(GWASthing2))
@@ -418,26 +418,26 @@ test_that("GWASExperiment rbind works",{
         features=thing1$feature,
         samples=thing1$sample,
         phenotypes=thing1$pheno,
-        pvalues=thing1$pval
+        pvalues=SimpleList(thing1$pval)
     )
     
     set.seed(43)
     thing2 <- .makeThingData()
     rownames(thing2$snp) <- rownames(thing2$feature) <- 
-        paste0(rownames(thing1$snp),"_1")
+        rownames(thing2$pval) <- paste0(rownames(thing1$snp),"_1")
     GWASthing2 <- GWASExperiment(
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing1$sample,
         phenotypes=thing1$pheno,
-        pvalues=thing2$pval
+        pvalues=SimpleList(thing2$pval)
     )
     GWASthingF <- GWASExperiment(
         genotypes=thing2$snp,
         features=thing2$feature,
         samples=thing2$sample,
         phenotypes=thing2$pheno,
-        pvalues=thing2$pval
+        pvalues=SimpleList(thing2$pval)
     )
     
     expect_identical(colData(GWASthing1),colData(GWASthing2))

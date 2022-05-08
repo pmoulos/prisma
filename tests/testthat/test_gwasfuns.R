@@ -1,4 +1,5 @@
 # Preflight - 100 samples is the minimum for SNPTEST to run
+set.seed(42)
 dat <- makeSimData(nsnp=100,nsam=100,nphe=3,csnp=10)
 gwe <- GWASExperiment(
     genotypes=dat$snp,

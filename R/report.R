@@ -30,8 +30,8 @@ prismaReport <- function(gwe,prismaOut,cvMetricsOut,lookupOut,path=NULL) {
 #~     tmp$results <- tmp$results[1:3]
 #~     REP_ENV <- .makeReportEnv(gwe,tmp,cvMetricsOut[1:3],lookupOut[1:3])
     
-    file.copy(#from="/media/raid/software/prisma/inst/prisma_report.Rmd",
-        from=system.file(package="prisma","inst/prisma_report.Rmd"),
+    file.copy(from="/media/raid/software/prisma/inst/prisma_report.Rmd",
+        #from=system.file(package="prisma","inst/prisma_report.Rmd"),
         #to="/media/raid/tmp/prisma_report/prisma_report.Rmd",overwrite=TRUE)
         to=file.path(path,"prisma_report.Rmd"),overwrite=TRUE)
     render(
