@@ -951,7 +951,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
         return(gp)
     },finally="")
     
-    sp <- split(gp,seqnames(gp))
+    sp <- GenomicRanges::split(gp,seqnames(gp))
     tmp <- lapply(names(sp),function(n,S) {
         disp("  lifting ",n)
         x <- S[[n]]
