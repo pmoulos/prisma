@@ -46,14 +46,15 @@ BiocManager::install(version = "3.15")
 The following packages are either on CRAN or on Bioconductor:
 
 ```
-pkgs <- c("akmedoids","Biobase","biomaRt","BSgenome","data.table",
+pkgs <- c("akmedoids","BSgenome.Hsapiens.UCSC.hg19",
+    "BSgenome.Hsapiens.UCSC.hg38","Biobase","biomaRt","BSgenome","data.table",
     "GenomicRanges","ggplot2","gwasrapidd","harmonicmeanp","islasso",
     "jsonlite","kableExtra","knitr","liftOver","Matrix","magrittr","methods",
     "openxlsx","pander","parallel","PhenotypeSimulator","quincunx","R.utils",
     "rmarkdown","rmdformats","RcppArmadillo","RMTstat","rrBLUP","rrcov","rsnps",
     "rtracklayer","S4Vectors","scales","scrime","snpStats","SNPRelate",
     "SNPlocs.Hsapiens.dbSNP151.GRCh38","statgenGWAS","SummarizedExperiment",
-    "survcomp","testthat","tseries","utils")    
+    "survcomp","testthat","tseries","utils")
 
 BiocManager::install(pkgs)
 ```

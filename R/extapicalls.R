@@ -942,7 +942,13 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
     ch <- import.chain(chainFile)
     
     orsls <- seqlevelsStyle(gp)
-    seqlevelsStyle(gp) <- "UCSC"
+    gp <- tryCatch({
+        seqlevelsStyle(gp) <- "UCSC"
+    },error=function(e) {
+        if (!grepl("chr",as.character(seqnames(gp)[1])))
+            seqlevels(gp) <- paste0("chr",seqlevels(gp))
+        return(gp)
+    },finally="")
     
     sp <- split(gp,seqnames(gp))
     tmp <- lapply(names(sp),function(n,S) {
@@ -970,7 +976,13 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
     },sp)
     lifted <- GRanges(do.call("rbind",tmp))
     
-    seqlevelsStyle(lifted) <- orsls[1]
+    lifted <- tryCatch({
+        seqlevelsStyle(lifted) <- orsls[1]
+    },error=function(e) {
+        if (any(c("NCBI","Ensembl") %in% orsls))
+            seqlevels(lifted) <- gsub("chr","",seqlevels(lifted))
+        return(lifted)
+    })
     nams <- names(lifted) # Names are not kept in GPos conversion
     out <- GPos(lifted,stitch=FALSE)
     mcols(out) <- mcols(lifted)

@@ -50,6 +50,8 @@ Imports:
     tseries,
     utils
 Suggests:
+    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
     knitr,
     testthat,
     data.table

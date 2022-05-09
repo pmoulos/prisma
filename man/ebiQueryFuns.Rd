@@ -95,7 +95,8 @@
     command:
     
     \code{
-        mkdir -p LOCAL_PATH && cd LOCAL_PATH
+        mkdir -p LOCAL_PATH
+        cd LOCAL_PATH
         wget -m ftp://anonymous:@ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
         
         # Then in R:
