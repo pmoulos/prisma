@@ -944,6 +944,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
     orsls <- seqlevelsStyle(gp)
     gp <- tryCatch({
         seqlevelsStyle(gp) <- "UCSC"
+        gp
     },error=function(e) {
         if (!grepl("chr",as.character(seqnames(gp)[1])))
             seqlevels(gp) <- paste0("chr",seqlevels(gp))
@@ -978,6 +979,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
     
     lifted <- tryCatch({
         seqlevelsStyle(lifted) <- orsls[1]
+        lifted
     },error=function(e) {
         if (any(c("NCBI","Ensembl") %in% orsls))
             seqlevels(lifted) <- gsub("chr","",seqlevels(lifted))
