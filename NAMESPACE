@@ -11,6 +11,8 @@ import(SNPRelate)
 import(snpStats)
 import(SummarizedExperiment)
 
+importFrom("BiocGenerics",which)
+
 importFrom("BSgenome",getBSgenome)
 importFrom("BSgenome",inferRefAndAltAlleles)
 importFrom("BSgenome",snpsById)

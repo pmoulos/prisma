@@ -965,7 +965,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
         }
         lout <- unlist(lo)
         # If mapping on different chromosome, drop position
-        off <- which(seqnames(lout) != n)
+        off <- BiocGenerics::which(seqnames(lout) != n)
         if (length(off) > 0) {
             seqnames(lout)[off] <- n
             start(lout)[off] <- 0

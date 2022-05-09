@@ -11,6 +11,7 @@ Depends:
     SNPRelate
 Imports:
     Biobase,
+    BiocGenerics,
     biomaRt,
     BSgenome,
     gdsfmt,
