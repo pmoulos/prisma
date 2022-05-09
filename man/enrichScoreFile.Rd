@@ -3,17 +3,20 @@
 \title{Enrichment of PGS Catalog retrieved scores}
 \usage{
     enrichScoreFile(sf, gb = c("hg19", "hg38", "nr"),
-        clean = FALSE)
+        addGenes = FALSE, clean = FALSE)
 }
 \arguments{
     \item{sf}{A data frame created from a file retrieved 
     from PGS Catalog.}
     
-    \item{gb}{human genome build, \code{"hg19"} (default),
+    \item{gb}{Human genome build, \code{"hg19"} (default),
     for hg19/GRCh37, \code{"hg38"} for hg38/GRCh38 or 
     \code{"nr"} if unavailable.}
     
-    \item{clean}{keep only matched SNPs with dbSNP and a
+    \item{addGenes}{Try and assign gene names using the
+    Bioconductor sitadela package? Defaults to \code{FALSE}.}
+    
+    \item{clean}{Keep only matched SNPs with dbSNP and a
     genome version with respect to location. Default to
     \code{FALSE}.}
 }
@@ -41,7 +44,7 @@
 \examples{
     scoreFile <- system.file(package="prisma","extdata","PGS000299.txt.gz")
     pgs <- read.delim(scoreFile,comment.char="#")
-    pgse <- enrichScoreFile(pgs)
+    pgse <- enrichScoreFile(pgs,addGenes=FALSE)
     is(pgse,"GPos") # TRUE
 }
 \author{

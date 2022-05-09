@@ -105,10 +105,15 @@ test_that(".GWASVariantsWorker works",{
 test_that("getPGSScores works",{
     base <- file.path(system.file(package="prisma"),"extdata","scores")
     #base <- "/media/raid/software/prisma/inst/extdata/scores"
+    #base <- "/home/panos/other/prisma/inst/extdata/scores"
     
     pgsId <- c("PGS000034","PGS000299")
-    efoId <- c("EFO_0004340","EFO_0007788")
+    # EFO_0004340 has now too many associated scores
+    #efoId <- c("EFO_0004340","EFO_0007788")
+    efoId <- c("EFO_0007788")
     pubmedId <- c("29212779","32527150")
+    # 32527150 has now too many associated scores
+    pubmedId <- c("29212779")
     
     test1 <- getPGSScores(pgsId=pgsId,base=base)
     expect_true(is.data.frame(test1))
@@ -118,39 +123,44 @@ test_that("getPGSScores works",{
     expect_true(is.data.frame(test2))
     #expect_true(any(is.na(test2$risk_allele)))
     
-    test3 <- getPGSScores(pgsId=pgsId,efoId=efoId)
+    test3 <- getPGSScores(pgsId=pgsId,efoId=efoId,base=base)
     expect_true(is.data.frame(test3))
-    expect_true(nrow(test2)>0)
+    expect_true(nrow(test3)>0)
     # Some duplicates remain because of validateLoc=FALSE
-    expect_true(any(duplicated(test2$variant_id)))
+    expect_true(any(duplicated(test3$variant_id)))
     
     test4 <- getPGSScores(pubmedId=pubmedId,base=base,validateLoc=FALSE)
     expect_true(is.data.frame(test4))
     expect_true(nrow(test4)>0)
-    expect_true(any(duplicated(test4$variant_id)))
-    expect_true(nrow(test4) >= nrow(test1))
+    #expect_true(any(duplicated(test4$variant_id)))
+    #expect_true(nrow(test4) >= nrow(test1))
+    expect_true(nrow(test4) <= nrow(test1))
 })
 
 # Test suite for .iterGWASVariantsAPICall
 test_that(".iterPGSVariantsAPICall works",{
     # In test testing functions
     # Basic expected result informatin
-    testBasic <- function(x,n) {
+    testBasic <- function(x,n,k) {
         expect_true(is.list(x))
-        expect_true(length(x) == 2)
+        expect_true(length(x) == k)
         expect_true(all(names(x) %in% n))
     }
     
     # Test expected data back
-    testFound <- function(x) {
-        expect_true(nrow(x[[1]]) > 0)
-        expect_true(nrow(x[[2]]) > 0)
+    testFound <- function(x,k) {
+        for (i in seq_len(k))
+            expect_true(nrow(x[[i]]) > 0)
+        #expect_true(nrow(x[[1]]) > 0)
+        #expect_true(nrow(x[[2]]) > 0)
     }
     
     # Test expected data not found
-    testNotFound <- function(x) {
-        expect_true(nrow(x[[1]]) == 0)
-        expect_true(nrow(x[[2]]) == 0)
+    testNotFound <- function(x,k) {
+        for (i in seq_len(k))
+            expect_true(nrow(x[[k]]) == 0)
+        #expect_true(nrow(x[[1]]) == 0)
+        #expect_true(nrow(x[[2]]) == 0)
     }
     
     base <- file.path(system.file(package="prisma"),"extdata","scores")
@@ -158,24 +168,27 @@ test_that(".iterPGSVariantsAPICall works",{
     
     inputId <- c("PGS000034","PGS000299")
     test <- .iterPGSScoreAPICall(input=inputId,type="pgs",base=base)
-    testBasic(test,inputId)
-    testFound(test)
+    testBasic(test,inputId,2)
+    testFound(test,2)
     
-    inputEfo <- c("EFO_0004340","EFO_0007788")
-    expect_warning(test <- .iterPGSScoreAPICall(input=inputEfo,type="efo",
-        base=base))
-    testBasic(test,inputEfo)
-    testFound(test)
+    #inputEfo <- c("EFO_0004340","EFO_0007788")
+    inputEfo <- c("EFO_0007788")
+    #expect_warning(test <- .iterPGSScoreAPICall(input=inputEfo,type="efo",
+    #    base=base))
+    test <- .iterPGSScoreAPICall(input=inputEfo,type="efo",base=base)
+    testBasic(test,inputEfo,1)
+    testFound(test,1)
     
-    inputPubmed <- c("29212779","32527150")
+    #inputPubmed <- c("29212779","32527150")
+    inputPubmed <- c("29212779")
     test <- .iterPGSScoreAPICall(input=inputPubmed,type="pubmed",base=base)
-    testBasic(test,inputPubmed)
-    testFound(test)
+    testBasic(test,inputPubmed,1)
+    testFound(test,1)
     
     inputIdF <- c("PGS000000","PGS999999")
     test <- .iterPGSScoreAPICall(input=inputIdF,type="id")
-    testBasic(test,inputIdF)
-    testNotFound(test)
+    testBasic(test,inputIdF,2)
+    testNotFound(test,2)
 })
 
 # Test suite for .GWASVariantsWorker
@@ -194,8 +207,11 @@ test_that(".PGSScoreWorker works",{
     }
 
     # Should return data rows if API call succesful
-    inputEfo <- "EFO_0004340"
-    expect_warning(test <- .PGSScoreWorker(input=inputEfo,type="efo",base=base))
+    #inputEfo <- "EFO_0004340"
+    inputEfo <- "EFO_0007788"
+    #expect_warning(test <- .PGSScoreWorker(input=inputEfo,type="efo",
+    #   base=base))
+    test <- .PGSScoreWorker(input=inputEfo,type="efo",base=base)
     if (test$success)
         expect_true(nrow(test$data) > 0)
     else {

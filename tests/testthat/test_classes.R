@@ -200,7 +200,7 @@ test_that("GWASExperiment validation works - single errors",{
     # Should not throw error as withDimnames=TRUE and assay rownames are always
     # replacing rowData rownames
     thing <- .makeThingData(error="feature_name")
-    expect_silent(GWASExperiment(
+    expect_error(GWASExperiment(
         genotypes=thing$snp,
         features=thing$feature,
         samples=thing$sample,
@@ -218,7 +218,7 @@ test_that("GWASExperiment validation works - single errors",{
     # Should not throw error as withDimnames=TRUE and assay colnames are always
     # replacing colData rownames
     thing <- .makeThingData(error="sample_name")
-    expect_silent(GWASExperiment(
+    expect_error(GWASExperiment(
         genotypes=thing$snp,
         features=thing$feature,
         samples=thing$sample,
@@ -279,7 +279,7 @@ test_that("GWASExperiment validation works - multiple errors",{
     # Should not throw error as withDimnames=TRUE and assay dimnames are always
     # replacing annotation data dimnames
     thing <- .makeThingData(error=c("feature_name","sample_name"))
-    expect_silent(GWASExperiment(
+    expect_error(GWASExperiment(
         genotypes=thing$snp,
         features=thing$feature,
         samples=thing$sample,

@@ -704,7 +704,8 @@ getPGSScores <- function(pgsId=NULL,efoId=NULL,pubmedId=NULL,base=NULL,
 # Consider of add hoardr for file caching
 # OR = exp(effect_weight)
 # effect_weight (beta) = log(OR)
-enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
+enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),addGenes=FALSE,
+    clean=FALSE) {
     gb <- gb[1]
     
     # Template fill all the possible columns
@@ -755,9 +756,10 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
         sf <- .score2GPos(sf)
     
     # Check the rest variables required for a complete object
-    if (is.null(sf$locus_name))
+    if (is.null(sf$locus_name) && addGenes)
         sf <- .tryAssignLocusName(sf,gb)
-        #sf$locus_name <- rep(NA,length(sf))
+    else
+        sf$locus_name <- rep(NA,length(sf))
     
     if (is.null(sf$reference_allele)) {
         disp("    trying to infer reference allele",level="full")
@@ -801,7 +803,8 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     
     # Let's use RefSeq annotation by default
     db <- ifelse(is.null(sitDb),sitadela::getDbPath(),sitDb)
-    ann <- loadAnnotation(gv,"refseq",type="gene",version="auto",db=db)
+    ann <- suppressWarnings(loadAnnotation(gv,"refseq",type="gene",
+        version="auto",db=db))
     # We need the same seqlevels styles - for some reason seqlevelsStyles fail
     gptmp <- gp
     gptmp <- tryCatch({
@@ -809,7 +812,7 @@ enrichScoreFile <- function(sf,gb=c("hg19","hg38","nr"),clean=FALSE) {
     },error=function(e) {
         if (!grepl("chr",as.character(seqnames(gptmp)[1]))) {
             seqlevels(gptmp) <- paste0("chr",seqlevels(gptmp))
-            seqnames(gptmp) <- paste0("chr",seqnames(gptmp))
+            seqlevels(gptmp) <- seqlevels(ann)
         }
         return(gptmp)
     },finally="")
