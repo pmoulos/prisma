@@ -24,6 +24,7 @@
 }
 \examples{
     data(toy,package="prisma")
+    gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
     
     # Only 1 PC will be returned because of dataset size
     toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
