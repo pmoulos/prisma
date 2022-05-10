@@ -152,9 +152,11 @@
     
     prsiceOpts <- getDefaults("prsice")
     prsiceOpts$perm <- 100
-    toy <- runPRS(base=toy,response="BMI",
-        covariates=c("Age","Gender"),pcs=TRUE,
-        prsiceOpts=prsiceOpts)
+    
+    if (Sys.which("PRSice_linux") != "")
+        toy <- runPRS(base=toy,response="BMI",
+            covariates=c("Age","Gender"),pcs=TRUE,
+            prsiceOpts=prsiceOpts)
     
     lprs <- lassosumPRS(base=toy,response="BMI",
         covariates=c("Age","Gender"),pcs=TRUE)

@@ -265,13 +265,16 @@ downloadQctool <- function(ver=c("v2.2.0","v2.0.8"),path=NULL) {
     
     
     base <- "https://www.well.ox.ac.uk/~gav/resources/"
-    if (ver == "v2.2.0")
+    if (ver == "v2.2.0") {
         ext <- "qctool_v2.2.0-CentOS_Linux7.8.2003-x86_64.tgz"
-    else if (ver == "v2.0.8")
+        unext <- "qctool_v2.2.0-CentOS Linux7.8.2003-x86_64"
+    }
+    else if (ver == "v2.0.8") {
         ext <- "qctool_v2.0.8-CentOS_Linux7.6.1810-x86_64.tgz"
+        unext <- "qctool_v2.0.8-CentOS Linux7.6.1810-x86_64"
+    }
     
     src <- paste0(base,ext)
-    unext <- sub(".tgz","",ext)
     sver <- substring(ver,2,nchar(ver))
     defPath <- .createToolPath("qctool",sver,"QCTOOL",path)
     
@@ -283,6 +286,7 @@ downloadQctool <- function(ver=c("v2.2.0","v2.0.8"),path=NULL) {
     # Move and rename the executable to the common style
     disp("Installing...")
     untar(des,exdir=defPath)
+    
     tomove <- dir(file.path(defPath,unext))
     for (f in tomove)
         file.rename(from=file.path(defPath,unext,f),to=file.path(defPath,f))
@@ -291,11 +295,12 @@ downloadQctool <- function(ver=c("v2.2.0","v2.0.8"),path=NULL) {
     
     # Test whether all properly fetched and installed
     disp("Verifying...")
-    cmd <- file.path(defPath,"qctool")
+    cmd <- file.path(defPath,"qctool -help")
     disp("Trying the command: ",cmd)
     # Always 1 if no proper input, no help!
     v <- suppressWarnings(system(cmd,intern=TRUE))
-    if (any(grepl("OptionProcessingException",v))) { # Success
+    #if (any(grepl("OptionProcessingException",v))) { # Success
+    if (any(grepl("Usage",v))) { # Success
         disp("QCTOOL seems to be working! Updating environment...")
         .EXTERNALS[["qctool"]]$dir <- defPath
         .EXTERNALS[["qctool"]]$exec <- "qctool"

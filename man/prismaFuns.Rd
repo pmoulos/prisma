@@ -621,6 +621,8 @@ response <- "BMI"
 covariates <- c("Case_Control","Gender","Age")
 
 # Complete 4-iteration PRS pipeline - ~1 min to run with 4 cores - no PCA
+if (Sys.which("PRSice_linux") != "") {
+
 prismaOut <- prisma(
     gwe=toy,
     phenotype=response,
@@ -689,6 +691,8 @@ evalMetrics <- prsSelection(
     useDenovoWorkspace=dnList,
     rc=0.25
 )
+
+}
 
 # The evalMetrics variable is used with selectPrs, please
 # check the respective man page.

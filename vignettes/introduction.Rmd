@@ -9,4 +9,29 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-Lorem ipsum
+# Introduction
+
+The rise of modern genotyping technologies such as Next Generation Sequencing
+(Whhole Exome and Whole Genome Sequencing) as well as the continuous thriving of
+older genotyping technologies such as genotyping DNA microarrays have allowed an
+unprecedented collection of massive, large-cohort and population-level genetic
+data spanning a variety of application, from medical research to consumer
+genomics. At the same time, several perspective and sometimes country-level
+studies are reaching maturity levels regarding the amount and quality of 
+data collected at various levels such as anthropometric, phenotypic, biomarker
+and genetic levels, and some times other molecular -omics layers such as gene 
+expression. The aforementioned facts have allowed not only for more accurate
+and versatile Genome-Wide Association Studies to identify the potential genetic
+cause for many simple or more complex genetic traits but also combine phenotypic
+and genotypic data in unique ways to derive multi-way genetic signatures that
+characterize individuals with respect to several anthropometric features as well
+as these traits and biomarker levels. These genetic signatures have a seamingly
+endless portfolio of applications, spanning the characterization of the 
+predisposition of an individual to general healthstyle issues such as obesity
+and up to estimating the risk to several diseases like cancer and other 
+potential life-threatening conditions including cardiovascular disease and
+kidney malfunction. They are also used to characterize less life-threatening
+conditions but which deteriorate the general well-being such as psychological
+disease and anomalies of the central nervous system.
+
+Polygenic Risk Scores
