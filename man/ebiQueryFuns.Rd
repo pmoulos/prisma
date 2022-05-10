@@ -94,13 +94,13 @@
     This can be done for example with Linux \code{wget}
     command:
     
-    \code{
+    \preformatted{
         mkdir -p LOCAL_PATH
         cd LOCAL_PATH
         wget -m ftp://anonymous:@ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
         
         # Then in R:
-        # base <-  LOCAL_PATH/ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
+        # base <- LOCAL_PATH/ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
         # If the long path is not desired:
         
         cd LOCAL_PATH/ftp.ebi.ac.uk/pub/databases/spot/pgs/scores/
