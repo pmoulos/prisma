@@ -1312,6 +1312,7 @@ assignGenes <- function(prismaOut,gv=c("hg19","hg38"), sitDb=NULL) {
     
     tmp <- tryCatch({
         seqlevelsStyle(tmp) <- seqlevelsStyle(ann)
+        tmp
     },error=function(e) {
         if (!grepl("chr",as.character(seqnames(tmp)[1])))
             seqlevels(tmp) <- paste0("chr",seqlevels(tmp))
