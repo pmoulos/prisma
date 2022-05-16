@@ -1,3 +1,98 @@
+prismaPipeline <- function(...,retry=10,outPath=NULL) {
+    # Check inputs other than ...
+    .checkNumArgs("Number of retries (retry)",retry,"numeric",0,"gt")
+    if (is.null(outPath))
+        outPath <- paste0("prisma_run_",format(Sys.time(),
+            format="%Y-%m-%d-%H-%M-%S"))
+    
+    args <- list(...)
+    
+    # Bavard
+    pv <- tryCatch(paste0(" ",packageVersion("prisma")," "),
+        error=function(e) return(" "),finally="")
+    disp("\n",.symbolBar("$",64))
+    message("This is prisma",pv,"genomic region annotation builder")
+        disp(.symbolBar("=",64),"\n")
+    disp(.symbolBar("@",64),"\n")
+    
+    # Try to auto-resume crashes - assuming continue is TRUE from begining!
+    done <- FALSE
+    curr <- 1
+    while(!done && curr <= retry) {
+        disp("\n",.symbolBar("@",64))
+        message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - Try ",curr)
+        disp(.symbolBar("@",64),"\n")
+        
+        prismaOut <- tryCatch(prisma(...),error=function(e) {
+            message("Caught error: ",e$message)
+            message(" ")
+            message("I will now retry...")
+            return(FALSE)
+        },finally="")
+        
+        if (is.logical(prismaOut) && !prismaOut)
+            curr <- curr + 1
+        else
+            done <- TRUE
+    }
+    # Checkpoint
+    save(prismaOut,file=file.path(outPath,"prismaOut.RData"))
+    
+    # Should be now, done... CV metrics
+    disp("\n",.symbolBar("@",64))
+    message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - Cross-validation")
+    disp(.symbolBar("@",64),"\n")
+    
+    if ("gwe" %in% names(args))
+        gwe <- args$gwe
+    else
+        gwe <- args[[1]]
+    if ("phenotype" %in% names(args))
+        response <- args$phenotype
+    else
+        response <- args[[2]]
+    if ("covariates" %in% names(args))
+        covariates <- args$covariates
+    else
+        covariates <- args[[3]]
+    if ("pcs" %in% names(args))
+        pcs <- args$pcs
+    else
+        pcs <- args[[4]]
+    if ("rc" %in% names(args))
+        rc <- args$rc
+    else
+        rc=NULL
+        
+    cvMetrics <- prismaCrossValidate(
+        prismaOut=prismaOut,
+        gwe=gwe,
+        response=response,
+        covariates=covariates,
+        pcs=pcs,
+        rc=0.75
+    )
+    # Checkpoint
+    save(cvMetrics,file=file.path(outPath,"cvMetrics.RData"))
+
+    # Lookup in GWAS
+    disp("\n",.symbolBar("@",64))
+    message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - GWAS Catalog lookup")
+    disp(.symbolBar("@",64),"\n")
+    
+    lookup <- prismaLookup(prismaOut)
+    # Checkpoint
+    save(lookup,file=file.path(outPath,"lookup.RData"))
+
+    # Report
+    disp("\n",.symbolBar("@",64))
+    message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - Report")
+    disp(.symbolBar("@",64),"\n")
+    
+    #~ load(file.path(outPath,"input.RData"))
+    prismaReport(gwe,prismaOut,cvMetrics,lookup,path=outPath)
+}
+
 prisma <- function(
     gwe,
     phenotype,

@@ -563,7 +563,8 @@ setMethod("[","GWASExperiment",function(x,i,j,drop=TRUE) {
             j <- ..charbound(j,colnames(x),fmt)
         }
         j <- as.vector(j)
-        p <- p[j,,drop=FALSE]
+        if (!(is.null(p) || nrow(p) == 0))
+            p <- p[j,,drop=FALSE]
     }
     
     # If i,j is not missing, i.e. we are subsetting, LDsnps, pcaCov and PCs are
@@ -638,7 +639,8 @@ setReplaceMethod("[",c("GWASExperiment","ANY","ANY","GWASExperiment"),
             j <- ..charbound(j,colnames(x),fmt)
         }
         j <- as.vector(j)
-        p[j,] <- phenotypes(value,withDimnames=FALSE)
+        if (!(is.null(p) || nrow(p) == 0))
+            p[j,] <- phenotypes(value,withDimnames=FALSE)
     }
     
     # Similarly as above, if i or j not missing, values have been replaced and
