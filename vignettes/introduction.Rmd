@@ -1,4 +1,4 @@
----
+﻿---
 title: "Introduction to the prisma package"
 author: "Panagiotis Moulos"
 date: "`r Sys.Date()`"
@@ -12,7 +12,7 @@ vignette: >
 # Introduction
 
 The rise of modern genotyping technologies such as Next Generation Sequencing
-(Whhole Exome and Whole Genome Sequencing) as well as the continuous thriving of
+(Whole Exome and Whole Genome Sequencing) as well as the continuous thriving of
 older genotyping technologies such as genotyping DNA microarrays have allowed an
 unprecedented collection of massive, large-cohort and population-level genetic
 data spanning a variety of application, from medical research to consumer
@@ -34,4 +34,237 @@ kidney malfunction. They are also used to characterize less life-threatening
 conditions but which deteriorate the general well-being such as psychological
 disease and anomalies of the central nervous system.
 
-Polygenic Risk Scores
+The aforementioned biotechnological thriving as well as the increased complete
+data sources availability (coupled genotypic and phenotypic records for large
+cohorts) are gradually allowing the creation and exploration of Polygenic Risk 
+Scores as risk predictors and evaluators for a variety of disease and 
+healthstyle conditions. Polygenic Risk Scores (PRS) are (usually) simple 
+genotype scoring schemes which take into account many variants of an individual
+and based on the calculated score, attempt to assess a heritable risk of 
+developing/expressing a particular phenotype or combination of phenotypes. These
+phenotypes can be disease-related phenotypes such as cancer, cardiovascular
+disease and obesity, or plain lifestyle traits such as endurance in sports or
+effects of caffeine. They are different from the Genetic Risk Scores (GRS) in 
+the sense that while GRSs are compiled from a (usually) limited number of well
+characterized variants related to a particular phenotype across the literature
+with strong statistical evidence, PRSs are more relaxed regarding statistical
+power and comprise a usually much number of variants accounting for the additive
+genetic risk of an individual given his/hers total genetic profile.
+
+PRS and GRS are essentially variables constructed based on the (weighted) sum of
+genotypes (usually coded as 0, 1, 2 according to the alleles of a genotype) and
+comprise covariates in regression models that attempt to explain observed 
+genotypic/phenotypic relationships. While this approach seems over-simplified,
+nevertheless it has been shown in numerous studies that genetic scores are able
+to explain the aforementioned variabilities and most times even outperform 
+complex Machine Learning approaches. Then, after a succesful model construction,
+a distribution of PRS is constructed based on the ppopulation used to extract
+and calculate the PRS, and based on this distribution, the risk of new samples
+can be assessed according to the position of the new PRS in the reference
+distribution. The process of extracting a PRS is not very complex itself and
+includes the main following steps:
+
+* Derivation of summary statistics (regression coefficients/Odds Ratios, 
+p-values etc.) for each variant from a major and representative population 
+study (often a GWAS) recording also the phenotypes of interest.
+* Filtering of these variants according to their potential informative 
+redundancy (Linkage Disequilbrium), content with respect to the population
+(Hardy-Weinberg Equilibrium) and statistical significance/power to contribute
+to the phenotype under investigation (effects as assessed from regression 
+coefficients, p-values). This process is often refered as *Clumping + 
+Thresholding* and although popular is not the sole method to reduce noise while
+extracting a PRS. Another often complementary process is *penalized regression*
+or *lasso*.
+* Construction of the PRS: in this step, the variants (usually SNPs) having 
+passed the filtering procedure are used to calculate the PRS. There are various
+ways to calculate a PRS, the simplest one being just the sum of the genotypes
+(0, 1, 2) but the most popular seem to be the *weighted* PRS where the genotype
+of each marker (SNP, variant) participating in the PRS is mutliplied by its
+inferred effect given summary statistics e.g. from a GWAS. Multiple PRSs can be
+constructed and tested given different thresholds of p-values and/or other
+scores. The PRSs are constructed based on the genotypes of samples other than
+the ones used to derive the summary statistics, otherwise, strong overfitting
+effects are observed.
+* Construction and evaluation of multiple regression models: in this step many
+regression models are fitted and evaluated with the PRS candidates as covariates
+with the aim to select the PRS providing the largest explanatory power in terms
+of some metric such as the R<sup>2</sup> of the model and the significance of
+the PRS as a covariate (p-value). This is the strategy followed e.g. by 
+[PRSice-2](https://www.prsice.info/). Other strategies exist such as selecting
+one PRS without repetitions or using more SNPs in the PRS by effect-shrinking
+methods (this is what [lassosum](https://github.com/tshmak/lassosum) does) using
+penalized regression and LASSO techniques.
+* Selection and evaluation of the final PRS candidates with the goal of
+selecting a final PRS for the phenotype under investigation. This evaluation can
+be done based on split-and-test cross-validations on the initital dataset. In
+any case, the final PRS is subjected to slight changes if the initial dataset
+is changed (e.g. new samples added).
+
+# The PRISMA package
+
+## General introduction
+
+The PRISMA package is designed to provide a one-stop shop for all the PRS 
+extraction and evaluation steps described above. On top of that, it implements
+a linear optimization methodology which combines the regression effects from
+multiple statistical tests for GWAS-like association tests and offers a variety
+of PRS evaluation metrics and scores. Furthermore, PRISMA implements a semi-
+automated methodology for selecting and suggesting the best performing PRS 
+candidates which are extracted based on an iterative procedure where the input
+dataset is split in training (for summary statistics) and test (for PRS 
+extraction) subsets and the resulting PRS candidates are integrated and 
+evaluated resulting in the best candidate sets. The findings are finally 
+collected and described in an interactive report which also includes lookup for
+the selected SNPs in the EBI GWAS Catalog. Finally, PRISMA offers several side
+functions such as facilities for merging datasets (e.g. two datasets that
+complement each other or datasets coming from different array platforms),
+input/output functions and also SNP imputation based on reference panels by
+wrapping [IMPUTE2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html).
+
+Although it is generally assumed that any PRS extraction and evaluation is and
+should be based on summary statistics calculalated from GWAS and based on
+sufficiently large and as homogenous as possible cohorts this may not be always
+possible. Examples would include smaller cohorts that are used to study a
+rare disease (e.g. pediatric nephropathies) or to examine traits in smaller 
+groups such as isolated populations or athletic groups. In such cases, any PRS
+extraction process would result in rather unstable PRSs in terms of SNP content.
+In fact, such instability may also show up in cases where sufficiently large
+populations have been used to estimate summary statistics. PRISMA tries to 
+provide a solution in such cases by offering a resampling framework where PRS
+candidates are partly stabilized based on an ensemble technique where markers
+are gathered to PRSs based on aggregation from multiple PRS extraction runs
+and smart usage of state-of-the art algorithms such as PRSice2 and lassosum,
+coupled by a semi-automated selection of best candidates based on metrics such
+as the R<sup>2</sup> of regression models including the PRS as covariate.
+
+## Summary statistics extraction and GWAS analysis
+
+PRISMA supports five methods for estimating SNP effects for single-trait 
+associations. More specifically:
+
+1. General Linear Models (GLM), through the respective R functions. Each SNP is 
+regressed against the phenotype and .the selected covariates. The SNP effects and 
+p-value are reported.
+2. Ridge regression through the R package 
+[rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/index.html). This 
+package deploys penalized regression for shrinking the effects of less 
+informative SNPs in relation with the phenotype.
+3. Single-trait association tests with the 
+[statgenGWAS](https://biometris.github.io/statgenGWAS/) R package. The 
+association is based on linear regression and the incorporation of an internally
+calculated kinship matrix.
+4. Frequentist association tests with 
+[SNPTEST](https://www.well.ox.ac.uk/~gav/snptest/) (Oxford). Each SNP is 
+regressed against the phenotype and the selected covariates using an additive 
+model (all other SNPTEST options are also supported).
+5. Association tests with [PLINK](https://www.cog-genomics.org/plink/) (linear 
+regression with covariates or simple X<sup>2</sup> association tests if no
+covariates are present).
+
+##  De *novo* PRS extraction
+PRISMA currently supports two methods for extracting PRSs. More specifically:
+
+1. [PRSice2](https://www.prsice.info/), which operates based on the PLINK 
+framework and automates a PRS extraction process based on clumping and 
+thresholding followed by weighted PRS construction and evaluation with linear 
+regression.
+2. [lassosum](https://github.com/tshmak/lassosum), which utilizes penalized 
+(LASSO) regression to shrink the effects of  less informative variants without 
+completely removing them from the PRS.
+
+By default, PRISMA uses both PRSice2 and lassosum and offers two ways of 
+integrating their results: 
+i. by intersecting the PRS candidates from each algorithm 
+ii. by considering the respective union. 
+
+In all cases, the effects from GWA tests are considered as the weights of each 
+SNP in the constructed PRS.
+
+## PRISMA pipelines for PRS extraction
+
+Starting from a set of phenotypic and genotypic data assembled in a PRISMA
+`GWASExperiment` object and/or a PRS from an external resource (e.g. PGS 
+Catalog) which can be used to subset the former, PRISMA supports four pipelines 
+outlined below. Prior to each pipeline, a basic filtering of the genotypic data 
+is performed across SNPs and samples, and missing genotype imputation is 
+performed followed by PCA (optionally) to extract covariates characterizing the 
+whole available population. These are stored in the original object, to be used 
+towards the final steps of model evaluation.
+
+### De novo PRS extraction pipeline
+This is the main PRS candidate extraction pipeline and performs the following 
+steps:
+1. Split of the input data object to a usually larger training set and a smaller 
+independent test set.
+2. De novo quality control on the training and test sets as well as optional PCA 
+in the training set to capture local population structure to be used as 
+covariates in the subsequent GWA tests.
+3. Execution of GWA tests against a phenotype using one or more of the supported 
+methods to extract summary statistics (SNP effects and p-values).
+4. Execution of one or more PRS extraction algorithms to derive PRS candidate 
+SNPs.
+
+Steps (1) – (4) are executed N times with different training and test sets to 
+capture as much variation in the selection process as possible. Subsequently:
+
+5. The candidate SNPs from PRSs extracted at each iteration are aggregated and 
+the frequency of their appearance is recorded. At the same time, new effects are 
+calculated either by averaging the SNP effects from each iteration, a 
+[statistically valid process](https://www.biorxiv.org/content/10.1101/133785v8.full.pdf) 
+which generally corrects for overfitting, or by weighted averaging of the 
+effects based on the performance of PRSs constructed at each iteration (as 
+measured by the adjusted PRS R<sup>2</sup> returned by PRSice2).
+
+### De novo PRS evaluation pipeline
+
+This is an evaluation of a de novo extracted PRS pipeline and performs the 
+following steps:
+
+1. Create sets of PRS candidates from step (5) of the de novo PRS extraction 
+pipeline based on:
+  a. Fixed quantiles of the frequency distribution (e.g. 10%, 20%, 30%, 40%, 
+  50%, 60%, 75%, 80%, 90%, 95%, 99%).
+  b. A stepwise set creation process based on frequency of appearance, i.e. each 
+  set contains SNPs that appear 5, 6, … up to the maximum number of appearances.
+2. For each set created at (1), split de novo the initial data object in a 
+training and test set. Using the training test, reperform GWA tests to extract 
+summary statistics (the averaged effects are not used) and use PRSice2 in 
+*PRS application* mode to assess the PRS sets of (1) on the test set with the 
+new summary statistics.
+3. Evaluate each PRS application using the adjusted PRS R2 coefficient of 
+PRSice2.
+
+Steps (2) and (3) are repeated M times (ideally M=N iterations). This pipeline 
+includes heavy input/output in the form of PLINK files and is quite slow. In 
+some cases it may be more accurate though, although it does not provide a 
+straightforward way of calculating the final SNP effects for the PRS. Finally, 
+this pipeline may be more appropriate for evaluating external PGS scores, like 
+scores retrieved from PGS Catalog.
+
+### PRS evaluation pipeline based on the original train/test split with PRSice2
+
+This pipeline is similar to the de novo PRS evaluation pipeline but it uses the 
+initial train/test split described above for PRS evaluation. The steps are 
+similar to those described above and the evaluation is performed with the 
+PRSice2 framework, limiting somehow the available model evaluation metrics. 
+Also, averaged SNP effects are used.
+
+### PRS evaluation pipeline based on the original train/test split with R
+
+Again, this pipeline is similar to the one described above but this time 
+evaluation is done with native R functions (manual PRS construction outside 
+PRSice2 followed by GLM regressions). This is the fastest evaluation pipeline 
+and allows for the collection of many additional metrics.
+
+
+
+
+
+
+
+# Quick start
+
+The commands below can be executed within R's command line interface and use the
+toy data accompanying the package. For many more details regarding installation,
+usage and package presentation, you should also look at the other vignettes.
+
