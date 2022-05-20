@@ -239,6 +239,13 @@ With phenotypes
 
 ```{r gwe-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 set.seed(42)
+
+fam <- system.file("extdata/sample.fam",package="snpStats")
+bim <- system.file("extdata/sample.bim",package="snpStats")
+bed <- system.file("extdata/sample.bed",package="snpStats")
+input <- list(fam=fam,bim=bim,bed=bed)
+sample <- snpStats::read.plink(input$bed,input$bim,input$fam)
+
 pseudopheno <- data.frame(
     case_control=sample(c(0,1),nrow(sample$fam),replace=TRUE),
     other_pheno=sample(c("drug","nodrug"),nrow(sample$fam),replace=TRUE),

@@ -715,7 +715,6 @@ candidates <- selectPrs(
     metrics=evalMetrics$metrics,
     snpSelection=evalMetrics$pgs,
     gwe=toy,
-    method=prsSelectMethod,
     base=evalMetrics$baseline
 )
 
