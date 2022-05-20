@@ -120,18 +120,19 @@ downloadPlink <- function(ver=c("v1.90"),path=NULL) {
             "version!")
 }
 
-downloadPrsice <- function(ver=c("v2.3.3"),path=NULL) {
+downloadPrsice <- function(ver=c("v2.3.5","v2.3.3"),path=NULL) {
     # This downloads the latest version by default... Might not work for older
     # Linux operating systems
     ver <- ver[1]
     .checkTextArgs("PRSice version (ver)",ver,c("v2.3.3"),multiarg=FALSE)
     
     base <- "https://github.com/choishingwan/PRSice/releases/download/"
-    if (ver == "v2.3.3") {
+    if (ver == "v2.3.3")
         prext <- "2.3.3/"
-        ext <- "PRSice_linux.zip"
-        exec <- "PRSice_linux"
-    }
+    else if (ver == "v2.3.5")
+        prext <- "2.3.5/"
+    ext <- "PRSice_linux.zip"
+    exec <- "PRSice_linux"
         
     src <- paste0(base,prext,ext)
     sver <- substring(ver,2,nchar(ver))

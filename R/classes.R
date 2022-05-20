@@ -670,6 +670,8 @@ setMethod("cbind","GWASExperiment",function(...,deparse.level=1) {
     for (x in args[-1]) {
         if (!identical(colnames(rp),colnames(phenotypes(x,withDimnames=FALSE))))
             stop("Combining phenotype column names are not compatible")
+        if (!identical(genome(ref),genome(x)))
+            stop("Combining object genomes shoudl be the same")
     }
     
     #oldValidity <- S4Vectors:::disableValidity()
@@ -710,6 +712,8 @@ setMethod("rbind","GWASExperiment",function(...,deparse.level=1) {
     for (x in args[-1]) {
         if (!identical(rp,phenotypes(x,withDimnames=FALSE)))
             stop("Combining phenotypes must be identical")
+        if (!identical(genome(ref),genome(x)))
+            stop("Combining object genomes shoudl be the same")
     }
 
     #oldValidity <- S4Vectors:::disableValidity()

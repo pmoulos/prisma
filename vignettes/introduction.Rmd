@@ -161,7 +161,7 @@ model (all other SNPTEST options are also supported).
 regression with covariates or simple X<sup>2</sup> association tests if no
 covariates are present).
 
-##  De *novo* PRS extraction
+## De *novo* PRS extraction
 PRISMA currently supports two methods for extracting PRSs. More specifically:
 
 1. [PRSice2](https://www.prsice.info/), which operates based on the PLINK 
@@ -257,14 +257,303 @@ PRSice2 followed by GLM regressions). This is the fastest evaluation pipeline
 and allows for the collection of many additional metrics.
 
 
+## PRS selection process
+The final PRS selection out of the several candidates is performed in a two-step 
+semi-automatic process which involves graphical inspection of evaluation plots 
+and also suggestion of the best PRSs using simple mathematical functions on 
+the evaluation plots.
 
+### The PRISMA adjusted PRS R<sup>2</sup>
+Although many cases in related work are based on the R2 coefficient (or 
+adjusted versions such as the one suggested in PRSice2) to explain the 
+phenotypic variance percentages explained by the PRS, it is often desired that
+a PRS may not include huge number of SNPs for its construction, for several
+reasons, a few including:
 
+i. Potential overfitting by including many SNPs which may be heavily dependent 
+on specific populations used to derive summary statistics, thus presenting 
+problematic generalization when applied to slightly different populations.
+ii. The ability to use other non-high-throughput techniques to derive 
+genotypes, such as qPCR, which would benefit by a smaller number of markers 
+for genotyping.
+iii. Easier downstream investigation and tracking of the SNP markers included 
+in the PRS.
+iv. Potential robustness when further tuning a predictive regression model, 
+for example including or excluding covariates.
 
+For these reasons, we introduce the PRISMA adjusted PRS R2 calculated using 
+the formula:
 
+$$R_{P}^{2} = \sqrt[2]{\frac{R_{PRS}^{2}}{log(N)}} $$
+
+where $R_{PRS}^{2}$ is the adjusted R<sup>2</sup> explaining the PRS 
+contribution (R<sup>2</sup> of the full model including the PRS – R<sup>2</sup> 
+of the reduced model including only the covariates against the phenotype) and
+*N* is the number of SNPs included in the PRS.
+
+Essentially, $R_{P}^{2}$ penalizes $R_{PRS}^{2}$ according to the number of
+SNPs *N*, while maintaining scale and monotonic pattern by using the square
+root. In practice, it does not seriously differ from using only the 
+$R_{PRS}^{2}$ for selection of the optimal number of SNPs, but it is very
+useful when controlling the number of SNPs while maintaining accuracy is 
+desirable.
+
+### Graphical evaluations
+
+After executing a possible evaluation pipeline, the best PRS is firstly 
+evaluated graphically by:
+
+i. A bar plot of average adjusted PRS R2 ± standard deviations for each SNP 
+frequency cutoff where it can be checked if there is a cutoff increasing the 
+R2 as compared to the baseline (R2 from the de novo PRS extraction iterations).
+ii. A dot plot of the PRISMA adjusted PRS R2 R_P^2, where it can be inspected 
+where the adjusted R2 is potentially maximized.
+iii. A dot plot of SNP frequencies.
+
+### Automatic PRS selection
+
+The number of SNPs that will finally be used to build one or more candidate 
+PRS is determined with two possible stepwise SNP inclusion methods:
+    
+i. Using the Elbow method, which essentially detects a cutoff in the number of
+SNPs in the PRS where the R2 metrics do not significantly increase after
+including more SNPs in the PRS. This method can be applied when the 
+R<sup>2</sup> distribution is mostly monotonic.
+ii. By detecting local maxima in the R2 distribution, corresponding to local 
+maximizations of the latter at specific number of SNPs. The main PRS includes 
+the SNPs which maximize the $R_{PRS}^{2}$ or the $R_{P}^{2}$ so as to 
+compensate for the number of SNPs in the PRS (default behavior). This option
+returns also SNP sets at other local maxima of the R<sup>2</sup> distribution.  
+
+A similar approach like (ii) above regarding the maximization of R2 is being 
+used in a recent work presented in
+[this](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02479-9) study.
+
+## PRS evaluation metrics
+
+The following metrics are used for the evaluation of PRS candidates and during 
+their iterative selection:
+
+* Full regression model R<sup>2</sup>: the R<sup>2</sup> of a model including
+the PRS.
+* Reduced model R<sup>2</sup>: the R<sup>2</sup> of a model without the PRS
+(only covariates against the phenotype under interrogation).
+* Adjusted PRS R<sup>2</sup>: the PRSice2 adjusted PRS R<sup>2</sup>.
+* Full and reduced model Root Mean Squared Error (RMSE).
+* Full and reduced model Mean Absolute Error (MAE).
+* Statistical significance of the average differences of the above using the
+Student’s t-test, the Wilcoxon rank test and an empirical bootstrap p-value.
+* All of these metrics are collected during the evaluation pipeline with 
+vanilla R and also in cross-validation runs based on regression models with
+the selected PRSs and the total available dataset.
+
+## PRS retrieval from external resources
+
+PRISMA supports the retrieval of candidate PRSs or candidate PRS components 
+(SNPs) for a trait from the following resources:
+
+* The [EBI PRS Catalog](https://www.pgscatalog.org/)
+* The [EBI GWAS Catalog](https://www.ebi.ac.uk/gwas/)
+
+Retrieval of data regarding specific PRS also from 
+[impute.me](https://impute.me/) is being currently tested. The data retrieved 
+from online resources are being harmonized into a common format including the 
+recording of existing PRS coefficients, statistical significance, related loci 
+and GWAS association scores (p-values). They are also enriched with the 
+following data:
+
+* Location assignment when only dbSNP (rs) ids are only provided.
+* dbSNP id assignment when only location is provided.
+* Locus (gene) assignment when not provided and if possible (i.e. SNP is not 
+intronic).
+
+The resulting structure can be used with one of the PRISMA pipelines to 
+evaluate the retrieved PRS (i.e. check if all markers are needed with local 
+data) and reconstruct a PRS.
 
 # Quick start
 
 The commands below can be executed within R's command line interface and use the
 toy data accompanying the package. For many more details regarding installation,
 usage and package presentation, you should also look at the other vignettes.
+Before running these examples, you should have at least installed 
+[PRSice2](https://www.prsice.info/) (have also a look at the Installation
+vignette) which should be visible by R (i.e. included in the system's `PATH`
+variable).
 
+```{r intro-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=FALSE, warning=FALSE}
+library(prisma)
+```
+
+### Load some toy data
+
+The toy dataset contains genotypes for chromosomes 18 and 21 from a the 
+case/control described in 
+[Kalafati et al.](https://doi.org/10.1016/j.nut.2018.10.032). The trait for 
+which PRS candidates are sought is the Body-Mass Index (continuous variable).
+
+```{r intro-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+library(prisma)
+
+data(toy,package="prisma")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
+```
+
+### Apply some filters
+
+```{r intro-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+# Lose filters for the toy dataset
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- FALSE
+filts$inbreed <- NA
+```
+
+### Full pipeline - create PRS candidates
+
+```{r intro-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+# Workspace
+d1 <- tempfile()
+wspace1 <- file.path(tempdir(),d1)
+
+# Traits
+response <- "BMI"
+covariates <- c("Case_Control","Gender","Age")
+
+# Complete 4-iteration PRS pipeline - ~1 min to run with 4 cores - no PCA
+if (Sys.which("PRSice_linux") != "") {
+    prismaOut <- prisma(
+        gwe=toy,
+        phenotype=response,
+        covariates=covariates,
+        pcs=FALSE,
+        trainSize=0.8,
+        niter=4,
+        resolution="frequency",
+        minSnps=2,
+        filters=filts,
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        gwaMethods=c("glm","statgen"),
+        prsiceOpts=list(clump_p=0.75,perm=100),
+        prsWorkspace=wspace1,
+        cleanup="intermediate",
+        logging="file",
+        output="normal",
+        rc=0.25
+    )
+}
+```
+
+### Step-by-step pipeline
+
+Below, we execute step-by-step the individual steps implemented in the `prisma`
+wrapper only for the `statgenGWAS` GWA testing.
+
+#### 1. Iterate PRS extraction over the dataset
+
+```{r intro-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+d2 <- tempfile()
+wspace2 <- file.path(tempdir(),d2)
+if (Sys.which("PRSice_linux") != "") {
+    dnList <- prsPipeline(
+        gwe=toy,
+        phenotype=response,
+        covariates=covariates,
+        pcs=FALSE,
+        trainSize=0.8,
+        niter=4,
+        filters=filts,
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        gwaMethods="statgen",
+        prsiceOpts=list(clump_p=0.75,perm=100),
+        prsWorkspace=wspace2,
+        cleanup="intermediate",
+        logging="file",
+        rc=0.25
+    )
+}
+```
+
+#### 2. Calculate the evaluation metrics that lead to PRS selection
+
+```{r intro-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+d3 <- tempfile()
+wspace3 <- file.path(tempdir(),d3)
+evalMetrics <- prsSelection(
+    dnList=dnList,
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods="statgen",
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace3,
+    cleanup="intermediate",
+    logging="file",
+    output="summary",
+    useDenovoWorkspace=dnList,
+    rc=0.25
+)
+```
+
+#### 3. Based on the metrics, find the best PRS candidates
+
+```{r intro-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+candidates <- selectPrs(
+    metrics=evalMetrics$metrics,
+    snpSelection=evalMetrics$pgs,
+    gwe=toy,
+    method=prsSelectMethod,
+    base=evalMetrics$baseline
+)
+```
+
+The `prisma` wrapper implements additional steps to assemble the results and
+create some plots to be displayed in the final report.
+
+### Complete PRISMA pipeline with report
+
+The `prismaPipeline` wrapper servers as a complete "wrapper of wrapper" or a
+"meta-wrapper" for the end-to-end PRS extraction pipeline, from SNP effect
+estimation given a population with genotypes and phenotypes. The pipeline
+runs the `prisma` wrapper making sure that any crashes are resumed (up to 10
+times by default), followed by cross-validation for the PRS candidates, lookup
+in the EBI GWAS Catalog and the creation of an HTML report.
+
+```
+outPath <- file.path(tempdir(),tempfile())
+d4 <- tempfile()
+wspace4 <- file.path(outPath,d4)
+
+prismaPipeline(
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods=c("glm","statgen"),
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace4,
+    cleanup="intermediate",
+    logging="file",
+    output="normal",
+    rc=0.25,
+    outPath=outPath
+)
+```

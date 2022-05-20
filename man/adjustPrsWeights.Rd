@@ -9,7 +9,7 @@
 \arguments{
     \item{snpSelection}{A data frame with SNPs comprising
     a PRS, properly formatted (see 
-    \code{link{aggregatePrsMarkers})}.}
+    \code{\link{aggregatePrsMarkers})}.}
     
     \item{gwe}{The \code{GWASExperiment} object used to
     derive the PRS.}

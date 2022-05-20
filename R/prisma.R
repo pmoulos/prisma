@@ -1,9 +1,15 @@
 prismaPipeline <- function(...,retry=10,outPath=NULL) {
     # Check inputs other than ...
     .checkNumArgs("Number of retries (retry)",retry,"numeric",0,"gt")
-    if (is.null(outPath))
+    if (is.null(outPath)) {
         outPath <- paste0("prisma_run_",format(Sys.time(),
             format="%Y-%m-%d-%H-%M-%S"))
+        dir.create(outPath,recursive=TRUE,showWarnings=FALSE)
+    }
+    else {
+        if (!dir.exists(outPath))
+            dir.create(outPath,recursive=TRUE,showWarnings=FALSE)
+    }
     
     args <- list(...)
     
@@ -11,9 +17,8 @@ prismaPipeline <- function(...,retry=10,outPath=NULL) {
     pv <- tryCatch(paste0(" ",packageVersion("prisma")," "),
         error=function(e) return(" "),finally="")
     disp("\n",.symbolBar("$",64))
-    message("This is prisma",pv,"genomic region annotation builder")
-        disp(.symbolBar("=",64),"\n")
-    disp(.symbolBar("@",64),"\n")
+    message("This is PRISMA",pv,"PRS builder")
+    disp(.symbolBar("$",64))
     
     # Try to auto-resume crashes - assuming continue is TRUE from begining!
     done <- FALSE
@@ -39,9 +44,9 @@ prismaPipeline <- function(...,retry=10,outPath=NULL) {
     save(prismaOut,file=file.path(outPath,"prismaOut.RData"))
     
     # Should be now, done... CV metrics
-    disp("\n",.symbolBar("@",64))
+    disp(.symbolBar("@",64))
     message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - Cross-validation")
-    disp(.symbolBar("@",64),"\n")
+    disp(.symbolBar("@",64))
     
     if ("gwe" %in% names(args))
         gwe <- args$gwe
@@ -87,7 +92,7 @@ prismaPipeline <- function(...,retry=10,outPath=NULL) {
     # Report
     disp("\n",.symbolBar("@",64))
     message(format(Sys.time(),"%Y-%m-%d %H:%M:%S")," - Report")
-    disp(.symbolBar("@",64),"\n")
+    disp(.symbolBar("@",64))
     
     #~ load(file.path(outPath,"input.RData"))
     prismaReport(gwe,prismaOut,cvMetrics,lookup,path=outPath)

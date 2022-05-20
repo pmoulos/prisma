@@ -89,7 +89,7 @@
     Information Criterion) is used.
 }
 \examples{
-    # Soon available
+    # Check the examples in prisma man page
 }
 \author{
     Panagiotis Moulos

@@ -525,7 +525,7 @@
     phenotypes in the experiment.}
     
     \item{\code{pvalues(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE), pvalues(x, response = 1L, 
+    npcs = 0, withDimnames = TRUE)}, \code{pvalues(x, response = 1L, 
     covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the p-values after the application of one or more
     genotype-phenotype association tests. \code{response} is the
@@ -560,7 +560,7 @@
     assuming at least \code{i} tests have been performed.}
     
     \item{\code{effects(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE), effects(x, response = 1L, 
+    npcs = 0, withDimnames = TRUE)}, \code{effects(x, response = 1L, 
     covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the SNP effects with respect to the phenotype after 
     the application of one or more genotype-phenotype association 
@@ -578,7 +578,7 @@
     assuming at least \code{i} tests have been performed.}
     
     \item{\code{prsbetas(x, response = 1L, covariates = NULL, 
-    npcs = 0, withDimnames = TRUE), prsbetas(x, response = 1L, 
+    npcs = 0, withDimnames = TRUE)}, \code{prsbetas(x, response = 1L, 
     covariates = NULL, npcs = 0, withDimnames = TRUE, ...) <- value}:}{
     Get or set the beta coefficients (or odd ratios) effects 
     derived after the application of a Polygenic Risk Scores

@@ -10,7 +10,7 @@
     from PGS Catalog.}
     
     \item{gb}{Human genome build, \code{"hg19"} (default),
-    for hg19/GRCh37, \code{"hg38"} for hg38/GRCh38 or 
+    for hg19/GRCh37, \code{"hg38"} for hg38/ GRCh38 or 
     \code{"nr"} if unavailable.}
     
     \item{addGenes}{Try and assign gene names using the

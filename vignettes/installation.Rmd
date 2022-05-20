@@ -1,0 +1,366 @@
+---
+title: "PRISMA installation"
+author: "Panagiotis Moulos"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{PRISMA installation}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# PRISMA installation
+
+Apart from CRAN and Bioconductor dependencies, PRISMA also depends on:
+
+* The presence of certain system packages
+* The presence of the [lassosum](https://github.com/tshmak/lassosum) which is
+not on CRAN or Bioconductor
+* The presence of certain 3rd party tools which must be findable by PRISMA (can
+be installed also with PRISMA functions)
+
+The following outline the whole process.
+
+## Prerequisites
+
+### System packages
+
+Some or all of these may be already installed on the system. There might be
+additional ones depending on the Linux distribution prisma is being installed
+to. This list will be maintained and updated.
+
+```
+sudo apt install -y apt-transport-https software-properties-common \
+    build-essential zlib1g-dev libdb-dev libcurl4-openssl-dev libssl-dev \
+    libxml2-dev apache2 libfontconfig1-dev libjpeg-dev
+```
+
+### R packages
+
+#### Basic installation of Bioconductor
+
+```
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(version = "3.15")
+```
+
+#### Additional packages
+
+The following packages are either on CRAN or on Bioconductor:
+
+```
+pkgs <- c("BSgenome.Hsapiens.UCSC.hg19","BSgenome.Hsapiens.UCSC.hg38",
+    "Biobase","biomaRt","BSgenome","data.table","GenomicRanges","ggplot2",
+    "gwasrapidd","harmonicmeanp","islasso","jsonlite","kableExtra","knitr",
+    "liftOver","Matrix","magrittr","methods","openxlsx","pander","parallel",
+    "PhenotypeSimulator","quincunx","R.utils","rmarkdown","rmdformats",
+    "RcppArmadillo","RMTstat","rrBLUP","rrcov","rsnps","rtracklayer",
+    "S4Vectors","scales","scrime","snpStats","SNPRelate",
+    "SNPlocs.Hsapiens.dbSNP151.GRCh38","statgenGWAS","SummarizedExperiment",
+    "survcomp","testthat","tseries","utils")
+
+BiocManager::install(pkgs)
+```
+
+Also, `lassosum` is not on CRAN:
+
+```
+library(devtools)
+install_github("tshmak/lassosum")
+```
+
+### Other external tools and resources
+
+The following tools should be findable by R, for example they should be included
+in the system's `PATH` environmental variable.
+
+#### Summary statistics
+
+* [SNPTEST](https://www.well.ox.ac.uk/~gav/snptest/)
+* [PLINK](https://www.cog-genomics.org/plink/)
+
+#### PRS extraction
+
+* [PRSice-2](https://www.prsice.info/)
+
+#### Other tools (format conversion and imputation)
+
+* [GTOOL](https://www.well.ox.ac.uk/~cfreeman/software/gwas/gtool.html)
+* [QCTOOL](https://www.well.ox.ac.uk/~gav/qctool_v2/)
+* [IMPUTE2](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html)
+* [IMPUTE2 reference panel files](https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz)
+
+## Installation of PRISMA
+
+PRISMA can be installed from GitHub for the time being:
+
+```
+library(devtools)
+install_github("pmoulos/prisma")
+```
+
+# Installation of 3rd party tools
+
+In order to exploit all PRISMA functionalities, certain 3rd party tools for
+calculation of summary statistics, PRS extraction, file format conversion and
+imputation must be present on the system. Particulalry, 
+[PRSice-2](https://www.prsice.info/) must be present and findable, otherwise
+PRS extraction functionalities (and also the main purpose of the package) will
+be very limited. Furthermore, if you wish to manually run the full test-suite of
+the package, certain tests will be skipped if the required 3rd party tools are
+not present.
+
+The 3rd party tools can be installed outside R and PRISMA manually or from
+withing R via PRISMA package funcitonalities. In the first case, more manual
+steps are required but there is the freedom for the user to install these tools
+at will and whatever location, as long as this is placed on the system's `PATH`
+variable. In the second case, the tools are downloaded and installed 
+automatically but they must live in a specific location defined by R faclities
+in order to be findable by PRISMA.
+
+## Installation of 3rd party tools outside PRISMA
+
+The installation location can be where the user wishes to. Here, we assume
+that the tools are installed in `~/prs-tools`:
+
+```
+TOOLS_HOME=~/prs-tools
+mkdir -p $TOOLS_HOME
+```
+
+### Installation of tools for summary statistics
+
+#### SNPTEST
+
+We assume version 2.5.4 for Ubuntu:
+
+```
+mkdir -p $TOOLS_HOME/snptest-2.5.4 && cd $TOOLS_HOME/snptest-2.5.4
+wget --no-check-certificate  http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.4-beta3_linux_x86_64_static.tgz
+tar -xvf snptest_v2.5.4-beta3_linux_x86_64_static.tgz
+cd snptest_v2.5.4-beta3_linux_x86_64_static
+mv * ../ && cd ../
+rm -r snptest_v2.5.4-beta3_linux_x86_64_static*
+# PRISMA expects to find an executable named snptest
+mv snptest_v2.5.4-beta3 snptest 
+```
+
+#### PLINK
+
+We assume version 1.90 for 64-bit Linux:
+
+```
+mkdir -p $TOOLS_HOME/plink-1.90 && cd $TOOLS_HOME/plink-1.90
+wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20220402.zip
+unzip plink_linux_x86_64_20220402.zip
+rm plink_linux_x86_64_20220402.zip
+```
+
+### Installation of PRS extraction tools
+
+#### Installation of PRSice-2
+
+We assume version 2.3.5 for 64-bit Linux:
+
+```
+mkdir -p $TOOLS_HOME/prsice-2.3.5 && cd $TOOLS_HOME/prsice-2.3.5
+wget https://github.com/choishingwan/PRSice/releases/download/2.3.5/PRSice_linux.zip
+unzip PRSice_linux.zip
+rm PRSice_linux.zip
+```
+
+### Installation of additional tools
+
+#### Installation of IMPUTE2
+
+We assume version 2.3.2 for Linux:
+
+```
+mkdir -p $TOOLS_HOME/impute-2.3.2 && cd $TOOLS_HOME/impute-2.3.2
+wget --no-check-certificate https://mathgen.stats.ox.ac.uk/impute/impute_v2.3.2_x86_64_static.tgz
+tar -xvf impute_v2.3.2_x86_64_static.
+cd impute_v2.3.2_x86_64_static
+mv * ../
+cd ..
+rm -r impute_v2.3.2_x86_64_static*
+```
+
+#### Installation of GTOOL
+
+We assume version 0.7.5 for Linux:
+
+```
+mkdir -p $TOOLS_HOME/gtool-0.7.5 && cd $TOOLS_HOME/gtool-0.7.5
+wget --no-check-certificate  https://www.well.ox.ac.uk/~cfreeman/software/gwas/gtool_v0.7.5_x86_64.tgz
+tar -xvf gtool_v0.7.5_x86_64.tgz
+rm gtool_v0.7.5_x86_64.tgz
+```
+
+#### Installation of QCTOOL
+
+We assume version 2.2.0 for a later version of Linux (e.g. Ubuntu > 18.04). For
+older versions, either download version 2.0.8 or GTOOL only should be enough.
+PRISMA uses QCTOOL and GTOOL to convert PED files to the GEN format and on later
+Linux systems, for some reason GTOOL fails (they are both older tools!)
+
+```
+mkdir -p $TOOLS_HOME/qctool-2.2.0 && cd $TOOLS_HOME/qctool-2.2.0
+wget --no-check-certificate https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.0-CentOS_Linux7.8.2003-x86_64.tgz
+tar -xvf qctool_v2.2.0-CentOS_Linux7.8.2003-x86_64.tgz
+cd qctool_v2.2.0-CentOS\ Linux7.8.2003-x86_64/
+mv * ../
+rm -r qctool_v2.2.0-CentOS\ Linux7.8.2003-x86_64/ qctool_v2.2.0-CentOS_Linux7.8.2003-x86_64.tgz
+```
+
+### Editing the `PATH` variable
+
+The following should now be added to the end of your `~/.bashrc` file or the
+end of your `~/.profile` file or any other shell starting file according to the
+Linux operating system version. In Windows, a similar path must be followed,
+described for example [here](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html).
+
+```
+PRS_TOOLS=~/prs-tools # or wherever the TOOLS_HOME variable points to
+export PATH=$PATH:\
+    $TOOLS_HOME/snptest-2.5.4:\
+    $TOOLS_HOME/plink-1.90:\
+    $TOOLS_HOME/prsice-2.3.5:\
+    $TOOLS_HOME/impute-2.3.2:\
+    $TOOLS_HOME/gtool-0.7.5:\
+    $TOOLS_HOME/qctool-2.2.0:
+```
+
+Then you should logout and re-login or:
+
+```
+source ~/.basrhc
+```
+
+for the changes to take effect.
+
+### Installation of IMPUTE2 reference panel
+
+This could take some time. Also, the path to the reference is not stored
+somewhere within PRISMA and should be provided every time the `extendGWAS`
+function is used.
+
+```
+mkdir -p $TOOLS_HOME/impute_reference && cd $TOOLS_HOME/impute_reference
+wget --no-check-certificate https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz
+tar -xvf 1000GP_Phase3.tgz
+rm 1000GP_Phase3.tgz
+```
+
+The path to the reference file is then 
+`$TOOLS_HOME/impute_reference/1000GP_Phase3`.
+
+## Installation of 3rd party tools within PRISMA
+
+The installation location is specific and is defined by `tools::R_user_dir(d)`.
+Then, inside this directory, the aforementioned name convention is followed for
+each tool, i.e. `tool_name_in_lowercase/tool.version`. If you choose to install
+this way instead of manual installation and placing in the `PATH` variable, the 
+tools should not be moved otherwise PRISMA will *not* be able to find them. The
+user will be prompted to accept the installation path. The download wrapper
+downloads, installs and tests the tools.
+
+### Installation of all tools
+
+```
+downloadExternalTools()
+```
+
+### Installation of tools for summary statistics
+
+#### SNPTEST
+
+We assume version 2.5.4 for Ubuntu:
+
+```
+downloadSnptest(ver="v2.5.4")
+```
+
+#### PLINK
+
+We assume version 1.90 for 64-bit Linux:
+
+```
+downloadPlink(ver="v1.90")
+# or just
+# downloadPlink()
+```
+
+### Installation of PRS extraction tools
+
+#### Installation of PRSice-2
+
+We assume version 2.3.5 for 64-bit Linux:
+
+```
+downloadPrsice(ver="v2.3.5")
+# or just
+# downloadPrsice()
+```
+
+### Installation of additional tools and resources
+
+#### Installation of IMPUTE2
+
+We assume version 2.3.2 for Linux:
+
+```
+downloadImpute2(ver="v2.3.2")
+# or just
+# downloadImpute2()
+```
+
+#### Installation of GTOOL
+
+We assume version 0.7.5 for Linux:
+
+```
+downloadGtool(ver="v0.7.5")
+# or just
+# downloadGtool()
+```
+
+#### Installation of QCTOOL
+
+We assume version 2.2.0 for a later version of Linux (e.g. Ubuntu > 18.04). For
+older versions, either download version 2.0.8 or GTOOL only should be enough.
+PRISMA uses QCTOOL and GTOOL to convert PED files to the GEN format and on later
+Linux systems, for some reason GTOOL fails (they are both older tools!)
+
+```
+downloadQctool(ver="v2.2.0")
+# or just
+# downloadQctool()
+```
+
+### Installation of IMPUTE2 reference panel
+
+This could take some time. Also, the path to the reference is not stored
+somewhere within PRISMA and should be provided every time the `extendGWAS`
+function is used.
+
+```
+dir.create("TOOLS_HOME/impute_reference")
+download1000GP3("TOOLS_HOME/impute_reference")
+```
+
+The path to the reference file is then 
+`TOOLS_HOME/impute_reference/1000GP_Phase3`.
+
+# Test the PRISMA installation
+
+Prior to each build and release, we perform extensive tests shipping with the
+package. If you wish to run these tests (can take some time) then:
+
+```
+library(testthat)
+test_package("prisma")
+```

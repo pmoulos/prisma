@@ -2,6 +2,7 @@
 \alias{prisma}
 \alias{prsSelection}
 \alias{prsPipeline}
+\alias{prismaPipeline}
 \title{Main prisma PRS extraction and validation pipelines}
 \usage{
     prisma(
@@ -134,6 +135,8 @@
         output = c("summary", "full"),
         rc = NULL
     )
+    
+    prismaPipeline(..., retry = 10, outPath = NULL)
 }
 \arguments{
     \item{gwe}{A GWASExperiment object with GWA tests performed.
@@ -350,6 +353,17 @@
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no
     parallelization.}
+    
+    \item{...}{Arguments passed to \code{prisma} from the
+    \code{prismaPipeline} wrapper..}
+    
+    \item{retry}{The number of pipeline relaunches in case
+    of crash for any reason. Defaults to \code{10}.}
+    
+    \item{outPath}{The path to the directory where 
+    checkpoint files and the report will be written. It
+    can be different from \code{prsWorkspace} and
+    defaults to \code{NULL} for auto-generation.}
 }
 \value{
     A list with the members \code{params} and \code{results}.
@@ -422,6 +436,11 @@
     \code{prsSelection} accepts as input the output of
     \code{prsPipeline} and evaluate and select the best
     PRS candidates according to the input arguments.
+    
+    \code{prismaPipeline} seves as a wrapper of 
+    \code{prisma} and makes sure that the pipeline will
+    resume if crashed at any point as well as write
+    checkpoints and create the report.
 }
 \details{
     Regarding the \code{dnList} argument, this is a list
@@ -692,10 +711,49 @@ evalMetrics <- prsSelection(
     rc=0.25
 )
 
+candidates <- selectPrs(
+    metrics=evalMetrics$metrics,
+    snpSelection=evalMetrics$pgs,
+    gwe=toy,
+    method=prsSelectMethod,
+    base=evalMetrics$baseline
+)
+
 }
 
-# The evalMetrics variable is used with selectPrs, please
-# check the respective man page.
+# Complete pipeline with report and checkpoints
+# Complete 4-iteration PRS pipeline - ~1 min to run with 4 cores - no PCA
+if (Sys.which("PRSice_linux") != "") {
+
+outPath <- file.path(tempdir(),tempfile())
+d4 <- tempfile()
+wspace4 <- file.path(outPath,d4)
+prismaPipeline(
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods=c("glm","statgen"),
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace4,
+    cleanup="intermediate",
+    logging="file",
+    output="normal",
+    rc=0.25,
+    outPath=outPath
+)
+
+file.exists(file.path(outPath,"prismaOut.RData"))
+# TRUE
+
+}
 }
 \author{
     Panagiotis Moulos

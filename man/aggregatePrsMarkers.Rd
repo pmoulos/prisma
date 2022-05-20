@@ -27,7 +27,7 @@
     
     \item{avgfun}{How to summarize SNP effects (regression 
     coefficients) after the iterative extraction process.
-    One of \code{"mean"} (default), \code{"mean"} or 
+    One of \code{"mean"} (default), \code{"median"} or 
     \code{"weight"}. See also Details.}
     
     \item{gwe}{The GWASExperiment object used to derive the
