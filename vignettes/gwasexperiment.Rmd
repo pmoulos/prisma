@@ -113,7 +113,9 @@ mentioned in the respective man page.
 
 The following figure summarizes the `GWASExperiment` object structure:
 
-![The GWASExperiment class](gwasexperiment.png)
+```{r img-0, out.width = "480px"}
+knitr::include_graphics("gwasexperiment.png")
+```
 
 ## Examples
 
@@ -255,4 +257,10 @@ pseudopheno <- data.frame(
 gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats")
 
 gwe
+```
+
+### R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
 ```

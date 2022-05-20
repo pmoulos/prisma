@@ -2,7 +2,9 @@
 title: "Introduction to the prisma package"
 author: "Panagiotis Moulos"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{Introduction to the prisma package}
   %\VignetteEngine{knitr::rmarkdown}
@@ -412,7 +414,7 @@ filts$inbreed <- NA
 
 ### Full pipeline - create PRS candidates
 
-```{r intro-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r intro-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # Workspace
 d1 <- tempfile()
 wspace1 <- file.path(tempdir(),d1)
@@ -529,7 +531,7 @@ runs the `prisma` wrapper making sure that any crashes are resumed (up to 10
 times by default), followed by cross-validation for the PRS candidates, lookup
 in the EBI GWAS Catalog and the creation of an HTML report.
 
-```
+```{r intro-7, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 outPath <- file.path(tempdir(),tempfile())
 d4 <- tempfile()
 wspace4 <- file.path(outPath,d4)
@@ -555,4 +557,10 @@ prismaPipeline(
     rc=0.25,
     outPath=outPath
 )
+```
+
+### R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
 ```
