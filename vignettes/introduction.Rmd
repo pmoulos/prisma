@@ -2,7 +2,8 @@
 title: "Introduction to the prisma package"
 author: "Panagiotis Moulos"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette:
+output: 
+  rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
