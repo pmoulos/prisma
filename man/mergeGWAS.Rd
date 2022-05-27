@@ -99,8 +99,8 @@
         \item SNPs are queried with biomaRt to resolve 
         allele frequencies. Genome version is not important 
         at this point as only alleles are used and IDs.
-        \item If minor allele is available from Ensembl, we 
-        the the flip decision is based on it. If not (e.g. 
+        \item If minor allele is available from Ensembl, 
+        then the flip decision is based on it. If not (e.g. 
         outdated/merged SNPs, dbSNP is queried with package
         rsnps and fill the Ensembl result.
         \item Some SNPs may have been removed from dbSNP. 

@@ -146,7 +146,7 @@ PRISMA supports five methods for estimating SNP effects for single-trait
 associations. More specifically:
 
 1. General Linear Models (GLM), through the respective R functions. Each SNP is 
-regressed against the phenotype and .the selected covariates. The SNP effects and 
+regressed against the phenotype and the selected covariates. The SNP effects and 
 p-value are reported.
 2. Ridge regression through the R package 
 [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/index.html). This 
@@ -415,7 +415,7 @@ filts$inbreed <- NA
 
 ### Full pipeline - create PRS candidates
 
-```{r intro-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r intro-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # Workspace
 d1 <- tempfile()
 wspace1 <- file.path(tempdir(),d1)
@@ -456,7 +456,7 @@ wrapper only for the `statgenGWAS` GWA testing.
 
 #### 1. Iterate PRS extraction over the dataset
 
-```{r intro-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r intro-4, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 d2 <- tempfile()
 wspace2 <- file.path(tempdir(),d2)
 if (Sys.which("PRSice_linux") != "") {
@@ -482,7 +482,7 @@ if (Sys.which("PRSice_linux") != "") {
 
 #### 2. Calculate the evaluation metrics that lead to PRS selection
 
-```{r intro-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r intro-5, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 d3 <- tempfile()
 wspace3 <- file.path(tempdir(),d3)
 evalMetrics <- prsSelection(
@@ -511,7 +511,7 @@ evalMetrics <- prsSelection(
 
 #### 3. Based on the metrics, find the best PRS candidates
 
-```{r intro-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r intro-6, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 candidates <- selectPrs(
     metrics=evalMetrics$metrics,
     snpSelection=evalMetrics$pgs,
@@ -532,7 +532,7 @@ runs the `prisma` wrapper making sure that any crashes are resumed (up to 10
 times by default), followed by cross-validation for the PRS candidates, lookup
 in the EBI GWAS Catalog and the creation of an HTML report.
 
-```{r intro-7, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r intro-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 outPath <- file.path(tempdir(),tempfile())
 d4 <- tempfile()
 wspace4 <- file.path(outPath,d4)
@@ -560,7 +560,7 @@ prismaPipeline(
 )
 ```
 
-### R session info
+# R session info
 
 ```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 sessionInfo()

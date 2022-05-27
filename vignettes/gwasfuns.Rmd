@@ -1,0 +1,419 @@
+---
+title: "Single trait association tests and summary statistics"
+author: "Panagiotis Moulos"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Single trait association tests and summary statistics}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Introduction
+
+As a one-stop shop solution for the derivation of stable PRSs, PRISMA offers
+several methods to derive GWAS summary statistics. These summary statistics are
+then used to feed the PRS extraction process which is evaluated and reported in
+the end. The user is then able to select the best PRS or the PRS with combines
+relevant SNP content, reasonable number of SNPs and best evaluation metrics. The
+p-values of multiple tests can also be combined using one of the available
+p-value combination methods. See also the `gwa()` man page for details on the
+p-value combination.
+
+PRISMA supports five methods for estimating SNP effects for single-trait 
+associations. More specifically:
+
+1. General Linear Models (GLM): Each SNP is regressed against the phenotype and
+the selected covariates. An additive SNP effect model is assumed.
+2. Ridge regression through the R package 
+[rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/index.html). This 
+package deploys penalized regression for shrinking the effects of less 
+informative SNPs in relation with the phenotype.
+3. Single-trait association tests with the 
+[statgenGWAS](https://biometris.github.io/statgenGWAS/) R package. The 
+association is based on linear regression and the incorporation of an internally
+calculated kinship matrix.
+4. Frequentist association tests with 
+[SNPTEST](https://www.well.ox.ac.uk/~gav/snptest/) (Oxford). Each SNP is 
+regressed against the phenotype and the selected covariates using an additive 
+model (all other SNPTEST options are also supported).
+5. Association tests with [PLINK](https://www.cog-genomics.org/plink/) (linear 
+regression with covariates or simple X<sup>2</sup> association tests if no
+covariates are present).
+
+The SNP effects (regression coefficients and/or Odd Ratios) and p-values are 
+reported in the end and registered to the related slots of the input
+`GWASExperiment` object. A `GWASExperiment` object can hold multiple results for
+the same genotypic/phenotypic data living in the object, as long as they are not
+the same models, i.e. a model with 2 PCs as covariates is different from a model
+with no PC covariates.
+
+In the examples below we use the toy dataset included with PRISMA. For this
+reason we do not perform additional prior filtering although in a typical
+situation, genotypes should be filtered prior to any GWA testing. The main 
+function for GWA testing is the `gwa()` function which attaches the results to
+the `GWASExperiment` object. Each GWA function (e.g. `gwaGlm`) can be used
+independently but it returns only a matrix of summary statistics. The following
+sections illustrate their usage.
+
+```{r gwa-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=FALSE, warning=FALSE}
+library(prisma)
+```
+
+## Summary statistics with GLM
+
+We test each SNP in the toy dataset for association with the main phenotype 
+(BMI) given age, sex and case/control status, along with 1 PC. Below, we run
+GLM independently just to get summary statistics without attaching to the
+`toy` object. 
+
+```{r glm-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+glmSumstat <- gwaGlm(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE)
+```
+
+The contents of the `glmSumstat` matrix:
+
+```{r glm-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(glmSumstat)
+```
+
+Now attach such results to the `toy` object with and without PCs
+
+```{r glm-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+# With 1 PC
+toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),
+    pcs=TRUE,psig=0.05,methods=c("glm"))
+    
+# With no PCs
+toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),
+    pcs=FALSE,psig=0.05,methods=c("glm"))
+    
+# With 1 PCs and one more covariate
+toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
+    pcs=FALSE,psig=0.05,methods=c("glm"))
+```
+
+Change the phenotype to `Case_Control`. Now, GLM will run in binomial regression
+mode as the `Case_Control` phenotype is binary.
+
+```{r glm-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+# With 1 PC
+toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+    pcs=TRUE,psig=0.05,methods=c("glm"))
+    
+# With no PCs
+toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+    pcs=FALSE,psig=0.05,methods=c("glm"))
+```
+
+Now, use the `listGwa()` function to see what test results are attached to the
+`toy` object:
+
+```{r glm-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+listGwa(toy)
+```
+
+In the following examples that illustrate other GWA methods, we will run a 
+smaller number of command except the section where running more than one
+algorithm is illustrated.
+
+## Summary statistics with rrBLUP
+
+We test each SNP in the toy dataset for association with the main phenotype 
+(BMI) given age, sex and case/control status, along with 1 PC. Below, we run
+rrBLUP independently just to get summary statistics. Please note that rrBLUP
+is **not** suitable for binary or categorical variables. It works only with
+continuous variables.
+
+```{r rrb-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+rrSumstat <- gwaBlup(toy,response="BMI",
+    covariates=c("Age","Gender"),usepc="rrint",npcs=1)
+```
+
+The contents of the `rrSumstat` matrix:
+
+```{r rrb-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(rrSumstat)
+```
+
+Also, rrBLUP without PCs:
+
+```{r rrb-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+rrSumstat <- gwaBlup(toy,response="BMI",covariates=c("Age","Gender"),
+    usepc="none")
+```
+
+## Summary statistics with statgenGWAS
+
+We test each SNP in the toy dataset for association with similar settings as the
+previous examples.
+
+```{r ssg-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+sgSumstat <- gwaStatgen(toy,response="BMI",covariates=c("Age","Gender"),
+    pcs=TRUE)
+```
+
+The contents of the `sgSumstat` matrix:
+
+```{r ssg-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(sgSumstat)
+```
+
+## Summary statistics with SNPTEST
+
+We test each SNP in the toy dataset for association with similar settings as the
+previous examples.
+
+```{r snp-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+if (Sys.which("snptest") != "")
+    snpSumstat <- gwaSnptest(toy,response="BMI",covariates=c("Age","Gender"),
+        pcs=TRUE)
+else
+    snpSumstat <- matrix()
+```
+
+The contents of the `snpSumstat` matrix:
+
+```{r snp-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(snpSumstat)
+```
+
+SNPTEST with a dominant effect model and adding `Case_Control` as covariate:
+
+```{r snp-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+if (Sys.which("snptest") != "")
+    snpSumstat <- gwaSnptest(toy,response="BMI",
+        covariates=c("Age","Gender","Case_Control"),pcs=TRUE)
+else
+    snpSumstat <- matrix()
+```
+
+SNPTEST with `Case_Control` as the phenotype. In this case we must convert the
+`Case_Control` values from `1` and `2` to `0` and `1` as SNPTEST complains...
+
+```{r snp-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- phenotypes(toy)
+p$Case_Control2 <- p$Case_Control
+p$Case_Control[p$Case_Control==1] <- 0
+p$Case_Control[p$Case_Control==2] <- 1
+phenotypes(toy) <- p
+
+if (Sys.which("snptest") != "")
+    snpSumstat <- gwaSnptest(toy,response="Case_Control2",
+        covariates=c("Age","Gender","BMI"),pcs=TRUE)
+else
+    snpSumstat <- matrix()
+```
+
+## Summary statistics with PLINK
+
+We test each SNP in the toy dataset for association with similar settings as the
+previous examples.
+
+```{r pli-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+if (Sys.which("plink") != "")
+    plSumstat <- gwaPlink(toy,response="BMI",covariates=c("Age","Gender"),
+        pcs=TRUE)
+else
+    plSumstat <- matrix()
+```
+
+The contents of the `plSumstat` matrix:
+
+```{r pli-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(plSumstat)
+```
+
+PLINK with `Case_Control` as covariate:
+
+```{r pli-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+if (Sys.which("plink") != "")
+    plSumstat <- gwaPlink(toy,response="Case_Control",
+        covariates=c("Age","Gender","BMI"),pcs=TRUE)
+```
+
+## Summary statistics with more than one test
+
+Here we demonstrate the usage of the `gwa()` function which wraps over many
+tests for summary statistic acquisition and regsiters the results in the 
+respective `GWASExperiment` slots. We test each SNP in the toy dataset for 
+association with the main phenotype (BMI) given age, sex and case/control 
+status, along with 1 PC. We also try additional associations with several tests
+and register them to the toy dataset. 
+
+```{r gwa-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Only 1 PC will be returned because of dataset size
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+if (Sys.which("snptest") != "")
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
+        psig=0.05,methods=c("glm","statgen","snptest"))
+else
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
+        psig=0.05,methods=c("glm","statgen"))
+```
+
+Additional models without PCs:
+
+```{r gwa-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+if (Sys.which("snptest") != "")
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
+        psig=0.05,methods=c("glm","statgen","snptest"))
+else
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
+        psig=0.05,methods=c("glm","statgen"))
+```
+
+Let's add `Case_Control` in the covariates:
+
+```{r gwa-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+# With 1 PC
+if (Sys.which("snptest") != "")
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
+        pcs=TRUE,psig=0.05,methods=c("glm","statgen","snptest"))
+else
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
+        pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+
+# With no PCs
+if (Sys.which("snptest") != "")
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
+        pcs=FALSE,psig=0.05,methods=c("glm","statgen","snptest"))
+else
+    toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
+        pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
+```
+
+Change the phenotype to `Case_Control` and change SNPTEST to PLINK.
+
+```{r gwa-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+# With 1 PC
+if (Sys.which("plink") != "")
+    toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+        pcs=TRUE,psig=0.05,methods=c("glm","statgen","plink"))
+else
+    toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+        pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+
+# With no PCs
+if (Sys.which("plink") != "")
+    toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+        pcs=FALSE,psig=0.05,methods=c("glm","statgen","plink"))
+else
+    toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+        pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
+```
+
+Now, use the `listGwa()` function to see what test results are attached to the
+`toy` object:
+
+```{r gwa-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+listGwa(toy)
+```
+
+Let's see the effects and p-values for some of the attached models. Let's start
+with the first one where the phenotype was `BMI` and the covariates were
+`Age` and `Gender` along with 1 PC:
+
+```{r gwa-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- pvalues(toy,response="BMI",covariates=c("Age","Gender"),npcs=1)
+head(p)
+
+e <- effects(toy,response="BMI",covariates=c("Age","Gender"),npcs=1)
+head(e)
+```
+
+You will notice that the is an additional column named `fisher` to the matrix
+of p-values. This represents the combined p-value out of three tests using the
+[Fisher's p-value combination method](https://en.wikipedia.org/wiki/Fisher%27s_method).
+The `e` matrix provides the regression coefficients for each method and SNP.
+These are used later for the calculation of weighted PRSs.
+
+Furthermore, let's access the case where the phenotype was `BMI` and the 
+covariates were `Age`, `Gender` and `Case_Control` with no PCs:
+
+```{r gwa-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- pvalues(toy,response="BMI",covariates=c("Age","Gender","Case_Control"))
+head(p)
+
+e <- effects(toy,response="BMI",covariates=c("Age","Gender","Case_Control"))
+head(e)
+```
+
+Let's also access the case where the phenotype was `BMI` and the covariate was 
+`Age` with no PCs:
+
+```{r gwa-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- pvalues(toy,response="BMI",covariates="Age")
+head(p)
+# NULL
+```
+
+Whops! We never did fit that model...
+
+Finally, let's also see the case where the phenotype was `Case_Control` and the 
+covariates were `Age`, `Gender`, `BMI` with 1 PC:
+
+```{r gwa-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- pvalues(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+    npcs=1)
+head(p)
+
+e <- effects(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
+    npcs=1)
+head(e)
+```
+
+# R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
+```

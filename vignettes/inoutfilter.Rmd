@@ -1,0 +1,383 @@
+---
+title: "Reading, writing and filtering files and objects"
+author: "Panagiotis Moulos"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Reading, writing and filtering files and objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Reading PLINK files to GWASExperiment objects
+
+PRISMA provides facilities to create `GWASExperiment` objects directly from
+PLINK `bed/bim/fam` triplets (not from PED files for the time being) through
+the usage of the `read.plink` function from the package snpStats along with
+other functionalities to attach phenotypes, metadata etc. For example:
+
+```{r io-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=FALSE, warning=FALSE}
+library(prisma)
+```
+
+```{r io-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+library(prisma)
+
+fam <- system.file("extdata/sample.fam",package="snpStats")
+bim <- system.file("extdata/sample.bim",package="snpStats")
+bed <- system.file("extdata/sample.bed",package="snpStats")
+input <- list(fam=fam,bim=bim,bed=bed)
+
+gwe <- importGWAS(input,backend="snpStats")
+gwe
+```
+
+We can also attach a data frame or a file (text-tab delimited) of phenotypes:
+
+```{r io-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+set.seed(42)
+
+fam <- system.file("extdata/sample.fam",package="snpStats")
+bim <- system.file("extdata/sample.bim",package="snpStats")
+bed <- system.file("extdata/sample.bed",package="snpStats")
+input <- list(fam=fam,bim=bim,bed=bed)
+sample <- snpStats::read.plink(input$bed,input$bim,input$fam)
+
+pseudopheno <- data.frame(
+    case_control=sample(c(0,1),nrow(sample$fam),replace=TRUE),
+    other_pheno=sample(c("drug","nodrug"),nrow(sample$fam),replace=TRUE),
+    cont=round(runif(nrow(sample$fam)),3),
+    row.names=rownames(sample$fam)
+)
+
+gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats")
+
+gwe
+```
+
+Other functions of `importGWAS` include the selection of a subset of SNPs to
+import (`selection` argument), whether or not to reverse alleles (`alleleOrder`
+argument, useful some times although it generally should be left to the default)
+and whether a GDS file should be written or not (generally yes, especially if
+you intend to perform further filtering or PCA). For example, if you do not
+intend to do any of the previous and you know that the SNPs locations are mapped
+to the hg19 human genome version:
+
+```{r io-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+library(prisma)
+
+fam <- system.file("extdata/sample.fam",package="snpStats")
+bim <- system.file("extdata/sample.bim",package="snpStats")
+bed <- system.file("extdata/sample.bed",package="snpStats")
+input <- list(fam=fam,bim=bim,bed=bed)
+
+gwe <- importGWAS(input,backend="snpStats",writeGds=FALSE,genome="hg19")
+gwe
+```
+
+# Exporting GWASExperiment objects to PLINK files
+
+PRISMA also provides facilities to export `GWASExperiment` objects to PLINK
+`bed/bim/fam` triplets (not PED files for the time being) through the usage of 
+the `write.plink` function from the package snpStats along with other 
+functionalities to attach phenotypes, metadata etc. and potentially split the
+output per chromosome. For example, the following will write one temporary PLINK 
+binary triplet for the toy data included with the package, with the `"BMI"`
+included phenotype as the registered phenotype in the PLINK FAM file:
+
+```{r io-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+out <- tempfile()
+writePlink(toy,pheno="BMI",outBase=out)
+```
+
+The following will write a binary  PLINK files triplet, without registering a
+phenotype and splitting per chromosome:
+
+```{r io-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+out <- tempfile()
+writePlink(toy,outBase=out,perChr=TRUE)
+```
+
+The `writePlink` function also offers a SNP "salvation" mode (using the 
+`salvage=TRUE` argument). Sometimes, PLINK files may be imported to PRISMA for
+further processing and calculations. It may occur that some SNPs in these files
+have missing location/position data, which will result in their exclusion from
+the output files. In this mode, `writePlink` connects to Ensembl through the R
+package biomaRt and tries to identify chromosomal coordinates for these SNPs.
+
+# Other I/O and coversion tools
+
+PRISMA implements additional file conversion and output functions. Specifically:
+
+## Write GDS files
+
+The `writeGdsFile` function can be used for writing GDS files from 
+`GWASExperiment` objects:
+
+```{r io-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsf <- tempfile()
+writeGdsFile(toy,gdsfile=gdsf)
+```
+
+The `GWASExperiment2GDS` function operates similarly but it uses the `gdsfile`
+accessor to get the object's GDS file and throws an error if it is not defined.
+
+## Converters and utilities
+
+The `GWASExperiment2gData()` function converts a `GWASExperiment` object to the
+`gData` class used by the functions in the package statgenGWAS, making sure that
+the phenotypes and covariates follow the rules of the `gData` class:
+
+```{r io-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gd <- GWASExperiment2gData(toy)
+# Warnings may be produced if some covariates do not follow the rules of the
+# gData class.
+```
+
+The `GWASExperimentLiftOver` converts the SNP positions between the human genome
+versions `hg19` and `hg38`. SNPs which fail to map are dropped with a 
+notification:
+
+```{r io-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+toy38 <- GWASExperimentLiftOver(toy,from="hg19",to"hg38")
+```
+
+If the human genome version is not known a priori, the 
+`guessHumanGenomeVersion()` can be used to "guess" the human genome version by
+querying 5 random SNPs using the `ncbi_snp_query()` function from the package
+rsnps. Please note that if your overall data/experiment/study depends on SNP
+locations, only human hg19 and hg38 versions are currently supported by PRISMA.
+
+# Filtering GWASExperiment objects
+
+As PRISMA is intended to be a one-stop shop for PRS extraction, it also includes
+basic (or not-so-basic) functionalities for treating genotype data prior to GWA
+testing. These functionalities include genotype filtering based on sample and
+SNP properties as well as missing data imputation (the topic of another 
+vignette). Therefore, PRISMA support several filters which follow the best
+practices according to the related literature. More specifically, the PRISMA
+filters follow losely 
+[this](https://onlinelibrary.wiley.com/doi/10.1002/sim.6605) publication which
+is also a tutorial on preprocessing genotype data with R.
+
+The function that implements the filters in PRISMA is `filterGWAS()` and the
+filters to be performed are provided as a list of filter parameters through the
+`filters` argument. The following sections describe the supported filters.
+
+```{r fil-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts <- getDefaults("filters")
+```
+
+## SNP filters
+
+The following SNP filters are supported (percentages are provided as fractions,
+i.e. a value between 0 and 1):
+
+* SNP Call Rate: The call rate for a given SNP is defined as the proportion of
+samples for which the corresponding genotype is not missing. A typical value is
+95%, meaning SNPs for which there is less than 5% missing data are retained. 
+This could be smaller for datasets with fewer samples. The default value in
+PRISMA is 0.98 (`snpCallRate=0.98`).
+
+```{r fil-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$snpCallRate
+```
+
+* Minor Allele Frequency (MAF): Very often and especially in studies with small
+samples, genotypes for many markers exhibit a large degree of homogeneity (an
+extreme example of this could be an isolated population). This results in  inadequate power to infer a statistically significant relationship between the 
+SNP and the trait under study. This translates to very low MAFs so that the 
+large majority of samples have two copies of the major allele. A typical 
+strategy is to remove SNPs with MAF < 1%. In smaller datasets, a loser cutoff
+may be applied (5%). The default value in PRISMA is 0.05 (`maf=0.05`).
+
+```{r fil-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$maf
+```
+
+* Hardy-Weinberg equilibrium (HWE): The Hardy-Weinberg equilibrium is a 
+principle stating that the genetic variation in a population will remain 
+constant from one generation to the next in the absence of disturbing factors.
+Violations of HWE can be an indication of the presence of population 
+substructure or the occurrence of a genotyping error. A common strategy is to
+assume a genotyping error and remove SNPs for which HWE is violated. Violations
+from HWE are generally measured at a given SNP using a $\chi^{2}$ 
+goodness-of-fit test between the observed and expected genotypes. SNPs 
+presenting a p-value < 10<sup>−6</sup> are typically removed. This value could
+be even smaller for smaller datasets. The default value in PRISMA is 
+1 x 10<sup>−6</sup> (`hwe=1e-6`).
+
+```{r fil-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$hwe
+```
+
+* Linkage Disequilibrium (LD): Linkage disequilibrium is the nonrandom 
+association of alleles of different loci. In other words (although not the 
+single explanation) LD represents the strong correlation of close or distant
+loci genotypes, leading to strong collinear genptype effects and disturbing the
+downstream GWA testing. In PRISMA, LD is not applied directly (as suggested in
+the related litarature), but is a component of other filters and analyses such
+as PCA. The default cutoff value is 0.2 (`LD=0.2`). SNPs presenting pairwise
+relation with larger values are filtered.
+
+```{r fil-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$LD
+```
+
+## Sample filters
+
+The following sample filters are supported (percentages are provided as 
+fractions, i.e. a value between 0 and 1):
+
+* Sample Call Rate: Similar to the SNP Call Rate, samples with missing genotypes
+across more than a pre-defined percentage of the typed SNPs are excluded. This
+proportion of missingness across SNPs is referred to as the sample call rate. A 
+typical threshold is 95%. That is, individuals who are missing genotype data for
+more than 5% of the typed SNPs are removed. The default value in PRISMA is 0.95
+(`sampleCallRate=0.95`).
+
+```{r fil-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$sampleCallRate
+```
+
+* Heterozygosity: Heterozygosity refers to the presence of each of the two 
+alleles at a given SNP within an individual. This is expected under HWE to occur
+with probability 2 x p x (1 − p), where p is the dominant allele frequency at 
+that SNP (assuming a bi-allelic SNP). Excess heterozygosity across typed SNPs
+within an individual may be an indication of poor sample quality. Heterozygosity
+in PRISMA can be filtered in two ways:
+    - Based on hard cutoff filter (`heteroHard`). Samples with heterozygosity
+    above this value are excluded. The default value is `NA` (not used).
+    - Based on the distribution of heterozygosity. The heterozygosity values of
+    samples are used to create a distibution. Then, `heteroStat` (mean or 
+    median) of this distribution is calculated along with the respective measure
+    of scale (standard deviation or IQR) which is multiplied by a factor 
+    `heteroFac`. Then samples with heterozygosity larger than 
+    `heteroStat + heteroFac*scale` are excluded. The default `heteroStat` in
+    PRISMA is `"median"` and the default `heteroFac` is `3`. 
+
+```{r fil-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$heteroHard
+filts$heteroStat
+filts$heteroFac
+```
+
+* Inbreed coefficient: as with heterozygosity, the Inbreed Coefficient can 
+expose problems with deficient heterozygosity across samples. Inbreeding
+coefficients are defined in terms of the probability of identity in state of 
+different pairs of genes. The probability of identity in state is simply the
+probability that two genes are of identical allelic type. In other words,
+the inbreed coefficient *F* is:
+
+$$|F| = 1 - \frac{O}{E} $$
+
+where *O* is the observed and *E* the expected counts of heterozygous SNPs 
+within an individual. The expected counts for each sample are calculated based 
+on the observed SNPs for that sample.
+The default cutoff in PRISMA is 0.1 (`inbreed`=0.1). Samples with values
+above that are filtered out.
+
+```{r fil-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$inbreed
+```
+
+* Identity By Descent (IBD): IBD refers to the case where two or more 
+individuals/samples have inherited a common DNA segment (icluding also several 
+common SNPs) from a common ancestor without recombination, that is, the segment
+has the same ancestral origin in these individuals. An IBD kinship coefficient 
+of greater than 0.1 may suggest relatedness, duplicates, or sample mixture. The
+default value in PRISMA is 0.1 (`IBD=0.1`). Samples with values greater than 
+this are excluded.
+
+```{r fil-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$IBD
+```
+
+* Principal Component Analysis (PCA): PCA can be used to visualize and classify
+samples into ancestry groups based on their observed genetic makeup. Such a
+genetic or ancestry group could be a simple case/control design. PCA can be
+used to identify outliers within such groups (either sample mixe-up or wrong
+self-reporting or even problematic genotyped samples). PCA in PRISMA is 
+performed on LD-contolled SNPs, as suggested in the related literature and is
+used both for identifying uderlying genetic statification to be used later in
+downstream GWA and PRS extraction, as well as identifying samples that should be
+exluded from this analysis. Furthermore, PRISMA can automatically identify such
+samples (*experimental!*) through the application of robust PCA techniques (R
+package rrcov) which automatically identify outliers. However, such approaches
+should probably be applied to large enough datasets. PRISMA filters outliers 
+based on the `pcaOut` filters parameter (`pcaOut=TRUE`) and this is done by
+performing robust PCA (`pcaRobust` parameter). `pcaRobust` can be one of
+`"hubert"` for the Hubert method or "grid" for the Grid-Seqrch algorith. Please
+see the documentation of the 
+[rrcov](https://cran.r-project.org/web/packages/rrcov/index.html) package.
+Please also **note** that robust PCA, especially with the `"grid"` method can
+take a **lot** of time, so it's probably best to apply it once on a
+`GWASExperiment` object and then continue any analysis with a new object.
+
+```{r fil-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts$pcaOut
+filts$pcaRobust
+```
+
+## Examples
+
+Perorm some basic and lose filtering on the small toy dataset:
+
+```{r fil-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma",
+    "extdata","toy.gds")
+
+# Lose filters for the toy dataset
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- FALSE
+filts$inbreed <- NA
+
+toyF <- filterGWAS(toy,filters=filts,imputeMissing=FALSE)
+```
+
+Check the filtering status using the `filterRecord()` accessor:
+
+```{r fil-12, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filterRecord(toyF)
+```
+
+Add robust PCA to the filters and enable inbreed coefficient:
+
+```{r fil-13, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- TRUE
+filts$pcaRobust <- "hubert"
+
+toyF <- filterGWAS(toy,filters=filts,imputeMissing=FALSE)
+```
+
+Inspect the outcome:
+
+```{r fil-14, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+filterRecord(toyF)
+```
+
+# R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
+```

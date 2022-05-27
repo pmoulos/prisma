@@ -15,7 +15,7 @@ getDefaults <- function(what) {
                 heteroStat="median",
                 heteroFac=3,
                 heteroHard=NA,
-                pcaOut=TRUE,
+                pcaOut=FALSE,
                 pcaRobust="hubert",
                 nPC=NA,
                 LD=0.2,

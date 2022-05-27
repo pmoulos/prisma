@@ -104,7 +104,8 @@
                     loc - sampleSum$Heterozygosity > filters$heteroFac*sca
         }
         else
-            filteredHetero <- sampleSum$Heterozygosity < filters$heteroHard
+            #filteredHetero <- sampleSum$Heterozygosity < filters$heteroHard
+            filteredHetero <- sampleSum$Heterozygosity > filters$heteroHard
     }
     
     # Sample filters: inbreeding coefficient

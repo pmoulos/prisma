@@ -113,7 +113,7 @@ mentioned in the respective man page.
 
 The following figure summarizes the `GWASExperiment` object structure:
 
-```{r img-0, out.width = "480px"}
+```{r img-0, echo=FALSE, out.width = "600px"}
 knitr::include_graphics("gwasexperiment.png")
 ```
 
@@ -126,13 +126,13 @@ objects including their creation and function.
 library(prisma)
 ```
 
-#### GWASExperiment from simulated data
+### GWASExperiment from simulated data
 
 We create some simulated data with 100 SNPs, 10 samples and 10 causative SNPs 
 for speed and simplicity. We also add pseudo-effects and pseudo-pvalues from two
 virtual GWA tests to demonstrate the slots of the object. The genome is unknown.
 
-```{r gwe-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r gwe-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 dat1 <- makeSimData(nsnp=100,nsam=10,nphe=3,csnp=10)
 
 # Simple GWASExperiment object
@@ -172,7 +172,7 @@ gwe1
 We create an additional simulated dataset to demonstrate joining and splitting
 operations.
 
-```{r gwe-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r gwe-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # Add SNPs (rbind)
 dat2 <- makeSimData(nsnp=100,nsam=10,nphe=3,csnp=10)
 rownames(dat2$snp) <- rownames(dat2$feature) <- 
@@ -218,11 +218,11 @@ but they can be recalculated.
 adjust accordingly.
 * The genome versions of the combining objects must be identical.
 
-#### GWASExperiment from PLINK files
+### GWASExperiment from PLINK files
 
 We use the example files shipping with the `snpStats` package:
 
-```{r gwe-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r gwe-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 fam <- system.file("extdata/sample.fam",package="snpStats")
 bim <- system.file("extdata/sample.bim",package="snpStats")
 bed <- system.file("extdata/sample.bed",package="snpStats")
@@ -231,7 +231,7 @@ input <- list(fam=fam,bim=bim,bed=bed)
 
 Without phenotypes:
 
-```{r gwe-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r gwe-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 gwe <- importGWAS(input,backend="snpStats")
 
 gwe
@@ -239,7 +239,7 @@ gwe
     
 With phenotypes
 
-```{r gwe-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r gwe-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 set.seed(42)
 
 fam <- system.file("extdata/sample.fam",package="snpStats")
@@ -259,7 +259,7 @@ gwe <- importGWAS(input,phenos=pseudopheno,backend="snpStats")
 gwe
 ```
 
-### R session info
+# R session info
 
 ```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 sessionInfo()

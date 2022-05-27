@@ -268,9 +268,13 @@ tools should not be moved otherwise PRISMA will *not* be able to find them. The
 user will be prompted to accept the installation path. The download wrapper
 downloads, installs and tests the tools.
 
+```{r inst-0, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+library(prisma)
+```
+
 ### Installation of all tools
 
-```
+```{r inst-1, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadExternalTools()
 ```
 
@@ -280,7 +284,7 @@ downloadExternalTools()
 
 We assume version 2.5.4 for Ubuntu:
 
-```
+```{r inst-2, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadSnptest(ver="v2.5.4")
 ```
 
@@ -288,7 +292,7 @@ downloadSnptest(ver="v2.5.4")
 
 We assume version 1.90 for 64-bit Linux:
 
-```
+```{r inst-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadPlink(ver="v1.90")
 # or just
 # downloadPlink()
@@ -300,7 +304,7 @@ downloadPlink(ver="v1.90")
 
 We assume version 2.3.5 for 64-bit Linux:
 
-```
+```{r inst-4, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadPrsice(ver="v2.3.5")
 # or just
 # downloadPrsice()
@@ -312,7 +316,7 @@ downloadPrsice(ver="v2.3.5")
 
 We assume version 2.3.2 for Linux:
 
-```
+```{r inst-5, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadImpute2(ver="v2.3.2")
 # or just
 # downloadImpute2()
@@ -322,7 +326,7 @@ downloadImpute2(ver="v2.3.2")
 
 We assume version 0.7.5 for Linux:
 
-```
+```{r inst-6, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadGtool(ver="v0.7.5")
 # or just
 # downloadGtool()
@@ -335,7 +339,7 @@ older versions, either download version 2.0.8 or GTOOL only should be enough.
 PRISMA uses QCTOOL and GTOOL to convert PED files to the GEN format and on later
 Linux systems, for some reason GTOOL fails (they are both older tools!)
 
-```
+```{r inst-7, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 downloadQctool(ver="v2.2.0")
 # or just
 # downloadQctool()
@@ -347,7 +351,7 @@ This could take some time. Also, the path to the reference is not stored
 somewhere within PRISMA and should be provided every time the `extendGWAS`
 function is used.
 
-```
+```{r inst-8, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 dir.create("TOOLS_HOME/impute_reference")
 download1000GP3("TOOLS_HOME/impute_reference")
 ```
@@ -360,7 +364,7 @@ The path to the reference file is then
 Prior to each build and release, we perform extensive tests shipping with the
 package. If you wish to run these tests (can take some time) then:
 
-```
+```{r inst-9, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 library(testthat)
 test_package("prisma")
 ```
