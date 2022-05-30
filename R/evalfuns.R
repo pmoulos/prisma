@@ -410,7 +410,7 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     return(c(
         reduced_r2=redR2,
         full_r2=fullR2,
-        prs_r2=abs(fullR2-redR2),
+        prs_r2=fullR2-redR2,
         prs_pvalue=P,
         reduced_rmse=redRmse,
         full_rmse=fullRmse,
@@ -788,7 +788,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     # Construct final metrics matrix
     metrics <- as.data.frame(do.call("rbind",metricsList))
     metrics$reduced_r2 <- rep(redR2,nrow(metrics))
-    metrics$prs_r2 <- metrics$full_r2 - metrics$reduced_r2
+    metrics$prs_r2 <- abs(metrics$full_r2 - metrics$reduced_r2)
     metrics$reduced_pvalue <- rep(redP,nrow(metrics))
     metrics$reduced_aic <- rep(redModel$aic,nrow(metrics))
     metrics$prs_aic <- metrics$full_aic - metrics$reduced_aic
