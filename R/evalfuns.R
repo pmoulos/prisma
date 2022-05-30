@@ -374,14 +374,17 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     fullModel <- summary(fullFit)
     
     # - R^2 of the reduced model
-    redR2 <- 1 - redModel$deviance/redModel$null.deviance
+    redR2 <- abs(1 - redModel$deviance/redModel$null.deviance)
     
     # - R^2 of the full model
-    fullR2 <- 1 - fullModel$deviance/fullModel$null.deviance
+    fullR2 <- abs(1 - fullModel$deviance/fullModel$null.deviance)
     
     # - p-value of the reduced against the full (F test)
     tmp <- anova(redFit,fullFit,test="F")
     P <- tmp[["Pr(>F)"]][2]
+    # NA p-value? Something bad happens, non-siginifican anyways...
+    if (any(is.na(P)))
+        P[is.na(P)] <- 1
     
     # Now predictions (response, covariates were validated before)
     pp <- phenotypes(test)

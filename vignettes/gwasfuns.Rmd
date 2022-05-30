@@ -73,8 +73,7 @@ GLM independently just to get summary statistics without attaching to the
 ```{r glm-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
@@ -139,8 +138,7 @@ continuous variables.
 ```{r rrb-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
@@ -170,8 +168,7 @@ previous examples.
 ```{r ssg-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
@@ -194,8 +191,7 @@ previous examples.
 ```{r snp-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
@@ -248,8 +244,7 @@ previous examples.
 ```{r pli-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
@@ -287,8 +282,7 @@ and register them to the toy dataset.
 ```{r gwa-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-gdsfile(toy) <- system.file(package="prisma",
-    "extdata","toy.gds")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))

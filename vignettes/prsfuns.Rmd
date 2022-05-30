@@ -12,3 +12,216 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+# Introduction
+
+The main purpose of PRISMA development was to provide an efficient wrapper that
+would integrate the several steps required for the derivation of PRSs, from the
+derivation of summary statistics in an iterative fashion for smaller datsets, up
+to the actual extraction and evaluation of PRS, all in an iterative and 
+stabilizing way. After the derivation of the summary statistics, this step 
+concerns the actual PRS extraction from the genotypes and summary statistics,
+for a queried phenotype and covariates. The user can perform PRS analysis with
+the available algorithms supported by PRISMA and gather the output data in
+easily interpretable formats, which can be used for PRS evaluation.
+
+PRISMA currently supports two methods for extracting PRSs. More specifically:
+
+1. [PRSice2](https://www.prsice.info/), which operates based on the PLINK 
+framework and automates a PRS extraction process based on clumping and 
+thresholding followed by weighted PRS construction and evaluation with linear 
+regression.
+2. [lassosum](https://github.com/tshmak/lassosum), which utilizes penalized 
+(LASSO) regression to shrink the effects of  less informative variants without 
+completely removing them from the PRS.
+
+In the examples below we use the toy dataset included with PRISMA. For this
+reason we do not perform additional prior filtering although in a typical
+situation, genotypes should be filtered prior to any GWA testing and subsequent
+PRS analysis. The main function for PRS extraction is testing is the `runPRS()` 
+function which attaches the results to the `GWASExperiment` object. Each PRS 
+extraction function (e.g. `prsicePRS()`) can be used independently but it 
+returns only a data frame with the SNPs in the PRS of a single run. The 
+following sections illustrate their usage.
+
+```{r prs-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=FALSE, warning=FALSE}
+library(prisma)
+```
+
+## PRS analysis with lassosum
+
+The toy dataset is split in two parts, one for *training*, that is derivation of
+summary statistics, and one for *testing*, that is extraction of PRS. We are
+using 80% of samples for training (`base`) and 20% for testing (`target`).
+Theoretically, one can use the whole dataset for training and testing but this
+could lead to extreme overfitting and PRSs of poor predictive value. We test 
+each SNP in the toy dataset for association with the main phenotype 
+(BMI) given age, sex and case/control status, along with 1 PC using GLM and
+statgenGWAS. Then PRS extraction analysis follows. The output of summary 
+statistics and the outcome of PRS analysis is registered to the `GWASExperiment`
+object.
+
+Let's load the data and partition the dataset and perform PCA. The training and
+test sets should have the same number of PCs indicating any underlying 
+population stratification in both datasets:
+
+```{r prs-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
+
+tt <- partitionGWAS(toy,by="BMI",out="ttboth")
+base <- tt$train
+target <- tt$test
+base <- suppressWarnings(calcPcaCovar(base,method="snprel"))
+target <- suppressWarnings(calcPcaCovar(target,method="snprel",npc=1))
+```
+
+Now, summary statistics
+
+```{r prs-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+
+# With 1 PC
+base <- gwa(base,response="BMI",covariates=c("Age","Gender"),
+    pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+
+# With no PCs
+base <- gwa(base,response="BMI",covariates=c("Age","Gender"),
+    pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
+    
+# With 1 PCs and one more covariate
+base <- gwa(base,response="BMI",covariates=c("Age","Gender","Case_Control"),
+    pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+```
+
+Verify that we have three different models:
+
+```{r prs-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+listGwa(base)
+```
+
+Derivation of lassosum PRS for the three models:
+
+```{r prs-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+lassoPrs1 <- lassosumPRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender"),pcs=TRUE)
+
+lassoPrs2 <- lassosumPRS(base=base,target=target,response="BMI",
+    covariates=c("Age","Gender"),pcs=FALSE)
+        
+lassoPrs3 <- lassosumPRS(base=base,target=target,response="BMI",
+    covariates=c("Age","Gender","Case_Control"),pcs=TRUE)
+```
+
+Peak at the contents of the lassosum PRS:
+
+```{r prs-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(lassoPrs1)
+
+head(lassoPrs3)
+```
+
+## PRS analysis with PRSice2
+
+We assume the same dataset split and the same summary statistics, calculated
+once:
+
+```{r prs-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+if (.Platform$OS.type == "unix" && !grepl("^darwin",R.version$os) 
+    && Sys.which("PRSice_linux") != "") {
+    prsicePrs1 <- prsicePRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender"),pcs=TRUE,perm=100)
+
+    prsicePrs2 <- prsicePRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender"),pcs=FALSE,perm=100)
+            
+    prsicePrs3 <- prsicePRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender","Case_Control"),pcs=TRUE,perm=100)
+}
+
+```
+
+Peak at the contents of the lassosum PRS:
+
+```{r prs-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+head(prsicePrs1)
+
+head(prsicePrs3)
+```
+
+## PRS analysis with more than one algorithm
+
+Here we demonstrate the usage of the `runPRS()` function which wraps over more
+than one PRS extraction algorithm and regsiters the results (which SNPs 
+participate and their effects) in the respective `GWASExperiment` slot 
+(`prsbetas`).
+
+ ```{r prs-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+if (.Platform$OS.type == "unix" && !grepl("^darwin",R.version$os) 
+    && Sys.which("PRSice_linux") != "") {
+    prsiceOpts <- getDefaults("prsice")
+    prsiceOpts$perm <- 100
+    
+    target <- runPRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender"),pcs=TRUE,prsiceOpts=prsiceOpts)
+    
+    target <- runPRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender"),pcs=FALSE,prsiceOpts=prsiceOpts)
+        
+    target <- runPRS(base=base,target=target,response="BMI",
+        covariates=c("Age","Gender","Case_Control"),pcs=TRUE,
+        prsiceOpts=prsiceOpts)
+}
+```
+
+Now, use the `listPrs()` function to see what PRS extraction results are 
+attached to the `target` object:
+
+```{r prs-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+listPrs(target)
+```
+
+Let's see the prsbetas and p-values for some of the extracted PRSs. Let's start
+with the first one where the phenotype was `BMI` and the covariates were
+`Age` and `Gender` along with 1 PC:
+
+```{r prs-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- prsbetas(target,response="BMI",covariates=c("Age","Gender"),npcs=1)
+head(p)
+```
+
+Or another model:
+
+```{r prs-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+p <- prsbetas(target,response="BMI",covariates=c("Age","Gender",
+    "Case_Control"),npcs=1)
+head(p)
+```
+
+It is possible of course to use the total dataset for PRS analysis with a lot
+of overfit:
+
+```{r prs-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
+toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
+
+toy <- gwa(base,response="BMI",covariates=c("Age","Gender","Case_Control"),
+    pcs=TRUE,psig=0.05,methods="statgen")
+
+if (.Platform$OS.type == "unix" && !grepl("^darwin",R.version$os) 
+    && Sys.which("PRSice_linux") != "") {
+    prsiceOpts <- getDefaults("prsice")
+    prsiceOpts$perm <- 100
+    
+    toy <- runPRS(base=toy,response="BMI",covariates=c("Age","Gender",
+        "Case_Control"),pcs=TRUE,prsiceOpts=prsiceOpts) 
+}
+
+You will notice the larger R<sup>2</sup> values in the outputs.
+
+# R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
+```
