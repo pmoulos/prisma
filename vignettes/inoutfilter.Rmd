@@ -152,7 +152,7 @@ notification:
 ```{r io-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
-toy38 <- GWASExperimentLiftOver(toy,from="hg19",to"hg38")
+toy38 <- GWASExperimentLiftOver(toy,from="hg19",to="hg38")
 ```
 
 If the human genome version is not known a priori, the 

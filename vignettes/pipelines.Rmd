@@ -248,7 +248,7 @@ out <- prsPipeline(
 This time out is a list of data frames with the collected evaluation metrics.
 These are described in detail in the respective man pages.
 
-```{r pip-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 m <- do.call("rbind",out)
 
 m
@@ -267,7 +267,7 @@ process. It is controlled by the lack of the `useDenovoWorkspace` argument or
 of data frames with attributes as above.
 
 
-```{r pip-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 snpSelection <- snpSummary[snpSummary$freq>1,]
 
 d4 <- tempfile()
@@ -313,7 +313,7 @@ function is responsible for the following:
 2. For each set created at (1), run an evaluation pipeline and collect 
 evaluation metrics in a format proper for downstream analysis.
 
-```{r pip-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 d5 <- tempfile()
 wspace5 <- file.path(tempdir(),d5)
 
@@ -343,7 +343,7 @@ evalMetrics <- prsSelection(
 `evalMetrics` is a list with contents used by the subsequent `selectPrs()`
 function:
 
-```{r pip-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 candidates <- selectPrs(
     metrics=evalMetrics$metrics,
     snpSelection=evalMetrics$pgs,
@@ -354,7 +354,7 @@ candidates <- selectPrs(
 
 The `candidates` variable is a list of candidate PRSs.
 
-```{r pip-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 head(candidates[[1]])
 ```
 
@@ -364,7 +364,7 @@ The aforementioned processes can be executed with the `prisma()` function. This
 will output a list object with the PRS candidates and evaluatiom metrics which
 is then fed to cross-validation, lookup and reporting procedures.
 
-```{r pip-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-12, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # Workspace
 d6 <- tempfile()
 wspace6 <- file.path(tempdir(),d6)
@@ -400,7 +400,7 @@ After the completion of the PRISMA pipeline, we are using the total dataset to
 evaluate the candidates. We also lookup for the SNP content in GWAS Catalog and
 finally report the results in an HTML report.
 
-```{r pip-12, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-13, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 cvMetrics <- prismaCrossValidate(
     prismaOut=prismaOut,
     gwe=toy,
@@ -415,7 +415,7 @@ cvMetrics <- prismaCrossValidate(
 `cvMetrics` is a list of validation metrics used with the reporting function.
 You may inspect it but it has not great meaning outside the report.
 
-```{r pip-13, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-14, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 lookup <- prismaLookup(prismaOut)
 ```
    
@@ -424,7 +424,7 @@ content of the PRS candidates and potential associated traits.
 
 Finally, create the report:
 
-```{r pip-13, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r pip-15, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 prismaReport(toy,prismaOut,cvMetrics,lookup)
 ```
 
@@ -435,7 +435,7 @@ function wraps the `prisma()` call, the calculation of evaluation and
 cross-validation metrics, the lookup and report. The report will be written in
 `outPath`.
 
-```{r pip-14, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r pip-16, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 outPath <- file.path(tempdir(),tempfile())
 d7 <- tempfile()
 wspace7 <- file.path(outPath,d7)

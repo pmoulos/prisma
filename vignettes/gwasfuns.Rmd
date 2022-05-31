@@ -196,11 +196,12 @@ gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
 
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     snpSumstat <- gwaSnptest(toy,response="BMI",covariates=c("Age","Gender"),
         pcs=TRUE)
-else
+} else {
     snpSumstat <- matrix()
+}
 ```
 
 The contents of the `snpSumstat` matrix:

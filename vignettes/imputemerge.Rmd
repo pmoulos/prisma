@@ -165,7 +165,7 @@ toyEx <- extendGWAS(toy,wspace=wspace,refSpace=refSpace,convTool="qctool",
 
 The following will perform imputation over intervals of 10Mbp (default is 1Mbp):
 
-```{r imp-2, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r imp-4, eval=FALSE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
 data(toy,package="prisma")
 
 refSpace <- "PATH/TO/IMPUTE2/REFERENCE/PANEL"
@@ -222,7 +222,6 @@ The following figure summarizes the imputation modes in PRISMA:
 ```{r img-1, echo=FALSE, out.width = "600px"}
 knitr::include_graphics("merging.png")
 ```
-
 
 ### Common SNPs
     

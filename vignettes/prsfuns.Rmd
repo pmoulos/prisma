@@ -155,7 +155,7 @@ than one PRS extraction algorithm and regsiters the results (which SNPs
 participate and their effects) in the respective `GWASExperiment` slot 
 (`prsbetas`).
 
- ```{r prs-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r prs-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 if (.Platform$OS.type == "unix" && !grepl("^darwin",R.version$os) 
     && Sys.which("PRSice_linux") != "") {
     prsiceOpts <- getDefaults("prsice")
@@ -184,14 +184,14 @@ Let's see the prsbetas and p-values for some of the extracted PRSs. Let's start
 with the first one where the phenotype was `BMI` and the covariates were
 `Age` and `Gender` along with 1 PC:
 
-```{r prs-9, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r prs-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 p <- prsbetas(target,response="BMI",covariates=c("Age","Gender"),npcs=1)
 head(p)
 ```
 
 Or another model:
 
-```{r prs-10, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r prs-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 p <- prsbetas(target,response="BMI",covariates=c("Age","Gender",
     "Case_Control"),npcs=1)
 head(p)
@@ -200,7 +200,7 @@ head(p)
 It is possible of course to use the total dataset for PRS analysis with a lot
 of overfit:
 
-```{r prs-11, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+```{r prs-12, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(toy,package="prisma")
 
 gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
