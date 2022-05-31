@@ -1,0 +1,36 @@
+---
+title: "Evaluation of external PRS"
+author: "Panagiotis Moulos"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Evaluation of external PRS}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Introduction
+
+Although the main PRISMA functionality has to do with *de novo* PRS derivation
+and evaluation, one can easily evaluate an externally derived PRS, for example
+a PRS retrieved from the [EBI PGS Catalog](https://www.pgscatalog.org/). This
+can be done in two ways:
+
+1. Subsetting the `GWASExperiment` according to the SNPs in the retrieved 
+PRS/PGS and running a PRISMA pipeline (`prisma()` or `prismaPipeline()`). This
+is the better way as new effects should be calculated suitable for our 
+population. This pipeline should run quite fast, if the number of SNPs included
+in the external PRS are few.
+2. Provided the retireved PRS directly in the `prsCrossValidate()` function.
+This will take the object as is (with own effects) and return some evaluation
+scores when the PRS is tested with our population and genotypes. The PRS
+retrieval functions included in the package (`getPGSScores()`) will fetch data 
+frames ready for usage with `prsCrossValidate()`. Quality control of the initial
+dataset may or may not be performed.
+
+# Testing an externally retrieved PRS
+
+For the purposes of this vignette we are going to use ... included with the pack
