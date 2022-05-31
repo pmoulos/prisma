@@ -33,4 +33,24 @@ dataset may or may not be performed.
 
 # Testing an externally retrieved PRS
 
-For the purposes of this vignette we are going to use ... included with the pack
+For the purposes of this vignette we are going to use the score file reported
+for [PGS000034](https://www.pgscatalog.org/score/PGS000034/) with *Adult Body
+Mass Index" reported as trait. This score included with the pack
+
+
+
+
+
+base <- file.path(system.file(package="prisma"),"extdata","scores")
+    #base <- "/media/raid/software/prisma/inst/extdata/scores"
+    #base <- "/home/panos/other/prisma/inst/extdata/scores"
+    
+    pgsId <- c("PGS000034","PGS000299")
+    # EFO_0004340 has now too many associated scores
+    #efoId <- c("EFO_0004340","EFO_0007788")
+    efoId <- c("EFO_0007788")
+    pubmedId <- c("29212779","32527150")
+    # 32527150 has now too many associated scores
+    pubmedId <- c("29212779")
+    
+    test1 <- getPGSScores(pgsId=pgsId,base=base)

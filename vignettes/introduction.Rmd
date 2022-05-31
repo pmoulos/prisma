@@ -534,7 +534,7 @@ times by default), followed by cross-validation for the PRS candidates, lookup
 in the EBI GWAS Catalog and the creation of an HTML report.
 
 ```{r intro-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
-outPath <- file.path(tempdir(),tempfile())
+outPath <- tempfile()
 d4 <- tempfile()
 wspace4 <- file.path(outPath,d4)
 

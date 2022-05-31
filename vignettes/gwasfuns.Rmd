@@ -227,8 +227,8 @@ SNPTEST with `Case_Control` as the phenotype. In this case we must convert the
 ```{r snp-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 p <- phenotypes(toy)
 p$Case_Control2 <- p$Case_Control
-p$Case_Control[p$Case_Control==1] <- 0
-p$Case_Control[p$Case_Control==2] <- 1
+p$Case_Control2[p$Case_Control==1] <- 0
+p$Case_Control2[p$Case_Control==2] <- 1
 phenotypes(toy) <- p
 
 if (Sys.which("snptest") != "") {
