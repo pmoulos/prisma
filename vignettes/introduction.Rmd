@@ -538,6 +538,10 @@ outPath <- file.path(tempdir(),tempfile())
 d4 <- tempfile()
 wspace4 <- file.path(outPath,d4)
 
+# Traits
+response <- "BMI"
+covariates <- c("Case_Control","Gender","Age")
+
 prismaPipeline(
     gwe=toy,
     phenotype=response,

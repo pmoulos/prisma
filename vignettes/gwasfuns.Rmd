@@ -213,11 +213,12 @@ head(snpSumstat)
 SNPTEST with a dominant effect model and adding `Case_Control` as covariate:
 
 ```{r snp-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     snpSumstat <- gwaSnptest(toy,response="BMI",
         covariates=c("Age","Gender","Case_Control"),pcs=TRUE)
-else
+} else {
     snpSumstat <- matrix()
+}
 ```
 
 SNPTEST with `Case_Control` as the phenotype. In this case we must convert the
@@ -230,11 +231,12 @@ p$Case_Control[p$Case_Control==1] <- 0
 p$Case_Control[p$Case_Control==2] <- 1
 phenotypes(toy) <- p
 
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     snpSumstat <- gwaSnptest(toy,response="Case_Control2",
         covariates=c("Age","Gender","BMI"),pcs=TRUE)
-else
+} else {
     snpSumstat <- matrix()
+}
 ```
 
 ## Summary statistics with PLINK
@@ -250,11 +252,12 @@ gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
 
-if (Sys.which("plink") != "")
+if (Sys.which("plink") != "") {
     plSumstat <- gwaPlink(toy,response="BMI",covariates=c("Age","Gender"),
         pcs=TRUE)
-else
+} else {
     plSumstat <- matrix()
+}
 ```
 
 The contents of the `plSumstat` matrix:
@@ -266,9 +269,12 @@ head(plSumstat)
 PLINK with `Case_Control` as covariate:
 
 ```{r pli-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
-if (Sys.which("plink") != "")
+if (Sys.which("plink") != "") {
     plSumstat <- gwaPlink(toy,response="Case_Control",
         covariates=c("Age","Gender","BMI"),pcs=TRUE)
+} else {
+    plSumstat <- matrix()
+}
 ```
 
 ## Summary statistics with more than one test
@@ -288,63 +294,72 @@ gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 # Only 1 PC will be returned because of dataset size
 toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
 
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
         psig=0.05,methods=c("glm","statgen","snptest"))
-else
+}
+else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
         psig=0.05,methods=c("glm","statgen"))
+}
 ```
 
 Additional models without PCs:
 
 ```{r gwa-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
         psig=0.05,methods=c("glm","statgen","snptest"))
-else
+}
+else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
         psig=0.05,methods=c("glm","statgen"))
+}
 ```
 
 Let's add `Case_Control` in the covariates:
 
 ```{r gwa-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # With 1 PC
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
         pcs=TRUE,psig=0.05,methods=c("glm","statgen","snptest"))
-else
+} else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
         pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+}
 
 # With no PCs
-if (Sys.which("snptest") != "")
+if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen","snptest"))
-else
+} else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender","Case_Control"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
+}
 ```
 
 Change the phenotype to `Case_Control` and change SNPTEST to PLINK.
 
 ```{r gwa-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 # With 1 PC
-if (Sys.which("plink") != "")
+if (Sys.which("plink") != "") {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=TRUE,psig=0.05,methods=c("glm","statgen","plink"))
-else
+} else {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=TRUE,psig=0.05,methods=c("glm","statgen"))
+}
 
 # With no PCs
-if (Sys.which("plink") != "")
+if (Sys.which("plink") != "") {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen","plink"))
-else
+}
+else {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
+}
 ```
 
 Now, use the `listGwa()` function to see what test results are attached to the

@@ -217,6 +217,7 @@ if (.Platform$OS.type == "unix" && !grepl("^darwin",R.version$os)
     toy <- runPRS(base=toy,response="BMI",covariates=c("Age","Gender",
         "Case_Control"),pcs=TRUE,prsiceOpts=prsiceOpts) 
 }
+```
 
 You will notice the larger R<sup>2</sup> values in the outputs.
 
