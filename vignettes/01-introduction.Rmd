@@ -260,7 +260,6 @@ evaluation is done with native R functions (manual PRS construction outside
 PRSice2 followed by GLM regressions). This is the fastest evaluation pipeline 
 and allows for the collection of many additional metrics.
 
-
 ## PRS selection process
 The final PRS selection out of the several candidates is performed in a two-step 
 semi-automatic process which involves graphical inspection of evaluation plots 

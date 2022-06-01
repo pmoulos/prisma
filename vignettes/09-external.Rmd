@@ -35,11 +35,15 @@ dataset may or may not be performed.
 library(prisma)
 ```
 
+
 # Testing an externally retrieved PRS
 
 For the purposes of this vignette we are going to use the score file reported
 for [PGS000034](https://www.pgscatalog.org/score/PGS000034/) with *Adult Body
-Mass Index* reported as trait. This score included with the package.
+Mass Index* reported as trait. This score included with the package. We have
+also created a smaller toy dataset called `pgd` from the same source as the
+toy dataset but containing the common SNPs between PGS000034 and the source
+data that was used to create the toy dataset.
 
 ```{r ext-1, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 base <- file.path(system.file(package="prisma"),"extdata","scores")
@@ -49,5 +53,68 @@ exPgs <- getPGSScores(pgsId=pgsId,base=base)
 head(exPgs)
 ```
 
-The rest steps are hypothetical, as the toy dataset does not have the same
-SNPs as `exPgs`
+Load the **pgd** dataset and use the common SNPs with `exPgs`. They are already
+the same but we state the commands for demo purposes.
+
+```{r ext-2, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+data(pgd,package="prisma")
+gdsfile(pgd) <- system.file(package="prisma","extdata","pgd.gds")
+
+pgd
+
+exPgs <- exPgs[rownames(pgd),]
+```
+
+Run a PRISMA full pipeline, only with GLM:
+
+```{r ext-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+outPath <- tempfile()
+d1 <- tempfile()
+wspace1 <- file.path(outPath,d1)
+
+# Traits
+response <- "BMI"
+covariates <- c("Case_Control","Gender","Age")
+
+# Lose filters for the toy dataset
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- FALSE
+filts$inbreed <- NA
+
+prismaPipeline(
+    gwe=pgd,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods="glm",
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace1,
+    cleanup="intermediate",
+    logging="file",
+    output="normal",
+    rc=0.25,
+    outPath=outPath
+)
+```
+
+A raw matrix of evaluation metrics:
+
+```{r ext-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+m <- prsCrossValidate(exPgs,pgd,response=response,
+    covariates=covariates,leaveOut=0.2,times=5)
+```
+
+# R session info
+
+```{r session-0, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+sessionInfo()
+```
