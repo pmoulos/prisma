@@ -56,7 +56,7 @@ head(exPgs)
 Load the **pgd** dataset and use the common SNPs with `exPgs`. They are already
 the same but we state the commands for demo purposes.
 
-```{r ext-2, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 data(pgd,package="prisma")
 gdsfile(pgd) <- system.file(package="prisma","extdata","pgd.gds")
 
