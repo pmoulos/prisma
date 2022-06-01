@@ -45,7 +45,7 @@ also created a smaller toy dataset called `pgd` from the same source as the
 toy dataset but containing the common SNPs between PGS000034 and the source
 data that was used to create the toy dataset.
 
-```{r ext-1, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 base <- file.path(system.file(package="prisma"),"extdata","scores")
 pgsId <- "PGS000034"
 exPgs <- getPGSScores(pgsId=pgsId,base=base)
