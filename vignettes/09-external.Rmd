@@ -35,7 +35,6 @@ dataset may or may not be performed.
 library(prisma)
 ```
 
-
 # Testing an externally retrieved PRS
 
 For the purposes of this vignette we are going to use the score file reported
@@ -49,6 +48,7 @@ data that was used to create the toy dataset.
 base <- file.path(system.file(package="prisma"),"extdata","scores")
 pgsId <- "PGS000034"
 exPgs <- getPGSScores(pgsId=pgsId,base=base)
+rownames(exPgs) <- exPgs$variant_id
 
 head(exPgs)
 ```
