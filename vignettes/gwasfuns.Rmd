@@ -297,8 +297,7 @@ toy <- suppressWarnings(calcPcaCovar(toy,method="snprel"))
 if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
         psig=0.05,methods=c("glm","statgen","snptest"))
-}
-else {
+} else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=TRUE,
         psig=0.05,methods=c("glm","statgen"))
 }
@@ -310,8 +309,7 @@ Additional models without PCs:
 if (Sys.which("snptest") != "") {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
         psig=0.05,methods=c("glm","statgen","snptest"))
-}
-else {
+} else {
     toy <- gwa(toy,response="BMI",covariates=c("Age","Gender"),pcs=FALSE,
         psig=0.05,methods=c("glm","statgen"))
 }
@@ -355,8 +353,7 @@ if (Sys.which("plink") != "") {
 if (Sys.which("plink") != "") {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen","plink"))
-}
-else {
+} else {
     toy <- gwa(toy,response="Case_Control",covariates=c("Age","Gender","BMI"),
         pcs=FALSE,psig=0.05,methods=c("glm","statgen"))
 }

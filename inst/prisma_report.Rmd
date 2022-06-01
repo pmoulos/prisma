@@ -122,8 +122,8 @@ nosci <- function(x,d) {
 args <- prismaOut$params$args
 funCall <- prismaOut$params$call
 
-msgs <- .makeReportMessages("en")
-#msgs <- prisma:::.makeReportMessages("en")
+#msgs <- .makeReportMessages("en")
+msgs <- prisma:::.makeReportMessages("en")
 
 theCvMetrics <- list(
     `PRS R<sup>2</sup>`="r2",
