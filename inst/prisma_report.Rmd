@@ -72,6 +72,7 @@ body {
 ```{r knitr_init, echo=FALSE, cache=FALSE}
 library(knitr)
 library(rmdformats)
+library(kableExtra)
 
 # Global options
 options(max.print="75")
