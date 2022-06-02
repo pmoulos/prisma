@@ -56,7 +56,7 @@ selection of the final PRS.
 
 The main PRISMA pipeline is depicted in the following figure:
 
-```{r img-0, echo=FALSE, out.width = "600px"}
+```{r img-0, echo=FALSE, out.width = "800px"}
 knitr::include_graphics("pipeline.png")
 ```
 

@@ -1,5 +1,5 @@
 ---
-title: "Evaluation of external PRS"
+title: "Evaluation of external PRS or external GWAS"
 author: "Panagiotis Moulos"
 date: "`r Sys.Date()`"
 output: 
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Evaluation of external PRS}
+  %\VignetteIndexEntry{Evaluation of external PRS or external GWAS}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -44,7 +44,7 @@ also created a smaller toy dataset called `pgd` from the same source as the
 toy dataset but containing the common SNPs between PGS000034 and the source
 data that was used to create the toy dataset.
 
-```{r ext-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 base <- file.path(system.file(package="prisma"),"extdata","scores")
 pgsId <- "PGS000034"
 exPgs <- getPGSScores(pgsId=pgsId,base=base)
@@ -56,7 +56,7 @@ head(exPgs)
 Load the **pgd** dataset and use the common SNPs with `exPgs`. They are already
 the same but we state the commands for demo purposes.
 
-```{r ext-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 data(pgd,package="prisma")
 gdsfile(pgd) <- system.file(package="prisma","extdata","pgd.gds")
 
@@ -67,7 +67,7 @@ exPgs <- exPgs[rownames(pgd),]
 
 Run a PRISMA full pipeline, only with GLM:
 
-```{r ext-3, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 outPath <- tempfile()
 d1 <- tempfile()
 wspace1 <- file.path(outPath,d1)
@@ -108,9 +108,53 @@ prismaPipeline(
 
 A raw matrix of evaluation metrics:
 
-```{r ext-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
+```{r ext-4, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE, collapse=TRUE}
 m <- prsCrossValidate(exPgs,pgd,response=response,
     covariates=covariates,leaveOut=0.2,times=5)
+```
+
+# Testing a derived PRS with independent genotypic data
+
+Often (actually always) we would like to test our derived PRS candidates to an
+independent population which could share similar characteristics, for example
+living in the same country and having similar origins. Sometimes it is also
+beneficial to test random PRSs with this population to see whether the original
+PRS does indeed have added value and it is not a random effect. The `applyPRS()`
+function can be used to accomplish the aforementioned processes.
+
+In the example below, we do not run the PRS randomization process
+
+```{r ext-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+wspace2 <- tempfile()
+
+prismaOut <- prisma(
+    gwe=toy,
+    phenotype=response,
+    covariates=covariates,
+    pcs=FALSE,
+    trainSize=0.8,
+    niter=4,
+    resolution="frequency",
+    minSnps=2,
+    filters=filts,
+    pcaMethod="snprel",
+    imputeMissing=FALSE,
+    gwaMethods="statgen",
+    prsiceOpts=list(clump_p=0.75,perm=100),
+    prsWorkspace=wspace2,
+    cleanup="intermediate",
+    logging="file",
+    output="normal",
+    rc=0.25
+)
+
+snpSelection <- getPrsCandidates(prismaOut,"statgen",1)
+
+metrics <- applyPRS(snpSelection,gwe,response=response,covariates=covariates)
+
+metrics$metrics
+
+head(metrics$values)
 ```
 
 # R session info

@@ -69,6 +69,7 @@ test_that("Robust sample PCA filtering works",{
     filts <- getDefaults("filters")
     # Do not IBD
     filts$IBD <- NA
+    filts$pcaOut <- TRUE
     
     ## Test PcaGrid
     gweFilt1 <- .filterWithSnpStatsRobustPca(gwe,filts)

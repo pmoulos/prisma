@@ -113,7 +113,7 @@ mentioned in the respective man page.
 
 The following figure summarizes the `GWASExperiment` object structure:
 
-```{r img-0, echo=FALSE, out.width = "600px"}
+```{r img-0, echo=FALSE, out.width = "800px"}
 knitr::include_graphics("gwasexperiment.png")
 ```
 

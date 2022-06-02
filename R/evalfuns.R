@@ -235,7 +235,6 @@ prismaCrossValidate <- function(prismaOut,gwe,response,covariates=NULL,
     return(cvMetrics)
 }
 
-
 prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     pcs=FALSE,leaveOut=0.05,times=10,prsCalc=c("avg","sum","std"),family=NULL,
     rc=NULL,...) {
@@ -270,7 +269,6 @@ prsCrossValidate <- function(snpSelection,gwe,response,covariates=NULL,
     }
     if (family == "binomial")
         p[,response] <- .validateBinaryForBinomial(p[,response])
-    
     
     # Deal with PCs. In this case, as we are later dealing with model
     # predictions, we need to pre-calculate the population structure and include
@@ -795,6 +793,178 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
     
     # data frame with metric
     return(metrics)
+}
+
+applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
+    pcs=FALSE,minSnps=2,prsCalc=c("avg","sum","std"),family=NULL,rc=NULL,...) {
+    prsCalc <- prsCalc[1]
+    .checkTextArgs("PRS calculation type (prsCalc)",prsCalc,
+        c("avg","sum","std"),multiarg=FALSE)
+    
+    # Classic initial checks
+    .canRunGwa(gwe)
+    p <- phenotypes(gwe)
+    chResCov <- .validateResponseAndCovariates(p,response,covariates)
+    response <- chResCov$res
+    covariates <- chResCov$cvs
+    p <- p[,c(response,covariates),drop=FALSE]
+    phenotypes(gwe) <- p
+    
+    # Very first thing! Subse the gwe according to snpSelection content. If
+    # nothing found, stop!
+    if (!identical(rownames(snpSelection),snpSelection$variant_id))
+        rownames(snpSelection) <- snpSelection$variant_id
+    cm <- intersect(rownames(gwe),rownames(snpSelection))
+    if (length(cm) < minSnps)
+        stop("Not enough coverage to the input GWASExperiment object from ",
+            "the SNPs in the input PRS!\nA minimum of ",minSnpsm," is ",
+            "required but ",length(cm)," were found!")
+    if (length(cm) < nrow(snpSelection))
+        disp(nrow(snpSelection) - length(cm)," SNPs were not found in the ",
+            "input GWASExperiment object.\nContinuing with teh rest ",
+            length(cm)," SNPs...")
+    else if (length(cm) == nrow(snpSelection))
+        disp("All input PRS SNPs found in the input object! Proceeding...")
+    
+    # Subset after the checks and continue
+    #gwe <- gwe[cm,,drop=FALSE]
+    snpSelection <- snpSelection[cm,,drop=FALSE]
+    
+    if (!is.null(family)) {
+        family <- family[1]
+        .checkTextArgs("Regression family",family,
+            c("gaussian","binomial","poisson"),multiarg=FALSE)
+        fpredHelper <- "provided"
+    }
+    else {
+        family <- ifelse(.maybeBinaryForBinomial(p[,response]),"binomial",
+            "gaussian")
+        fpredHelper <- "predicted"
+    }
+    if (family == "binomial")
+        p[,response] <- .validateBinaryForBinomial(p[,response])
+    
+    if (pcs) {
+        if (.hasPcaCovariates(gwe)) {
+            pcov <- pcaCovariates(gwe)
+            p <- cbind(p,pcov)
+            phenotypes(gwe) <- p
+        }
+        else
+            warning("PC covariates requested in the model, but no calculated ",
+                "PC covariates found! Ignoring...",immediate.=TRUE)
+    }
+    
+    # Run the CV
+    disp("\nRegressing with GLM")
+    disp("Trait(s)    : ",response)
+    disp("Covariate(s): ",paste0(covariates,collapse=", "))
+    disp("Regression  : ",family," (",fpredHelper,")")
+    disp("Use PCs     : ",ifelse(pcs,"Yes","No"))
+    
+    metricsObj <- .applyPrsWorker(snpSelection,gwe,response,prsCalc,family,...)
+    
+    # If summary statistics are present in gwe, a randomization test can also
+    # run, i.e. select at random nrow(snpSelection) SNPs and their effects
+    # calculate the metrics. Overall, they should be less accurate. But which
+    # effects should be taken etc... WIP
+    
+    return(metricsObj)
+}
+
+.applyPrsWorker <- function(snpSelection,gwe,response,prsCalc,family,...) {
+    # response, covariates have been validated upstream
+    p <- phenotypes(gwe)
+    
+    # Fit the reduced model
+    disp("Creating the reduced model")
+    dat <- p
+    ii <- which(colnames(dat)==response)
+    colnames(dat) <- make.names(colnames(dat))
+    covs <- colnames(dat)[-ii]
+    cres <- colnames(dat)[ii]
+    if (length(covs) > 0)
+        fr <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    else
+        fr <- as.formula(paste(cres,1,sep="~"))
+    disp("Reduced model formula is: ",level="full")
+    disp(show(fr),level="full")
+    redFit <- glm(fr,data=dat,family=family,...)
+    redModel <- summary(redFit)
+    
+    # Calculate and attach the actual PRS
+    gweSnps <- t(as(genotypes(gwe),"numeric"))
+    gwePrs <- .prs(gweSnps[,rownames(snpSelection)],
+        snpSelection[,grep("effect",colnames(snpSelection))],prsCalc)
+    dat <- cbind(p,gwePrs)
+
+    # Fit the full model
+    disp("Creating the full model")
+    colnames(dat)[ncol(dat)] <- "PRS"
+    ii <- which(colnames(dat)==response)
+    colnames(dat) <- make.names(colnames(dat))
+    covs <- colnames(dat)[-ii]
+    cres <- colnames(dat)[ii]
+    fm <- as.formula(paste(cres,paste0(covs,collapse="+"),sep="~"))
+    disp("Full model formula is: ",level="full")
+    disp(show(fm),level="full")
+    fullFit <- glm(fm,data=dat,family=family,...)
+    fullModel <- summary(fullFit)
+    
+    # - R^2 of the reduced model
+    redR2 <- 1 - redModel$deviance/redModel$null.deviance
+    
+    # - R^2 of the full model
+    fullR2 <- 1 - fullModel$deviance/fullModel$null.deviance
+    
+    # - p-value of the reduced against the full (F test)
+    tmp <- anova(redFit,fullFit,test="F")
+    P <- tmp[["Pr(>F)"]][2]
+    # NA p-value? Something bad happens, non-siginifican anyways...
+    if (any(is.na(P)))
+        P[is.na(P)] <- 1
+    
+    # Predictions
+    redPred <- predict(redFit,dat)
+    fullPred <- predict(fullFit,dat)
+    
+    # RMSE and MAE
+    redRmse <- sqrt(sum((redPred - p[,response])^2)/nrow(p))
+    fullRmse <- sqrt(sum((fullPred - p[,response])^2)/nrow(p))
+    redMae <- mean(abs((redPred - p[,response])))
+    fullMae <- mean(abs((fullPred - p[,response])))
+    redCor <- cor(redPred,p[,response])
+    fullCor <- cor(fullPred,p[,response])
+    
+    # New plots
+    ggs <- .plotPrsTrait(gwePrs,p[,response],response)
+    
+    # Now return an object...
+    return(list(
+        metrics=c(
+            reduced_r2=redR2,
+            full_r2=fullR2,
+            prs_r2=fullR2-redR2,
+            prs_pvalue=P,
+            reduced_rmse=redRmse,
+            full_rmse=fullRmse,
+            reduced_mae=redMae,
+            full_mae=fullMae,
+            reduced_pred_cor=redCor,
+            full_pred_cor=fullCor,
+            reduced_pred_r2=redCor^2,
+            full_pred_r2=fullCor^2,
+            prs_pred_r2=fullCor^2-redCor^2
+        ),
+        values=data.frame(
+            raw_pheno=p[,response],
+            red_pheno=redPred,
+            full_pheno=fullPred,
+            prs=gwePrs,
+            row.names=rownames(p)
+        ),
+        plots=ggs
+    ))
 }
 
 .constructOutput <- function(snps,snpSelection,gwe) {

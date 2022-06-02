@@ -1,6 +1,7 @@
 \name{prismaCvFuns}
 \alias{prismaCrossValidate}
 \alias{prsCrossValidate}
+\alias{applyPRS}
 \title{Functions to perform PRS cross-validation evaluations}
 \usage{
     prismaCrossValidate(prismaOut, gwe, response, 
@@ -13,6 +14,11 @@
         covariates = NULL, pcs = FALSE, leaveOut = 0.05,
         times = 10, prsCalc = c("avg", "sum", "std"),
         family = NULL, rc = NULL, ...)
+    
+    applyPRS(snpSelection, gwe, response, 
+        covariates = NULL, pcs = FALSE, minSnps = 2,
+        prsCalc = c("avg", "sum", "std"), times = 10,
+        family = NULL, rc = NULL,...)
 }
 \arguments{
     \item{prismaOut}{an output from the \code{link{prisma}}
@@ -39,8 +45,11 @@
     leave-out in a cross-validation run. This can be a vector
     of multiple fractions for \code{prismaCrossValidate}.}
     
-    \item{times}{How many cross-validations to perform?
-    Defaults to \code{10}.}
+    \item{times}{For \code{prismaCrossValidate}, how many 
+    cross-validations to perform. For \code{applyPRS}, the
+    number of SNP randomizations to perform if summary 
+    statistics are present to \code{gwe}. Defaults to 
+    \code{10}. See also Details.}
     
     \item{prsCalc}{How the final PRS is calculated from the
     data frame of the PRS candidate SNPs? One of \code{"avg"} 
@@ -55,6 +64,11 @@
     
     \item{pcs}{Inlcude PCs in the regression model? Defaults
     to \code{FALSE}. See also Details.}
+    
+    \item{minSnps}{The minimum number of SNPs present in
+    \code{gwe} in order to continue with PRS application
+    using the genotypes of \code{gwe}. Defaults to 
+    \code{2}.}
     
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no
@@ -78,6 +92,32 @@
     with \code{i=1:ntimes}. This data frame is the output
     of \code{prsCrossValidate}. For the collected metrics,
     see Details.
+    
+    For \code{applyPRS} a list with three members:
+    \itemize{
+        \item \code{metrics}: The same as the cross
+        validation metrics - see Details.
+        \item \code{values}: A data frame with the following
+        columns:
+        \itemize{
+            \item \code{raw_pheno}: The phenotype which
+            the PRS contributes to its explanation
+            \item \code{red_pheno}: The predicted phenotype
+            in a regression model without the PRS as a
+            covariate
+            \item \code{full_pheno}: The predicted phenotype
+            in a regression model including the PRS as a
+            covariate
+            \item \code{prs}: The PRS calculated according
+            to \code{prsCalc}
+        }
+        \item \code{plots}: A list of two ggplot objects:
+        \itemize{
+            \item \code{scatter}: A scatterplot of
+            \code{raw_pheno} against \code{prs}
+            \item \code{hist}: A histogram of \code{prs}
+        }
+    }
 }
 \description{
     These functions perform cross-validation regressions
@@ -101,6 +141,18 @@
     in \code{gwe} will be used. If \code{gwe} does not contain 
     any PCs, a warning is issued and \code{pcs} is set to 
     \code{FALSE}.
+    
+    Regarding the \code{times} argument in the 
+    \code{applyPRS} function, this instructs the function 
+    to perform \code{times} random SNP selections from the
+    input \code{gwe} and repeat the validation procedure 
+    through the calculation of evaluation metrics. This 
+    process is available only when summary statistics are
+    present in \code{gwe} and is useful to test how a random
+    PRS performs in explaining the examined phenotype. 
+    Normally, the metrics should be worse. A boostrap 
+    p-value is also calculated for some of the evaluation 
+    metrics.
     
     Regarding the collected metrics, these are:
     \itemize{

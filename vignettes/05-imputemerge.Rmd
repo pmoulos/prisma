@@ -41,7 +41,7 @@ extended genotypes and filter accordingly.
 
 ## Internal imputation
 
-```{r imp-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r imp-0, eval=TRUE, echo=FALSE, tidy=FALSE, message=FALSE, warning=FALSE}
 library(prisma)
 ```
 
@@ -180,7 +180,7 @@ the command in the background with `Rscript`.
 
 The following figure summarizes the imputation modes in PRISMA:
 
-```{r img-0, echo=FALSE, out.width = "600px"}
+```{r img-0, echo=FALSE, out.width = "800px"}
 knitr::include_graphics("imputation.png")
 ```
 
@@ -219,7 +219,7 @@ This process is also described in the man page of the `mergeGWAS()` function.
 
 The following figure summarizes the imputation modes in PRISMA:
 
-```{r img-1, echo=FALSE, out.width = "600px"}
+```{r img-1, echo=FALSE, out.width = "800px"}
 knitr::include_graphics("merging.png")
 ```
 

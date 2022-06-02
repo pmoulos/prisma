@@ -19,7 +19,7 @@
     
     downloadPlink(ver = c("v1.90"), path = NULL)
     
-    downloadPrsice(ver = c("v2.3.3"), path = NULL) 
+    downloadPrsice(ver = c("v2.3.5", "v2.3.3"), path = NULL) 
     
     downloadSnptest( ver = c("v2.5.6", "v2.5.4", "v2.5.2"),
         path = NULL)
