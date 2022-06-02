@@ -153,7 +153,7 @@ prismaOut <- prisma(
 
 snpSelection <- getPrsCandidates(prismaOut,"statgen",1)
 
-metrics <- applyPRS(snpSelection,gwe,response=response,covariates=covariates)
+metrics <- applyPRS(snpSelection,toy,response=response,covariates=covariates)
 
 metrics$metrics
 
