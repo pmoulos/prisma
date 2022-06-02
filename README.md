@@ -101,6 +101,8 @@ The following depict the very basic PRISMA PRS extraction pipeline. For full
 documentation see the package vignettes and also 
 [online](#) documentation.
 
+## Step by step pipeline
+
 ```
 library(prisma)
 
@@ -190,4 +192,42 @@ evalMetrics <- prsSelection(
     useDenovoWorkspace=dnList,
     rc=0.25
 )
+
+candidates <- selectPrs(
+    metrics=evalMetrics$metrics,
+    snpSelection=evalMetrics$pgs,
+    gwe=toy,
+    base=evalMetrics$baseline
+)
+```
+
+## Complete pipeline
+
+```
+if (Sys.which("PRSice_linux") != "") {
+    outPath <- tempfile()
+    wspace1 <- tempfile()
+    
+    prismaPipeline(
+        gwe=toy,
+        phenotype=response,
+        covariates=covariates,
+        pcs=FALSE,
+        trainSize=0.8,
+        niter=4,
+        resolution="frequency",
+        minSnps=2,
+        filters=filts,
+        pcaMethod="snprel",
+        imputeMissing=FALSE,
+        gwaMethods=c("glm","statgen"),
+        prsiceOpts=list(clump_p=0.75,perm=100),
+        prsWorkspace=wspace4,
+        cleanup="intermediate",
+        logging="file",
+        output="normal",
+        rc=0.25,
+        outPath=outPath
+    )
+}
 ```

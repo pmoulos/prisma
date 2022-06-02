@@ -724,7 +724,7 @@ candidates <- selectPrs(
 # Complete 4-iteration PRS pipeline - ~1 min to run with 4 cores - no PCA
 if (Sys.which("PRSice_linux") != "") {
 
-outPath <- file.path(tempdir(),tempfile())
+outPath <- tempfile()
 d4 <- tempfile()
 wspace4 <- file.path(outPath,d4)
 prismaPipeline(

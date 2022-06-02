@@ -75,7 +75,7 @@ prismaPipeline <- function(...,retry=10,outPath=NULL) {
         response=response,
         covariates=covariates,
         pcs=pcs,
-        rc=0.75
+        rc=rc
     )
     # Checkpoint
     save(cvMetrics,file=file.path(outPath,"cvMetrics.RData"))
