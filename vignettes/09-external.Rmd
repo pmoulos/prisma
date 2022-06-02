@@ -125,6 +125,9 @@ function can be used to accomplish the aforementioned processes.
 In the example below, we do not run the PRS randomization process
 
 ```{r ext-5, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
+data(toy,package="prisma")
+gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
+
 wspace2 <- tempfile()
 
 prismaOut <- prisma(
