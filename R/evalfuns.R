@@ -796,7 +796,8 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
 }
 
 applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
-    pcs=FALSE,minSnps=2,prsCalc=c("avg","sum","std"),family=NULL,rc=NULL,...) {
+    pcs=FALSE,minSnps=2,prsCalc=c("avg","sum","std"),times=10,family=NULL,
+    rc=NULL,...) {
     prsCalc <- prsCalc[1]
     .checkTextArgs("PRS calculation type (prsCalc)",prsCalc,
         c("avg","sum","std"),multiarg=FALSE)
@@ -817,7 +818,7 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     cm <- intersect(rownames(gwe),rownames(snpSelection))
     if (length(cm) < minSnps)
         stop("Not enough coverage to the input GWASExperiment object from ",
-            "the SNPs in the input PRS!\nA minimum of ",minSnpsm," is ",
+            "the SNPs in the input PRS!\nA minimum of ",minSnps," is ",
             "required but ",length(cm)," were found!")
     if (length(cm) < nrow(snpSelection))
         disp(nrow(snpSelection) - length(cm)," SNPs were not found in the ",

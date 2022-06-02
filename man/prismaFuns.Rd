@@ -659,8 +659,8 @@ prismaOut <- prisma(
     prsWorkspace=wspace1,
     cleanup="intermediate",
     logging="file",
-    output="normal",
-    rc=0.1
+    output="normal"#,
+    #rc=0.25
 )
 
 # Below, individual wrapper steps implemented in prisma as whole
@@ -681,8 +681,8 @@ dnList <- prsPipeline(
     prsiceOpts=list(clump_p=0.75,perm=100),
     prsWorkspace=wspace2,
     cleanup="intermediate",
-    logging="file",
-    rc=0.1
+    logging="file"#,
+    #rc=0.25
 )
 
 # After, calculate the evaluation metrics
@@ -707,8 +707,8 @@ evalMetrics <- prsSelection(
     cleanup="intermediate",
     logging="file",
     output="summary",
-    useDenovoWorkspace=dnList,
-    rc=0.1
+    useDenovoWorkspace=dnList#,
+    #rc=0.25
 )
 
 candidates <- selectPrs(
@@ -745,7 +745,7 @@ prismaPipeline(
     cleanup="intermediate",
     logging="file",
     output="normal",
-    rc=0.1,
+    #rc=0.25,
     outPath=outPath
 )
 
