@@ -128,8 +128,18 @@ In the example below, we do not run the PRS randomization process
 data(toy,package="prisma")
 gdsfile(toy) <- system.file(package="prisma","extdata","toy.gds")
 
-wspace2 <- tempfile()
+# Traits
+response <- "BMI"
+covariates <- c("Case_Control","Gender","Age")
 
+# Lose filters for the toy dataset
+filts <- getDefaults("filters")
+filts$IBD <- NA
+filts$hwe <- 1e-3
+filts$pcaOut <- FALSE
+filts$inbreed <- NA
+
+wspace2 <- tempfile()
 prismaOut <- prisma(
     gwe=toy,
     phenotype=response,
