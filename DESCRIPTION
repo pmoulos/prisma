@@ -74,7 +74,7 @@ biocViews: Software, WorkflowStep, BiomedicalInformatics
 VignetteBuilder: knitr
 BugReports: https://github.com/pmoulos/prisma/issues
 Version: 0.0.1
-Date: 2022-05-31
+Date: 2022-06-02
 Collate:
     'classes.R'
     'classutils.R'
