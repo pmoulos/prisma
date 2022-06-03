@@ -17,78 +17,8 @@ prisma requires the presence of several R packages but also additional 3rd party
 software tools for running GWA tests to derive summary statistics as well as PRS
 extraction. See the more detailed 
 [installation](#) 
-guide for more information and step-by-step process.
-
-## System packages
-
-Some or all of these may be already installed on the system. There might be
-additional ones depending on the Linux distribution prisma is being installed
-to. This list will be maintained and updated.
-
-```
-sudo apt install -y apt-transport-https software-properties-common \
-    build-essential zlib1g-dev libdb-dev libcurl4-openssl-dev libssl-dev \
-    libxml2-dev apache2 libfontconfig1-dev libjpeg-dev
-```
-
-## R packages
-
-### Basic installation of Bioconductor
-
-```
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(version = "3.15")
-```
-
-### Additional packages
-
-The following packages are either on CRAN or on Bioconductor:
-
-```
-pkgs <- c("BSgenome.Hsapiens.UCSC.hg19","BSgenome.Hsapiens.UCSC.hg38",
-    "Biobase","biomaRt","BSgenome","data.table","GenomicRanges","ggplot2",
-    "gwasrapidd","harmonicmeanp","islasso","jsonlite","kableExtra","knitr",
-    "liftOver","Matrix","magrittr","methods","openxlsx","pander","parallel",
-    "PhenotypeSimulator","quincunx","R.utils","rmarkdown","rmdformats",
-    "RcppArmadillo","RMTstat","rrBLUP","rrcov","rsnps","rtracklayer",
-    "S4Vectors","scales","scrime","snpStats","SNPRelate",
-    "SNPlocs.Hsapiens.dbSNP151.GRCh38","statgenGWAS","SummarizedExperiment",
-    "survcomp","testthat","tseries","utils")
-
-BiocManager::install(pkgs)
-```
-
-Also, `lassosum` is not on CRAN:
-
-```
-library(devtools)
-install_github("tshmak/lassosum")
-```
-
-## Other external tools and resources
-
-The following tools should be findable by R, for example they should be included
-in the system's `PATH` environmental variable.
-
-### Summary statistics
-
-* [SNPTEST](https://www.well.ox.ac.uk/~gav/snptest/)
-* [PLINK](https://www.cog-genomics.org/plink/)
-
-### PRS extraction
-
-* [PRSice-2](https://www.prsice.info/)
-
-### Other tools
-
-* [GTOOL](https://www.well.ox.ac.uk/~cfreeman/software/gwas/gtool.html)
-* [QCTOOL](https://www.well.ox.ac.uk/~gav/qctool_v2/)
-* [IMPUTE2](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html)
-
-## Installation of PRISMA
-
-PRISMA can be installed from GitHub for the time being:
+guide for more information and step-by-step process. Once the prerequisites are
+in place, PRISMA can be installed from GitHub for the time being:
 
 ```
 library(devtools)
