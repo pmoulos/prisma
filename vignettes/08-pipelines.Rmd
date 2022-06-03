@@ -103,7 +103,7 @@ the `prsbetas` and `effects` or summary lists, not holding the genotypic data
 for saving memory and space. This list practically hold the derived PRSs in each
 iteration, through the `prsbetas` slot.
 
-```{r pip-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 library(prisma)
 
 data(toy,package="prisma")
@@ -145,7 +145,7 @@ if (Sys.which("PRSice_linux") != "") {
 
 Now, aggregate the outcome to a pool of SNPs to be evaluated for PRS candidates:
 
-```{r pip-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 snpSummary <- aggregatePrsMarkers(dnList,mode="intersect",qcut=0)
 
 head(snpSummary)
@@ -195,7 +195,7 @@ The `out` argument is a list of data frames containing a more elegant format of
 the SNPs in `snpSelection`. Since we requested evaluation with PRSice2, each
 data frame has a list of attributes attached to it, summarizing this evaluation:
 
-```{r pip-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-4, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 attributes(out[[1]])
 ```
 
@@ -218,7 +218,7 @@ PRSice2 followed by GLM regressions). This is the fastest evaluation pipeline
 and allows for the collection of many additional metrics. We change the
 `evalWith` argument to `"vanilla"` which is also the default.
 
-```{r pip-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-6, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 snpSelection <- snpSummary[snpSummary$freq>1,]
 
 d3 <- tempfile()
@@ -248,7 +248,7 @@ out <- prsPipeline(
 This time out is a list of data frames with the collected evaluation metrics.
 These are described in detail in the respective man pages.
 
-```{r pip-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-7, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 m <- do.call("rbind",out)
 
 m
@@ -267,7 +267,7 @@ process. It is controlled by the lack of the `useDenovoWorkspace` argument or
 of data frames with attributes as above.
 
 
-```{r pip-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE}
+```{r pip-8, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE, collapse=TRUE}
 snpSelection <- snpSummary[snpSummary$freq>1,]
 
 d4 <- tempfile()
