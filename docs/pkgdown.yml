@@ -1,0 +1,15 @@
+pandoc: 1.19.2.4
+pkgdown: 2.0.3.9000
+pkgdown_sha: 2ac66b4bc39f02469b2090572829c9c6975272b5
+articles:
+  01-introduction: 01-introduction.html
+  02-installation: 02-installation.html
+  03-gwasexperiment: 03-gwasexperiment.html
+  04-inoutfilter: 04-inoutfilter.html
+  05-imputemerge: 05-imputemerge.html
+  06-gwasfuns: 06-gwasfuns.html
+  07-prsfuns: 07-prsfuns.html
+  08-pipelines: 08-pipelines.html
+  09-external: 09-external.html
+last_built: 2022-06-03T11:27Z
+

@@ -1,0 +1,142 @@
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: cerulean
+reference:
+- title: GWASExperiment object accessors
+  desc:  Functions to operate and manipulate GWASExperiment objects
+  contents:
+  - GWASExperiment
+  - genotypes
+  - gfeatures
+  - gsamples
+  - phenotypes
+  - pvalues
+  - allPvalues
+  - effects
+  - allEffects
+  - prsbetas
+  - allPrsbetas
+  - gsplit
+  - genome
+  - gdsfile
+  - filterRecord
+  - pcaCovariates
+  - SnpMatrix
+  - listGwa
+  - listPrs
+- title: Input/output and conversion
+  desc: Functions to read/write from/to PLINK files and other formats
+  contents: 
+  - importGWAS
+  - writePlink
+  - writeGdsFile
+  - GWASExperiment2gData
+  - GWASExperiment2GDS
+  - GWASExperimentLiftOver
+  - guessHumanGenomeVersion
+- title: Data filtering
+  desc: Functions to filter samples and genotypes in GWASExperiment objects
+  contents: 
+  - filterGWAS
+- title: Imputing and merging
+  desc: Functions to perform internal and external imputation and datset merging
+  contents: 
+  - imputeGWAS
+  - extendGWAS
+  - mergeGWAS
+- title: External utilities
+  desc: Functions to retrieve and install external utilities and resources
+  contents:
+  - downloadExternalFuns
+  - downloadExternalTools
+  - downloadGtool
+  - downloadImpute
+  - downloadPlink
+  - downloadPrsice
+  - downloadSnptest
+  - downloadQctool
+  - download1000GP3
+- title: Dataset splitting
+  desc: Function to split GWASExperiment objects inspired by caret
+  contents:
+  - createSplit
+  - partitionGWAS
+- title: Summary statistics
+  desc: >
+    Functions to perform GWA tests, extract summary statistics and combine
+    p-values
+  contents:
+  - gwa
+  - gwaBlup
+  - gwaGlm
+  - gwaPlink
+  - gwaSnptest
+  - gwaStatgen
+  - combineHarmonic
+  - combineMaxp
+  - combineMinp
+  - combineSimes
+  - combineWeight
+  - fisherMethod
+- title: Derivation of PRS
+  desc: Wrapper function around external tools to extract PRSs
+  contents:
+  - lassosumPRS
+  - PRS
+  - prsicePRS
+  - runPRS
+- title: PRISMA workflows
+  desc: The PRS derivation and evaluation workflows of PRISMA
+  contents:
+  - prisma
+  - prsSelection
+  - prsPipeline
+  - prismaPipeline
+  - aggregatePrsMarkers
+  - selectPrs
+  - applyPRS
+- title: Cross-validation
+  desc: Functions to evaluate PRISMA output with cross-validation
+  contents:
+  - prismaCrossValidate
+  - prsCrossValidate
+  - prsRegressionMetrics
+  - cvSummary
+  - plotCvMetrics
+  - summarizeCvMetrics
+- title: Output and reporting
+  desc: Function to process and report PRISMA output
+  contents:
+  - getPrsCandidates
+  - gwaTests
+  - prismaReport
+- title: Statistical utilities
+  desc: Function that implement several statistical utilites used in the package
+  contents:
+  - calcPcaCovar
+  - normalityCheck
+  - twTest
+- title: External PRS retrieval
+  desc: Functions to download and process external PRSs e.g. from PGS Catalog
+  contents:
+  - enrichScoreFile
+  - getGWASVariants
+  - getPGSScores
+  - prismaLookup
+- title: Miscellaneous
+  desc: Miscellaneous utilites used in the package
+  contents:
+  - adjustPrsWeights
+  - assignGenes
+  - getDefaults
+  - harvestWorkspace
+  - makeSimData
+  - rsLocsFromEnsembl
+  - prismaVerbosity
+- title: Data
+  desc: Toy datasets accompanying the package
+  contents:
+  - toy
+  - pgd
+  - prismaOut
