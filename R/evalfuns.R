@@ -870,6 +870,45 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     # calculate the metrics. Overall, they should be less accurate. But which
     # effects should be taken etc... WIP
     
+    if ((is.null(effects(gwe)) || (is(effects(gwe),"SimpleList") 
+     && length(effects(gwe)) == 0)) && times > 0) {
+         disp("No summary statistics found in the input object. No ",
+             "SNP randomization will be performed.")
+         return(metricsObj)
+    }
+    
+#~     # 1. Create a list of random SNPs (row indexes)
+#~     indexList <- lapply(seq_len(times),sample,nrow(gwe),nrow(snpSelection))
+#~     # 2. Calculate metrics for random SNPs
+#~     metricsList <- cmclapply(indexList,function(ii) {
+#~         obj <- gwe[ii,,drop=FALSE]
+#~         #npcs <- ifelse(!is.null(ncol(pcaCovariates(obj))),
+#~         #   ncol(pcaCovariates(obj)),0)
+#~         f <- gfeatures(obj)
+#~         #e <- effects(obj,response,covariates,npcs)
+#~         e <- effects(obj)
+        
+#~         # Fix this
+#~         pri <- .getGwaLinArgPrior()
+#~         if (any(pri %in% colnames(e)))
+#~             assoc <- pri[which(pri %in% colnames(e))[1]]    
+#~         currSel <- data.frame(
+#~             chromosome=f$chromosome,
+#~             position=f$position,
+#~             variant_id=rownames(obj),
+#~             risk_allele=f$allele.1,
+#~             reference_allele=f$allele.2,
+#~             locus_name=rep(NA,nrow(obj)),
+#~             effect_weight=e[,assoc], # fix this
+#~             OR=e[,assoc],
+#~             asm=rep(NA,nrow(obj)),
+#~             freq=rep(0,nrow(obj))
+#~         )
+#~         currMets <- .applyPrsWorker(currSel,obj,response,prsCalc,family,...)
+#~         return(currMets$metrics)
+#~     })
+#~     # We now need to do something with the result now
+    
     return(metricsObj)
 }
 
