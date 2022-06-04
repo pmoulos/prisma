@@ -1,5 +1,7 @@
 PRISMA - Automated Polygenic Risk Score modeling and evaluation
-================================================================================ <img src="./vignettes/prisma-sticker.png" align="right" width=128 height=128 alt="" />
+===============================================================
+
+<img src="./vignettes/prisma-sticker.png" align="right" width=160 height=160 alt="" />
 
 prisma is an R package for the semi-automated construction and evaluation of 
 Polygenic Risk Scores (PRS) with data from multiple summary statistics and PRS 
