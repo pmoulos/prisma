@@ -868,46 +868,59 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     # If summary statistics are present in gwe, a randomization test can also
     # run, i.e. select at random nrow(snpSelection) SNPs and their effects
     # calculate the metrics. Overall, they should be less accurate. But which
-    # effects should be taken etc... WIP
-    
+    # effects should be taken etc...
+    if (times == 0)
+        return(metricsObj)
     if ((is.null(effects(gwe)) || (is(effects(gwe),"SimpleList") 
-     && length(effects(gwe)) == 0)) && times > 0) {
+        && length(effects(gwe)) == 0)) && times > 0) {
          disp("No summary statistics found in the input object. No ",
              "SNP randomization will be performed.")
          return(metricsObj)
     }
     
-#~     # 1. Create a list of random SNPs (row indexes)
-#~     indexList <- lapply(seq_len(times),sample,nrow(gwe),nrow(snpSelection))
-#~     # 2. Calculate metrics for random SNPs
-#~     metricsList <- cmclapply(indexList,function(ii) {
-#~         obj <- gwe[ii,,drop=FALSE]
-#~         #npcs <- ifelse(!is.null(ncol(pcaCovariates(obj))),
-#~         #   ncol(pcaCovariates(obj)),0)
-#~         f <- gfeatures(obj)
-#~         #e <- effects(obj,response,covariates,npcs)
-#~         e <- effects(obj)
+    # 1. Create a list of random SNPs (row indexes)
+    indexList <- lapply(seq_len(times),function(i) {
+        return(sample(nrow(gwe),nrow(snpSelection)))
+    })
+    # 2. Calculate metrics for random SNPs
+    metricsList <- cmclapply(seq_along(indexList),function(i) {
+        #disp("===== SNP randomization ",i)
+        obj <- gwe[indexList[[i]],,drop=FALSE]
+        #npcs <- ifelse(!is.null(ncol(pcaCovariates(obj))),
+        #   ncol(pcaCovariates(obj)),0)
+        f <- gfeatures(obj)
+        #e <- effects(obj,response,covariates,npcs)
+        e <- effects(obj)
         
-#~         # Fix this
-#~         pri <- .getGwaLinArgPrior()
-#~         if (any(pri %in% colnames(e)))
-#~             assoc <- pri[which(pri %in% colnames(e))[1]]    
-#~         currSel <- data.frame(
-#~             chromosome=f$chromosome,
-#~             position=f$position,
-#~             variant_id=rownames(obj),
-#~             risk_allele=f$allele.1,
-#~             reference_allele=f$allele.2,
-#~             locus_name=rep(NA,nrow(obj)),
-#~             effect_weight=e[,assoc], # fix this
-#~             OR=e[,assoc],
-#~             asm=rep(NA,nrow(obj)),
-#~             freq=rep(0,nrow(obj))
-#~         )
-#~         currMets <- .applyPrsWorker(currSel,obj,response,prsCalc,family,...)
-#~         return(currMets$metrics)
-#~     })
-#~     # We now need to do something with the result now
+        # Fix this
+        pri <- .getGwaLinArgPrior()
+        if (any(pri %in% colnames(e)))
+            assoc <- pri[which(pri %in% colnames(e))[1]]    
+        currSel <- data.frame(
+            chromosome=f$chromosome,
+            position=f$position,
+            variant_id=rownames(obj),
+            risk_allele=f$allele.1,
+            reference_allele=f$allele.2,
+            locus_name=rep(NA,nrow(obj)),
+            effect_weight=e[,assoc], # fix this
+            OR=e[,assoc],
+            asm=rep(NA,nrow(obj)),
+            freq=rep(0,nrow(obj))
+        )
+        currMets <- .applyPrsWorker(currSel,obj,response,prsCalc,family,...)
+        return(currMets$metrics)
+    })
+    # 3. Make a matrix of metrics and calculate the p-value of the permutations
+    randMetrics <- do.call("rbind",metricsList)
+    # Calculate a bootstrap p-value for PRS R2 only
+    bootp <- length(which(randMetrics[,"prs_r2"] >= metricsObj$metrics[
+        "prs_r2"]))/times
+    # 4. Attach to the returning object
+    metricsObj$permutations <- list(
+        metrics=randMetrics,
+        bootp=bootp
+    )
     
     return(metricsObj)
 }

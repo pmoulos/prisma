@@ -4,7 +4,7 @@
 \usage{
     filterGWAS(obj, filters = getDefaults("filters"),
         imputeMissing = TRUE, imputeMode = c("single","split"),
-        rc = NULL)
+        withPlink = FALSE, rc = NULL)
 }
 \arguments{
     \item{obj}{An object of class \code{GWASExperiment} holding
@@ -23,6 +23,12 @@
     into a part containing missing values and a part with
     no missing values (\code{"split"}), may happen in large
     dataset and could be more accurate.}
+    
+    \item{withPlink}{Perform basic filtering (not IBD or PCA)
+    with PLINK instead of snpStats. Maybe faster and suitable
+    for huge datasets but with less options. Defaults to 
+    \code{FALSE}. Also, in this case, the \code{filterRecord}
+    is not filled.}
     
     \item{rc}{The fraction of available cores to use for 
     parallel calculations. Default is \code{NULL} for no
@@ -108,6 +114,11 @@
     
     toyF <- filterGWAS(toy,filters=filts,
         imputeMissing=FALSE)
+        
+    # With PLINK
+    if (Sys.which("plink") != "")
+        toyF <- filterGWAS(toy,filters=filts,
+            imputeMissing=FALSE,withPlink=TRUE)
 }
 \author{
     Panagiotis Moulos

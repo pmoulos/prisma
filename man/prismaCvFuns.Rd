@@ -93,7 +93,7 @@
     of \code{prsCrossValidate}. For the collected metrics,
     see Details.
     
-    For \code{applyPRS} a list with three members:
+    For \code{applyPRS} a list with three or four members:
     \itemize{
         \item \code{metrics}: The same as the cross
         validation metrics - see Details.
@@ -116,6 +116,21 @@
             \item \code{scatter}: A scatterplot of
             \code{raw_pheno} against \code{prs}
             \item \code{hist}: A histogram of \code{prs}
+        }
+        \item \code{permutations}: This is available only
+        when \code{times > 0} and only when summary 
+        statistics (\code{effects} slot) are present in the
+        \code{gwe} GWASExperiment object.
+        \itemize{
+            \item \code{metrics}: A matrics of evaluation
+            metrics (same as the \code{metrics} upper level
+            member) over \code{times} iterations (the number
+            of rows)
+            \item \code{bootp}: A bootstrap p-value denoting
+            the statistical significance of the tested PRS
+            being non-random (essentially the number of times
+            the PRS R^2 of the random PRS is larger than
+            the original PRS R^2 divided by \code{times})
         }
     }
 }

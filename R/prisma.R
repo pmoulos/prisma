@@ -1403,7 +1403,8 @@ assignGenes <- function(prismaOut,gv=c("hg19","hg38"), sitDb=NULL) {
         return(x) # sitadela not here, return input
     
     db <- ifelse(is.null(sitDb),sitadela::getDbPath(),sitDb)
-    ann <- loadAnnotation(gv,"refseq",type="gene",version="auto",db=db)
+    ann <- suppressWarnings(loadAnnotation(gv,"refseq",type="gene",
+        version="auto",db=db)) # Stupid MySQL messages!
     
     tmp <- x
     names(tmp)[2] <- "start"
@@ -1719,11 +1720,11 @@ assignGenes <- function(prismaOut,gv=c("hg19","hg38"), sitDb=NULL) {
     disp("Drop quantiles with same number of SNPs (dropSameQuantiles) : ",
         ifelse(eval(args$dropSameQuantiles),"Yes","No"))
     disp("PRS aggregation method (aggregation)                        : ",
-        eval(args$aggregation))
+        eval(args$aggregation[1]))
     disp("SNP effect summarization method (effectWeight)              : ",
-        eval(args$effectWeight))
+        eval(args$effectWeight[1]))
     disp("PRS evaluation framework (evalWith)                         : ",
-        eval(args$evalWith))
+        eval(args$evalWith[1]))
     
     disp("\nMiscellaneous options")
     disp("--------------------------------------------------------------------")

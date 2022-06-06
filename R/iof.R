@@ -201,13 +201,14 @@ writeGdsFile <- function(obj,gdsfile=NULL) {
 }
 
 filterGWAS <- function(obj,filters=getDefaults("filters"),imputeMissing=TRUE,
-    imputeMode=c("single","split"),rc=NULL) {
+    imputeMode=c("single","split"),withPlink=FALSE,rc=NULL) {
     filters <- .checkFilters(filters)
     imputeMode <- imputeMode[1]
     
     # Later input type may be more native, e.g. read from CSV files
     if (is(assay(obj,1),"SnpMatrix"))
-        return(.filterWithSnpStats(obj,filters,imputeMissing,imputeMode,rc))
+        return(.filterWithSnpStats(obj,filters,imputeMissing,imputeMode,
+            withPlink,rc))
     else if (is(assay(obj,1),"bigsnp"))
         return(.filterWithBigSnpr(obj,filters,imputeMissing))
 }

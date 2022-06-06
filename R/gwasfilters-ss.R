@@ -6,11 +6,15 @@
 #~ read.gdsn <- utils::getFromNamespace("read.gdsn","SNPRelate")
 
 .filterWithSnpStats <- function(obj,filters,imputeMissing=TRUE,
-    imputeMode=c("single","split"),rc=NULL) {
+    imputeMode=c("single","split"),withPlink=TRUE,rc=NULL) {
     imputeMode <- imputeMode[1]
     
     disp("\nPerforming basic filtering",level="normal")
-    objBas <- .filterWithSnpStatsBasic(obj,filters)
+    if (withPlink)
+        objBas <- .filterWithPlinkBasic(obj,filters)
+    else
+        objBas <- .filterWithSnpStatsBasic(obj,filters)
+        
     
     #if (!is.na(filters$LD) || !is.na(filters$IBD)) {
     if (!is.na(filters$IBD)) {
@@ -42,6 +46,151 @@
         .filterReport(objPca)
     
     return(objPca)
+}
+
+.filterWithPlinkBasic <- function(obj,filters) {
+    # The process is to write filtered PLINK files and re-read them to
+    # to temporary minimal GWASExperiment object just for the rownames and
+    # colnames... Too costly to track all else in the initial object and 
+    # reattach everything to a new one.
+    
+    # If no filters, nothing to do
+    if (.emptyFilters(filters))
+        return(obj)
+    
+    disp("  Exporting temporary PLINK files for the calculations")
+    plinkBase <- tempfile()
+    writePlink(obj,outBase=plinkBase)
+    
+    # Basic commands
+    outBase <- tempfile()
+    plink <- .getToolPath("plink")
+    baseCommand <- paste(
+       paste0(plink," \\"),
+       paste0("  --bfile ",plinkBase," \\"),
+       paste0("  --out ",outBase),
+       sep="\n"
+    )
+    
+    # Prepare for heterozygosity and inbreed filtering - latter not yet
+    if (!.isEmpty(filters$inbreed)) {
+        warning("Inbreed coefficient filter is not yet supported when ",
+            "filtering with PLINK. Ignoring...",immediate.=TRUE)
+        filters$inbreed <- NA
+    }
+    
+    goodHet <- NULL
+    if (!.isEmpty(filters$heteroHard) || !.isEmpty(filters$heteroStat)) {
+        hetCommand <- paste0(baseCommand," --het")
+        message("\nExecuting:\n",hetCommand)
+        out <- tryCatch({
+            system(hetCommand,ignore.stdout=TRUE,ignore.stderr=TRUE)
+            if (prismaVerbosity() == "full") {
+                logfile <- paste0(outBase,".log")
+                log <- .formatSystemOutputForDisp(readLines(logfile))
+                disp("\nPLINK output is:\n")
+                disp(paste(log,collapse="\n"),"\n")
+            }
+            0L
+        },error=function(e) {
+            message("Caught error: ",e$message)
+            return(1L)
+        },finally="")
+        
+        if (out != 1L) {
+            hetData <- read.table(paste0(outBase,".het"),header=TRUE,
+                check.names=FALSE)
+            rownames(hetData) <- hetData$FID
+            heterozygosity <- 1 - hetData[,3]/hetData[,5]
+            names(heterozygosity) <- rownames(hetData)
+            
+            # Filter based on what is requested
+            if (.isEmpty(filters$heteroHard)) {
+                if (filters$heteroStat == "mean") {
+                    loc <- mean(heterozygosity,na.rm=TRUE)
+                    sca <- sd(heterozygosity,na.rm=TRUE)
+                }
+                else if (filters$heteroStat == "median") {
+                    loc <- median(heterozygosity,na.rm=TRUE)
+                    sca <- IQR(heterozygosity,na.rm=TRUE)
+                }
+                        
+                remainHetero <- 
+                    (heterozygosity > loc - filters$heteroFac*sca) & 
+                        (loc - heterozygosity < filters$heteroFac*sca)
+            }
+            else
+                remainHetero <- heterozygosity < filters$heteroHard
+            goodHet <- names(which(remainHetero))   
+        }
+        else {
+            warning("There was an error in calculating heterozygosity! ",
+                "Ignoring...",immediate.=TRUE)
+            filters$heteroStat <- filters$heteroFac <- filters$heteroHard <- NA
+        }
+    }
+    
+    # Basic filtering
+    command <- paste0(baseCommand," \\\n","  --make-bed")
+    # SNP filters: call rate
+    if (!.isEmpty(filters$snpCallRate)) {
+        toadd <- paste0("  --geno ",
+            format(1 - filters$snpCallRate,scientific=FALSE))
+        command <- paste0(command," \\\n",toadd)
+    }
+    # SNP filters: MAF
+    if (!.isEmpty(filters$maf)) {
+        toadd <- paste0("  --maf ",format(filters$maf,scientific=FALSE))
+        command <- paste0(command," \\\n",toadd)
+    }
+    # SNP filters: Hardy-Weinberg p-value
+    if (!.isEmpty(filters$hwe)) {
+        toadd <- paste0("  --hwe ",format(filters$hwe,scientific=FALSE))
+        command <- paste0(command," \\\n",toadd)
+    }
+    # Sample filters: call rate
+    if (!.isEmpty(filters$sampleCallRate)) {
+        toadd <- paste0("  --mind ",
+            format(1 - filters$sampleCallRate,scientific=FALSE))
+        command <- paste0(command," \\\n",toadd)
+    }
+    
+    # Now execute to get the outcome
+    message("\nExecuting:\n",command)
+    out <- tryCatch({
+        system(command,ignore.stdout=TRUE,ignore.stderr=TRUE)
+        if (prismaVerbosity() == "full") {
+            logfile <- paste0(outBase,".log")
+            log <- .formatSystemOutputForDisp(readLines(logfile))
+            disp("\nPLINK output is:\n")
+            disp(paste(log,collapse="\n"),"\n")
+        }
+        0L
+    },error=function(e) {
+        message("Caught error: ",e$message)
+        return(1L)
+    },finally="")
+    
+    if (out != 1L) {
+        # Read-in the resulting object and get its row- and col-names
+        tmpIn <- list(
+            bed=paste0(outBase,".bed"),
+            bim=paste0(outBase,".bim"),
+            fam=paste0(outBase,".fam")
+        )
+        tmpObj <- importGWAS(tmpIn,writeGds=FALSE,gdsOverwrite=FALSE)
+        snpsKeep <- rownames(tmpObj)
+        samsKeep <- colnames(tmpObj)
+        # Unify with hetero
+        samsKeep <- union(samsKeep,goodHet)
+    }
+    else
+        stop("Filtering with PLINK has failed! Please use another filtering ",
+            "backend...")
+    
+    # If all ok
+    disp(length(snpsKeep)," SNPs and ",length(samsKeep)," samples remaining")
+    return(obj[snpsKeep,samsKeep])
 }
 
 .filterWithSnpStatsBasic <- function(obj,filters) {
@@ -506,6 +655,11 @@
     
     # Replace the defaults after value checking
     return(.setArg(defaults,f))
+}
+
+.emptyFilters <- function(f) {
+    empty <- unlist(lapply(f,.isEmpty))
+    return(all(empty))
 }
 
 .filterReport <- function(obj) {

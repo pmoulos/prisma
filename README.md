@@ -18,7 +18,7 @@ of the results and online search in the GWAS Catalog.
 prisma requires the presence of several R packages but also additional 3rd party
 software tools for running GWA tests to derive summary statistics as well as PRS
 extraction. See the more detailed 
-[installation](#) 
+[installation](https://pmoulos.github.io/prisma/articles/02-installation.html) 
 guide for more information and step-by-step process. Once the prerequisites are
 in place, PRISMA can be installed from GitHub for the time being:
 
@@ -31,7 +31,7 @@ install_github("pmoulos/prisma")
 
 The following depict the very basic PRISMA PRS extraction pipeline. For full
 documentation see the package vignettes and also 
-[online](#) documentation.
+[online](https://pmoulos.github.io/prisma) documentation.
 
 ## Step by step pipeline
 
