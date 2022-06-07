@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>Evaluation of external PRS or external GWAS</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-03</h4>
+            <h4 data-toc-skip class="date">2022-06-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/09-external.Rmd" class="external-link"><code>vignettes/09-external.Rmd</code></a></small>
       <div class="d-none name"><code>09-external.Rmd</code></div>
@@ -227,10 +227,10 @@
     cleanup<span class="op">=</span><span class="st">"intermediate"</span>,
     logging<span class="op">=</span><span class="st">"file"</span>,
     output<span class="op">=</span><span class="st">"normal"</span>,
-    rc<span class="op">=</span><span class="fl">0.25</span>
+    rc<span class="op">=</span><span class="fl">0.5</span>
 <span class="op">)</span>
 <span class="co">## </span>
-<span class="co">## 2022-06-03 15:07:03: Data processing started...</span>
+<span class="co">## 2022-06-06 20:47:00: Data processing started...</span>
 <span class="co">## </span>
 <span class="co">## Input</span>
 <span class="co">## --------------------------------------------------------------------</span>
@@ -310,12 +310,12 @@
 <span class="co">## </span>
 <span class="co">## Miscellaneous options</span>
 <span class="co">## --------------------------------------------------------------------</span>
-<span class="co">## Local workspace directory (prsWorkspace) : /tmp/Rtmpo0FmJg/file720331a48079</span>
+<span class="co">## Local workspace directory (prsWorkspace) : /tmp/Rtmp1aBwWH/file5a5827f340de</span>
 <span class="co">## Cleanup level (cleanup)                  : intermediate</span>
 <span class="co">## PRS pipeline output type (dnOutput)      : normal</span>
 <span class="co">## Output level (output)                    : normal</span>
 <span class="co">## Run ID (runId)                           : auto</span>
-<span class="co">## Available cores fraction (rc)            : 25%</span>
+<span class="co">## Available cores fraction (rc)            : 50%</span>
 <span class="co">## </span>
 <span class="co">## ****************************************************************</span>
 <span class="co">## Executing PRISMA pipeline with statgen</span>
@@ -324,605 +324,17 @@
 <span class="co">## ################################################################</span>
 <span class="co">## 1. Discovery of de novo PRS candidates</span>
 <span class="co">## ################################################################</span>
-<span class="co">## prisma operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline</span>
+<span class="co">## prisma operations will be executed at /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/baseline</span>
 <span class="co">## </span>
-<span class="co">## Executing denovo pipeline iteration 1, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_iter_1.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Denovo pipeline iteration 1</span>
-<span class="co">## ================================================================</span>
-<span class="co">## ----- Dataset partitioning -----</span>
-<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 119</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Test (target) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 126</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) GWAS -----</span>
-<span class="co">## </span>
-<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 18</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 25 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 25 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 21</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 21 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 21 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 25 associations found out of 564 markers</span>
-<span class="co">##   Part 21: 21 associations found out of 316 markers</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 46 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ----- PRS analysis with base and target -----</span>
-<span class="co">## </span>
-<span class="co">## Starting PRS analysis with lassosum, prsice</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1</span>
-<span class="co">##   preparing summary statistics...</span>
-<span class="co">##   preparing PLINK temporary files for target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">##   copying linkage disequilibrium block files...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running lassosum PRS algorithm</span>
-<span class="co">## Running lassosum validation and PRS calculation</span>
-<span class="co">## 20 out of 20 samples kept in pheno.</span>
-<span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.118721512563089</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1</span>
-<span class="co">##   preparing summary statistics for the base file...</span>
-<span class="co">##   preparing the covariates file...</span>
-<span class="co">##   preparing the phenotype file...</span>
-<span class="co">##   preparing PLINK temporary files - target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
-<span class="co">## </span>
-<span class="co">## Executing:</span>
-<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
-<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1/base_RDOGF7798M \</span>
-<span class="co">##   --beta \</span>
-<span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1/pheno_RDOGF7798M \</span>
-<span class="co">##   --target /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1/plink_prsice_RDOGF7798M \</span>
-<span class="co">##   --cov /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1/covar_RDOGF7798M \</span>
-<span class="co">##   --clump-kb 250 \</span>
-<span class="co">##   --clump-r2 0.1 \</span>
-<span class="co">##   --clump-p 0.75 \</span>
-<span class="co">##   --score avg \</span>
-<span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_RDOGF7798M \</span>
-<span class="co">##   --print-snp \</span>
-<span class="co">##   --perm 100</span>
-<span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.237934</span>
-<span class="co">## Full model R^2 is: 0.653614</span>
-<span class="co">## Null model R^2 is: 0.41568</span>
-<span class="co">## </span>
-<span class="co">## Running PRS algorithms finished! Processing the results...</span>
-<span class="co">## Done!</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_1/denovo_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 2, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_iter_2.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Denovo pipeline iteration 2</span>
-<span class="co">## ================================================================</span>
-<span class="co">## ----- Dataset partitioning -----</span>
-<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 118</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Test (target) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 125</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 4</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) GWAS -----</span>
-<span class="co">## </span>
-<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 18</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 9 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 9 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 21</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 9 associations found out of 567 markers</span>
-<span class="co">##   Part 21: 13 associations found out of 314 markers</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 22 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ----- PRS analysis with base and target -----</span>
-<span class="co">## </span>
-<span class="co">## Starting PRS analysis with lassosum, prsice</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2</span>
-<span class="co">##   preparing summary statistics...</span>
-<span class="co">##   preparing PLINK temporary files for target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">##   copying linkage disequilibrium block files...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running lassosum PRS algorithm</span>
-<span class="co">## Running lassosum validation and PRS calculation</span>
-<span class="co">## 20 out of 20 samples kept in pheno.</span>
-<span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.133238483673401</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2</span>
-<span class="co">##   preparing summary statistics for the base file...</span>
-<span class="co">##   preparing the covariates file...</span>
-<span class="co">##   preparing the phenotype file...</span>
-<span class="co">##   preparing PLINK temporary files - target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
-<span class="co">## </span>
-<span class="co">## Executing:</span>
-<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
-<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2/base_HYUHQ8347O \</span>
-<span class="co">##   --beta \</span>
-<span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2/pheno_HYUHQ8347O \</span>
-<span class="co">##   --target /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2/plink_prsice_HYUHQ8347O \</span>
-<span class="co">##   --cov /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2/covar_HYUHQ8347O \</span>
-<span class="co">##   --clump-kb 250 \</span>
-<span class="co">##   --clump-r2 0.1 \</span>
-<span class="co">##   --clump-p 0.75 \</span>
-<span class="co">##   --score avg \</span>
-<span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_HYUHQ8347O \</span>
-<span class="co">##   --print-snp \</span>
-<span class="co">##   --perm 100</span>
-<span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.182992</span>
-<span class="co">## Full model R^2 is: 0.669374</span>
-<span class="co">## Null model R^2 is: 0.486382</span>
-<span class="co">## </span>
-<span class="co">## Running PRS algorithms finished! Processing the results...</span>
-<span class="co">## Done!</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_2/denovo_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 3, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_iter_3.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Denovo pipeline iteration 3</span>
-<span class="co">## ================================================================</span>
-<span class="co">## ----- Dataset partitioning -----</span>
-<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 117</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Test (target) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 121</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) GWAS -----</span>
-<span class="co">## </span>
-<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 18</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 26 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 26 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 21</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 26 associations found out of 567 markers</span>
-<span class="co">##   Part 21: 13 associations found out of 316 markers</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 39 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ----- PRS analysis with base and target -----</span>
-<span class="co">## </span>
-<span class="co">## Starting PRS analysis with lassosum, prsice</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3</span>
-<span class="co">##   preparing summary statistics...</span>
-<span class="co">##   preparing PLINK temporary files for target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">##   copying linkage disequilibrium block files...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running lassosum PRS algorithm</span>
-<span class="co">## Running lassosum validation and PRS calculation</span>
-<span class="co">## 20 out of 20 samples kept in pheno.</span>
-<span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.00237324085266332</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3</span>
-<span class="co">##   preparing summary statistics for the base file...</span>
-<span class="co">##   preparing the covariates file...</span>
-<span class="co">##   preparing the phenotype file...</span>
-<span class="co">##   preparing PLINK temporary files - target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
-<span class="co">## </span>
-<span class="co">## Executing:</span>
-<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
-<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3/base_SZVFZ9835D \</span>
-<span class="co">##   --beta \</span>
-<span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3/pheno_SZVFZ9835D \</span>
-<span class="co">##   --target /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3/plink_prsice_SZVFZ9835D \</span>
-<span class="co">##   --cov /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3/covar_SZVFZ9835D \</span>
-<span class="co">##   --clump-kb 250 \</span>
-<span class="co">##   --clump-r2 0.1 \</span>
-<span class="co">##   --clump-p 0.75 \</span>
-<span class="co">##   --score avg \</span>
-<span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_SZVFZ9835D \</span>
-<span class="co">##   --print-snp \</span>
-<span class="co">##   --perm 100</span>
-<span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0881702</span>
-<span class="co">## Full model R^2 is: 0.714939</span>
-<span class="co">## Null model R^2 is: 0.626768</span>
-<span class="co">## </span>
-<span class="co">## Running PRS algorithms finished! Processing the results...</span>
-<span class="co">## Done!</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_3/denovo_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 4, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_iter_4.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Denovo pipeline iteration 4</span>
-<span class="co">## ================================================================</span>
-<span class="co">## ----- Dataset partitioning -----</span>
-<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 121</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Test (target) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 121</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) GWAS -----</span>
-<span class="co">## </span>
-<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 18</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 24 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 24 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 21</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 17 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 17 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 24 associations found out of 564 markers</span>
-<span class="co">##   Part 21: 17 associations found out of 314 markers</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 41 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ----- PRS analysis with base and target -----</span>
-<span class="co">## </span>
-<span class="co">## Starting PRS analysis with lassosum, prsice</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4</span>
-<span class="co">##   preparing summary statistics...</span>
-<span class="co">##   preparing PLINK temporary files for target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">##   copying linkage disequilibrium block files...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running lassosum PRS algorithm</span>
-<span class="co">## Running lassosum validation and PRS calculation</span>
-<span class="co">## 20 out of 20 samples kept in pheno.</span>
-<span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0764543645450464</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4</span>
-<span class="co">##   preparing summary statistics for the base file...</span>
-<span class="co">##   preparing the covariates file...</span>
-<span class="co">##   preparing the phenotype file...</span>
-<span class="co">##   preparing PLINK temporary files - target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
-<span class="co">## </span>
-<span class="co">## Executing:</span>
-<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
-<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4/base_RPDAE4453Z \</span>
-<span class="co">##   --beta \</span>
-<span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4/pheno_RPDAE4453Z \</span>
-<span class="co">##   --target /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4/plink_prsice_RPDAE4453Z \</span>
-<span class="co">##   --cov /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4/covar_RPDAE4453Z \</span>
-<span class="co">##   --clump-kb 250 \</span>
-<span class="co">##   --clump-r2 0.1 \</span>
-<span class="co">##   --clump-p 0.75 \</span>
-<span class="co">##   --score avg \</span>
-<span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_RPDAE4453Z \</span>
-<span class="co">##   --print-snp \</span>
-<span class="co">##   --perm 100</span>
-<span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0812213</span>
-<span class="co">## Full model R^2 is: 0.588261</span>
-<span class="co">## Null model R^2 is: 0.507039</span>
-<span class="co">## </span>
-<span class="co">## Running PRS algorithms finished! Processing the results...</span>
-<span class="co">## Done!</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline/YFPBSPZRCDT4480K_denovo_4/denovo_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmpo0FmJg/file720331a48079/statgen/baseline</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/baseline</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 2. Calculation of PRS evaluation metrics</span>
 <span class="co">## ################################################################</span>
 <span class="co">## Aggregation mode: intersect</span>
-<span class="co">##   iteration 1 yields 52 markers</span>
-<span class="co">##   iteration 2 yields 100 markers</span>
-<span class="co">##   iteration 3 yields 1 markers</span>
+<span class="co">##   iteration 1 yields 3 markers</span>
+<span class="co">##   iteration 2 yields 97 markers</span>
+<span class="co">##   iteration 3 yields 29 markers</span>
 <span class="co">##   iteration 4 yields 3 markers</span>
 <span class="co">## Calculating frequencies</span>
 <span class="co">## Averaging effects with mean</span>
@@ -932,158 +344,21 @@
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Frequency 2 &lt;-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2</span>
+<span class="co">## prisma operations will be executed at /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/selection/2</span>
 <span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_iter_1.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9949696</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_evaluate_1/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_iter_2.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9949696</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_evaluate_2/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_iter_3.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
-<span class="co">## ================================================================</span>
-<span class="co">## 1 SNPs not found in target data! Excluding...</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9949696</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_evaluate_3/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_iter_4.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9949696</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2/2_evaluate_4/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/2</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/selection/2</span>
 <span class="co">## </span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Frequency 3 &lt;-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3</span>
+<span class="co">## prisma operations will be executed at /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/selection/3</span>
 <span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_iter_1.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_evaluate_1/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_iter_2.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_evaluate_2/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_iter_3.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_evaluate_3/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_iter_4.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3/3_evaluate_4/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmpo0FmJg/file720331a48079/statgen/selection/3</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/Rtmp1aBwWH/file5a5827f340de/statgen/selection/3</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 3. Selection of best PRS candidate markers</span>
 <span class="co">## ################################################################</span>
-<span class="co">## The optimal number of markers for PRS based on prs_r2 is 3 at prs_r2=0.09165</span>
+<span class="co">## The optimal number of markers for PRS based on prs_r2 is 4 at prs_r2=0.19894</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 4. Wrap-up and graphics</span>
@@ -1102,8 +377,8 @@
 <span class="co">## Getting DNA sequences...</span>
 <span class="co">## Getting GC content...</span>
 <span class="co">## </span>
-<span class="co">## 2022-06-03 15:08:51: Data processing finished!</span>
-<span class="co">## Total processing time: 01 minutes 48 seconds</span>
+<span class="co">## 2022-06-06 20:48:34: Data processing finished!</span>
+<span class="co">## Total processing time: 01 minutes 33 seconds</span>
 
 <span class="va">snpSelection</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prismaOutFuns.html">getPrsCandidates</a></span><span class="op">(</span><span class="va">prismaOut</span>,<span class="st">"statgen"</span>,<span class="fl">1</span><span class="op">)</span>
 
@@ -1117,25 +392,26 @@
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the full model</span>
+<span class="co">## No summary statistics found in the input object. No SNP randomization will be performed.</span>
 
 <span class="va">metrics</span><span class="op">$</span><span class="va">metrics</span>
 <span class="co">##       reduced_r2          full_r2           prs_r2       prs_pvalue </span>
-<span class="co">##     4.386799e-01     5.639940e-01     1.253141e-01     1.026894e-06 </span>
+<span class="co">##     4.386799e-01     5.909386e-01     1.522587e-01     4.533066e-08 </span>
 <span class="co">##     reduced_rmse        full_rmse      reduced_mae         full_mae </span>
-<span class="co">##     3.551591e+00     3.130140e+00     2.829719e+00     2.457688e+00 </span>
+<span class="co">##     3.551591e+00     3.031879e+00     2.829719e+00     2.402121e+00 </span>
 <span class="co">## reduced_pred_cor    full_pred_cor  reduced_pred_r2     full_pred_r2 </span>
-<span class="co">##     6.623292e-01     7.509954e-01     4.386799e-01     5.639940e-01 </span>
+<span class="co">##     6.623292e-01     7.687253e-01     4.386799e-01     5.909386e-01 </span>
 <span class="co">##      prs_pred_r2 </span>
-<span class="co">##     1.253141e-01</span>
+<span class="co">##     1.522587e-01</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">metrics</span><span class="op">$</span><span class="va">values</span><span class="op">)</span>
-<span class="co">##     raw_pheno red_pheno full_pheno       prs</span>
-<span class="co">## 12   30.15677  31.57696   31.58775 1.6726284</span>
-<span class="co">## 21   30.16859  31.33548   28.75451 3.0074684</span>
-<span class="co">## 139  30.93989  31.14021   32.60563 0.9687017</span>
-<span class="co">## 142  42.38751  31.62525   34.32095 0.2647751</span>
-<span class="co">## 148  30.30177  31.72185   29.23190 3.0074684</span>
-<span class="co">## 157  29.51856  24.07311   23.48451 1.6361218</span></code></pre></div>
+<span class="co">##     raw_pheno red_pheno full_pheno         prs</span>
+<span class="co">## 12   30.15677  31.57696   32.16866  0.52282598</span>
+<span class="co">## 21   30.16859  31.33548   28.36736  1.77442175</span>
+<span class="co">## 139  30.93989  31.14021   33.42950  0.01781605</span>
+<span class="co">## 142  42.38751  31.62525   35.08138 -0.48719388</span>
+<span class="co">## 148  30.30177  31.72185   29.69688  1.44926079</span>
+<span class="co">## 157  29.51856  24.07311   24.18296  0.48103345</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="r-session-info">R session info<a class="anchor" aria-label="anchor" href="#r-session-info"></a>
@@ -1165,7 +441,7 @@
 <span class="co">## other attached packages:</span>
 <span class="co">##  [1] BSgenome.Hsapiens.UCSC.hg19_1.4.3 BSgenome_1.62.0                  </span>
 <span class="co">##  [3] rtracklayer_1.54.0                Biostrings_2.62.0                </span>
-<span class="co">##  [5] XVector_0.34.0                    prisma_0.0.1                     </span>
+<span class="co">##  [5] XVector_0.34.0                    prisma_0.0.2                     </span>
 <span class="co">##  [7] SNPRelate_1.28.0                  gdsfmt_1.30.0                    </span>
 <span class="co">##  [9] snpStats_1.44.0                   Matrix_1.4-1                     </span>
 <span class="co">## [11] survival_3.3-1                    SummarizedExperiment_1.24.0      </span>

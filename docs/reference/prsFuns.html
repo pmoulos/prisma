@@ -22,7 +22,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -221,7 +221,7 @@
 <span class="r-in">    <span class="co"># Only 1 PC will be returned because of dataset size</span></span>
 <span class="r-in">    <span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="calcPcaCovar.html">calcPcaCovar</a></span><span class="op">(</span><span class="va">toy</span>,method<span class="op">=</span><span class="st">"snprel"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing PCA to select covariates to include in associations</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing LD pruning...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SNP pruning based on LD:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Excluding 0 SNP (non-autosomes or non-selection)</span>
@@ -247,10 +247,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of principal components: 32</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> PCA:    the sum of all selected genotypes (0,1,2) = 10268</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> CPU capabilities: Double-Precision SSE2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fri Jun  3 14:42:22 2022    (internal increment: 13024)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fri Jun  3 14:42:22 2022    Begin (eigenvalues and eigenvectors)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fri Jun  3 14:42:22 2022    Done.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:20:29 2022    (internal increment: 13024)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 1s</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:20:30 2022    Begin (eigenvalues and eigenvectors)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:20:30 2022    Done.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Selecting number of PCs to include</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   with Tracy-Widom test for significant eigenvalues</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     selected 1 PCs</span>
@@ -319,14 +319,14 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Starting PRS analysis with lassosum, prsice</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ========== Running PRS analysis with lassosum</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> lassosum operations will be executed at /tmp/Rtmpwic9pB/lassosum_WSJPC7148G</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing lassosum run at workspace directory: /tmp/Rtmpwic9pB/lassosum_WSJPC7148G</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> lassosum operations will be executed at /tmp/Rtmpxo9Dha/lassosum_WSJPC7148G</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing lassosum run at workspace directory: /tmp/Rtmpxo9Dha/lassosum_WSJPC7148G</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing summary statistics...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing PLINK temporary files for target...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpwic9pB/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpwic9pB/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpwic9pB/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/lassosum_WSJPC7148G/plink_lassosum_target_EIRID5993K.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   copying linkage disequilibrium block files...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running lassosum PRS algorithm</span>
@@ -346,28 +346,28 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Done! R^2 is: 0.756356747467697</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ========== Running PRS analysis with prsice</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> prsice operations will be executed at /tmp/Rtmpwic9pB/prsice_FKVJN3606M</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PRSice run at workspace directory: /tmp/Rtmpwic9pB/prsice_FKVJN3606M</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> prsice operations will be executed at /tmp/Rtmpxo9Dha/prsice_FKVJN3606M</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PRSice run at workspace directory: /tmp/Rtmpxo9Dha/prsice_FKVJN3606M</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing summary statistics for the base file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing the covariates file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing the phenotype file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing PLINK temporary files - target...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpwic9pB/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpwic9pB/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpwic9pB/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/plink_prsice_WOGET5330Y.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running PRSice PRS algorithm in calculate mode</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --base /tmp/Rtmpwic9pB/prsice_FKVJN3606M/base_WOGET5330Y \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --base /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/base_WOGET5330Y \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --beta \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --binary-target F \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmpwic9pB/prsice_FKVJN3606M/pheno_WOGET5330Y \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --target /tmp/Rtmpwic9pB/prsice_FKVJN3606M/plink_prsice_WOGET5330Y \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --cov /tmp/Rtmpwic9pB/prsice_FKVJN3606M/covar_WOGET5330Y \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/pheno_WOGET5330Y \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --target /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/plink_prsice_WOGET5330Y \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --cov /tmp/Rtmpxo9Dha/prsice_FKVJN3606M/covar_WOGET5330Y \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-kb 250 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-r2 0.1 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-p 1 \</span>
@@ -386,14 +386,14 @@
 <span class="r-in">    </span>
 <span class="r-in">    <span class="va">lprs</span> <span class="op">&lt;-</span> <span class="fu">lassosumPRS</span><span class="op">(</span>base<span class="op">=</span><span class="va">toy</span>,response<span class="op">=</span><span class="st">"BMI"</span>,</span>
 <span class="r-in">        covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> lassosum operations will be executed at /tmp/Rtmpwic9pB/lassosum_OAORP9897W</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing lassosum run at workspace directory: /tmp/Rtmpwic9pB/lassosum_OAORP9897W</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> lassosum operations will be executed at /tmp/Rtmpxo9Dha/lassosum_OAORP9897W</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing lassosum run at workspace directory: /tmp/Rtmpxo9Dha/lassosum_OAORP9897W</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing summary statistics...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing PLINK temporary files for target...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpwic9pB/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpwic9pB/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpwic9pB/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/lassosum_OAORP9897W/plink_lassosum_target_VDWTZ8527W.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   copying linkage disequilibrium block files...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running lassosum PRS algorithm</span>
@@ -415,28 +415,28 @@
 <span class="r-in">    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"PRSice_linux"</span><span class="op">)</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span></span>
 <span class="r-in">        <span class="va">pprs</span> <span class="op">&lt;-</span> <span class="fu">prsicePRS</span><span class="op">(</span>base<span class="op">=</span><span class="va">toy</span>,response<span class="op">=</span><span class="st">"BMI"</span>,</span>
 <span class="r-in">            covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span>,perm<span class="op">=</span><span class="fl">100</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> prsice operations will be executed at /tmp/Rtmpwic9pB/prsice_AYASI0629U</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PRSice run at workspace directory: /tmp/Rtmpwic9pB/prsice_AYASI0629U</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> prsice operations will be executed at /tmp/Rtmpxo9Dha/prsice_AYASI0629U</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PRSice run at workspace directory: /tmp/Rtmpxo9Dha/prsice_AYASI0629U</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing summary statistics for the base file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing the covariates file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing the phenotype file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   preparing PLINK temporary files - target...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpwic9pB/prsice_AYASI0629U/plink_prsice_RNNVO2324P.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpwic9pB/prsice_AYASI0629U/plink_prsice_RNNVO2324P.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpwic9pB/prsice_AYASI0629U/plink_prsice_RNNVO2324P.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/prsice_AYASI0629U/plink_prsice_RNNVO2324P.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/prsice_AYASI0629U/plink_prsice_RNNVO2324P.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/prsice_AYASI0629U/plink_prsice_RNNVO2324P.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running PRSice PRS algorithm in calculate mode</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --base /tmp/Rtmpwic9pB/prsice_AYASI0629U/base_RNNVO2324P \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --base /tmp/Rtmpxo9Dha/prsice_AYASI0629U/base_RNNVO2324P \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --beta \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --binary-target F \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmpwic9pB/prsice_AYASI0629U/pheno_RNNVO2324P \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --target /tmp/Rtmpwic9pB/prsice_AYASI0629U/plink_prsice_RNNVO2324P \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --cov /tmp/Rtmpwic9pB/prsice_AYASI0629U/covar_RNNVO2324P \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmpxo9Dha/prsice_AYASI0629U/pheno_RNNVO2324P \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --target /tmp/Rtmpxo9Dha/prsice_AYASI0629U/plink_prsice_RNNVO2324P \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --cov /tmp/Rtmpxo9Dha/prsice_AYASI0629U/covar_RNNVO2324P \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-kb 250 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-r2 0.1 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --clump-p 1 \</span>

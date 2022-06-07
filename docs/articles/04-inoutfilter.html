@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>Reading, writing and filtering files and objects</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-03</h4>
+            <h4 data-toc-skip class="date">2022-06-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/04-inoutfilter.Rmd" class="external-link"><code>vignettes/04-inoutfilter.Rmd</code></a></small>
       <div class="d-none name"><code>04-inoutfilter.Rmd</code></div>
@@ -97,24 +97,24 @@ input &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt
 
 gwe &lt;-<span class="st"> </span><span class="kw">importGWAS</span>(input,<span class="dt">backend=</span><span class="st">"snpStats"</span>)
 ## Reading PLINK files with snpStats framework
-## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpeiVKQg/file26136fd2f695
+## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpzV4pNV/filed9b2ad9e144
 ## Start file conversion from PLINK BED to SNP GDS ...
 ##     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'
 ##         SNP-major mode (Sample X SNP), 603 bytes
 ##     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'
 ##     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'
-## Fri Jun  3 14:51:41 2022     (store sample id, snp id, position, and chromosome)
+## Mon Jun  6 20:30:37 2022     (store sample id, snp id, position, and chromosome)
 ##     start writing: 120 samples, 20 SNPs ...
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:51:41 2022     Done.
+## Mon Jun  6 20:30:37 2022     Done.
 ## Optimize the access efficiency ...
 ## Clean up the fragments of GDS file:
-##     open the file '/tmp/RtmpeiVKQg/file26136fd2f695' (5.1K)
+##     open the file '/tmp/RtmpzV4pNV/filed9b2ad9e144' (5.1K)
 ##     # of fragments: 50
-##     save to '/tmp/RtmpeiVKQg/file26136fd2f695.tmp'
-##     rename '/tmp/RtmpeiVKQg/file26136fd2f695.tmp' (4.8K, reduced: 312B)
+##     save to '/tmp/RtmpzV4pNV/filed9b2ad9e144.tmp'
+##     rename '/tmp/RtmpzV4pNV/filed9b2ad9e144.tmp' (4.8K, reduced: 312B)
 ##     # of fragments: 24
 gwe
 ## class: GWASExperiment 
@@ -147,24 +147,24 @@ pseudopheno &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
 
 gwe &lt;-<span class="st"> </span><span class="kw">importGWAS</span>(input,<span class="dt">phenos=</span>pseudopheno,<span class="dt">backend=</span><span class="st">"snpStats"</span>)
 ## Reading PLINK files with snpStats framework
-## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpeiVKQg/file26134be5c5f3
+## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpzV4pNV/filed9b65b4b461
 ## Start file conversion from PLINK BED to SNP GDS ...
 ##     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'
 ##         SNP-major mode (Sample X SNP), 603 bytes
 ##     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'
 ##     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'
-## Fri Jun  3 14:51:41 2022     (store sample id, snp id, position, and chromosome)
+## Mon Jun  6 20:30:37 2022     (store sample id, snp id, position, and chromosome)
 ##     start writing: 120 samples, 20 SNPs ...
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:51:42 2022     Done.
+## Mon Jun  6 20:30:37 2022     Done.
 ## Optimize the access efficiency ...
 ## Clean up the fragments of GDS file:
-##     open the file '/tmp/RtmpeiVKQg/file26134be5c5f3' (5.1K)
+##     open the file '/tmp/RtmpzV4pNV/filed9b65b4b461' (5.1K)
 ##     # of fragments: 50
-##     save to '/tmp/RtmpeiVKQg/file26134be5c5f3.tmp'
-##     rename '/tmp/RtmpeiVKQg/file26134be5c5f3.tmp' (4.8K, reduced: 312B)
+##     save to '/tmp/RtmpzV4pNV/filed9b65b4b461.tmp'
+##     rename '/tmp/RtmpzV4pNV/filed9b65b4b461.tmp' (4.8K, reduced: 312B)
 ##     # of fragments: 24
 
 gwe
@@ -202,9 +202,9 @@ gwe
 <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>
 <span class="fu"><a href="../reference/writeFuns.html">writePlink</a></span><span class="op">(</span><span class="va">toy</span>,pheno<span class="op">=</span><span class="st">"BMI"</span>,outBase<span class="op">=</span><span class="va">out</span><span class="op">)</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpeiVKQg/file261325f0f8e2.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpeiVKQg/file261325f0f8e2.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpeiVKQg/file261325f0f8e2.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpzV4pNV/filed9b496ac263.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpzV4pNV/filed9b496ac263.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpzV4pNV/filed9b496ac263.bed (SNP-major mode)</span>
 <span class="co">## NULL</span></code></pre></div>
 <p>The following will write a binary PLINK files triplet, without registering a phenotype and splitting per chromosome:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
@@ -214,13 +214,13 @@ gwe
 <span class="fu"><a href="../reference/writeFuns.html">writePlink</a></span><span class="op">(</span><span class="va">toy</span>,outBase<span class="op">=</span><span class="va">out</span>,perChr<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
 <span class="co">## Preflight...</span>
 <span class="co">## ===== Writing files for chromosome 18</span>
-<span class="co">## Writing FAM file to /tmp/RtmpeiVKQg/file2613311e5611_chr18.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpeiVKQg/file2613311e5611_chr18.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpeiVKQg/file2613311e5611_chr18.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr18.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr18.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr18.bed (SNP-major mode)</span>
 <span class="co">## ===== Writing files for chromosome 21</span>
-<span class="co">## Writing FAM file to /tmp/RtmpeiVKQg/file2613311e5611_chr21.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpeiVKQg/file2613311e5611_chr21.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpeiVKQg/file2613311e5611_chr21.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr21.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr21.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpzV4pNV/filed9b540ccda8_chr21.bed (SNP-major mode)</span>
 <span class="co">## NULL</span></code></pre></div>
 <p>The <code>writePlink</code> function also offers a SNP "salvation" mode (using the <code>salvage=TRUE</code> argument). Sometimes, PLINK files may be imported to PRISMA for further processing and calculations. It may occur that some SNPs in these files have missing location/position data, which will result in their exclusion from the output files. In this mode, <code>writePlink</code> connects to Ensembl through the R package biomaRt and tries to identify chromosomal coordinates for these SNPs.</p>
 </div>
@@ -236,28 +236,28 @@ gwe
 
 gdsf &lt;-<span class="st"> </span><span class="kw">tempfile</span>()
 <span class="kw">writeGdsFile</span>(toy,<span class="dt">gdsfile=</span>gdsf)
-## Writing FAM file to /tmp/RtmpeiVKQg/file2613785c658c.fam 
-## Writing extended MAP file to /tmp/RtmpeiVKQg/file2613785c658c.bim 
-## Writing BED file to /tmp/RtmpeiVKQg/file2613785c658c.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpzV4pNV/filed9b29e9f5c8.fam 
+## Writing extended MAP file to /tmp/RtmpzV4pNV/filed9b29e9f5c8.bim 
+## Writing BED file to /tmp/RtmpzV4pNV/filed9b29e9f5c8.bed (SNP-major mode)
 ## Start file conversion from PLINK BED to SNP GDS ...
-##     BED file: '/tmp/RtmpeiVKQg/file2613785c658c.bed'
+##     BED file: '/tmp/RtmpzV4pNV/filed9b29e9f5c8.bed'
 ##         SNP-major mode (Sample X SNP), 24.4K
-##     FAM file: '/tmp/RtmpeiVKQg/file2613785c658c.fam'
-##     BIM file: '/tmp/RtmpeiVKQg/file2613785c658c.bim'
-## Fri Jun  3 14:51:45 2022     (store sample id, snp id, position, and chromosome)
+##     FAM file: '/tmp/RtmpzV4pNV/filed9b29e9f5c8.fam'
+##     BIM file: '/tmp/RtmpzV4pNV/filed9b29e9f5c8.bim'
+## Mon Jun  6 20:30:43 2022     (store sample id, snp id, position, and chromosome)
 ##     start writing: 100 samples, 1000 SNPs ...
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:51:45 2022     Done.
+## Mon Jun  6 20:30:43 2022     Done.
 ## Optimize the access efficiency ...
 ## Clean up the fragments of GDS file:
-##     open the file '/tmp/RtmpeiVKQg/file2613755857dc' (34.6K)
+##     open the file '/tmp/RtmpzV4pNV/filed9bb485453' (34.6K)
 ##     # of fragments: 50
-##     save to '/tmp/RtmpeiVKQg/file2613755857dc.tmp'
-##     rename '/tmp/RtmpeiVKQg/file2613755857dc.tmp' (34.3K, reduced: 312B)
+##     save to '/tmp/RtmpzV4pNV/filed9bb485453.tmp'
+##     rename '/tmp/RtmpzV4pNV/filed9bb485453.tmp' (34.3K, reduced: 312B)
 ##     # of fragments: 24
-## [1] "/tmp/RtmpeiVKQg/file2613755857dc"</code></pre></div>
+## [1] "/tmp/RtmpzV4pNV/filed9bb485453"</code></pre></div>
 <p>The <code>GWASExperiment2GDS</code> function operates similarly but it uses the <code>gdsfile</code> accessor to get the object's GDS file and throws an error if it is not defined.</p>
 </div>
 <div class="section level3">
@@ -444,7 +444,7 @@ gdsf &lt;-<span class="st"> </span><span class="kw">tempfile</span>()
 <span class="co">##   with Hubert method</span>
 <span class="co">## </span>
 <span class="co">## Reperforming LD and PCA analysis after outlier sample removal</span>
-<span class="co">## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...</span>
+<span class="co">## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...</span>
 <span class="co">## Performing LD pruning...</span>
 <span class="co">## SNP pruning based on LD:</span>
 <span class="co">## Excluding 120 SNPs (non-autosomes or non-selection)</span>
@@ -514,7 +514,7 @@ gdsf &lt;-<span class="st"> </span><span class="kw">tempfile</span>()
 <span class="co">## [8] base     </span>
 <span class="co">## </span>
 <span class="co">## other attached packages:</span>
-<span class="co">##  [1] prisma_0.0.1                SNPRelate_1.28.0           </span>
+<span class="co">##  [1] prisma_0.0.2                SNPRelate_1.28.0           </span>
 <span class="co">##  [3] gdsfmt_1.30.0               snpStats_1.44.0            </span>
 <span class="co">##  [5] Matrix_1.4-1                survival_3.3-1             </span>
 <span class="co">##  [7] SummarizedExperiment_1.24.0 Biobase_2.54.0             </span>

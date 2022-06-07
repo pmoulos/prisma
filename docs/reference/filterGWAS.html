@@ -18,7 +18,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">filterGWAS</span><span class="op">(</span><span class="va">obj</span>, filters <span class="op">=</span> <span class="fu"><a href="getDefaults.html">getDefaults</a></span><span class="op">(</span><span class="st">"filters"</span><span class="op">)</span>,
         imputeMissing <span class="op">=</span> <span class="cn">TRUE</span>, imputeMode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"single"</span>,<span class="st">"split"</span><span class="op">)</span>,
-        rc <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
+        withPlink <span class="op">=</span> <span class="cn">FALSE</span>, rc <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -98,6 +98,12 @@
     into a part containing missing values and a part with
     no missing values (<code>"split"</code>), may happen in large
     dataset and could be more accurate.</p></dd>
+<dt>withPlink</dt>
+<dd><p>Perform basic filtering (not IBD or PCA)
+    with PLINK instead of snpStats. Maybe faster and suitable
+    for huge datasets but with less options. Defaults to 
+    <code>FALSE</code>. Also, in this case, the <code>filterRecord</code>
+    is not filled.</p></dd>
 <dt>rc</dt>
 <dd><p>The fraction of available cores to use for 
     parallel calculations. Default is <code>NULL</code> for no
@@ -203,6 +209,35 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Heterozygosity            : 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Inbreed                   : 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in">        </span>
+<span class="r-in">    <span class="co"># With PLINK</span></span>
+<span class="r-in">    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"plink"</span><span class="op">)</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span></span>
+<span class="r-in">        <span class="va">toyF</span> <span class="op">&lt;-</span> <span class="fu">filterGWAS</span><span class="op">(</span><span class="va">toy</span>,filters<span class="op">=</span><span class="va">filts</span>,</span>
+<span class="r-in">            imputeMissing<span class="op">=</span><span class="cn">FALSE</span>,withPlink<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Performing basic filtering</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Exporting temporary PLINK files for the calculations</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/file381e44242d9d.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/file381e44242d9d.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/file381e44242d9d.bed (SNP-major mode)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> /home/panos/.local/share/R/plink-1.90/plink \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --bfile /tmp/Rtmpxo9Dha/file381e44242d9d \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --out /tmp/Rtmpxo9Dha/file381e3dbfafea --het</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> /home/panos/.local/share/R/plink-1.90/plink \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --bfile /tmp/Rtmpxo9Dha/file381e44242d9d \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --out /tmp/Rtmpxo9Dha/file381e3dbfafea \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --make-bed \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --geno 0.02 \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --maf 0.05 \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --hwe 0.001 \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --mind 0.05</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with snpStats framework</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 881 SNPs and 100 samples remaining</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

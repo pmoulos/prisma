@@ -22,7 +22,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -172,7 +172,7 @@
     with <code>i=1:ntimes</code>. This data frame is the output
     of <code>prsCrossValidate</code>. For the collected metrics,
     see Details.
-    For <code>applyPRS</code> a list with three members:</p><ul><li><p><code>metrics</code>: The same as the cross
+    For <code>applyPRS</code> a list with three or four members:</p><ul><li><p><code>metrics</code>: The same as the cross
         validation metrics - see Details.</p></li>
 <li><p><code>values</code>: A data frame with the following
         columns:</p><ul><li><p><code>raw_pheno</code>: The phenotype which
@@ -189,6 +189,19 @@
 <li><p><code>plots</code>: A list of two ggplot objects:</p><ul><li><p><code>scatter</code>: A scatterplot of
             <code>raw_pheno</code> against <code>prs</code></p></li>
 <li><p><code>hist</code>: A histogram of <code>prs</code></p></li>
+</ul></li>
+<li><p><code>permutations</code>: This is available only
+        when <code>times &gt; 0</code> and only when summary 
+        statistics (<code>effects</code> slot) are present in the
+        <code>gwe</code> GWASExperiment object.</p><ul><li><p><code>metrics</code>: A matrics of evaluation
+            metrics (same as the <code>metrics</code> upper level
+            member) over <code>times</code> iterations (the number
+            of rows)</p></li>
+<li><p><code>bootp</code>: A bootstrap p-value denoting
+            the statistical significance of the tested PRS
+            being non-random (essentially the number of times
+            the PRS R^2 of the random PRS is larger than
+            the original PRS R^2 divided by <code>times</code>)</p></li>
 </ul></li>
 </ul></div>
     <div class="section level2">

@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>Derivation of PRS candidates and evaluation</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-03</h4>
+            <h4 data-toc-skip class="date">2022-06-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/07-prsfuns.Rmd" class="external-link"><code>vignettes/07-prsfuns.Rmd</code></a></small>
       <div class="d-none name"><code>07-prsfuns.Rmd</code></div>
@@ -111,19 +111,19 @@ base &lt;-<span class="st"> </span>tt<span class="op">$</span>train
 target &lt;-<span class="st"> </span>tt<span class="op">$</span>test
 base &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(base,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
-## Excluding 54 SNPs (monomorphic: TRUE, MAF: NaN, missing rate: NaN)
+## Excluding 58 SNPs (monomorphic: TRUE, MAF: NaN, missing rate: NaN)
 ##     # of samples: 50
-##     # of SNPs: 946
+##     # of SNPs: 942
 ##     using 1 thread
 ##     sliding window: 500,000 basepairs, Inf SNPs
 ##     |LD| threshold: 0.2
 ##     method: composite
-## Chromosome 18: 16.74%, 110/657
-## Chromosome 21: 15.74%, 54/343
+## Chromosome 18: 16.44%, 108/657
+## Chromosome 21: 16.33%, 56/343
 ## 164 markers are selected in total.
 ## LD pruning finished! 164 SNPs will be used for PCA.
 ## 
@@ -135,51 +135,51 @@ base &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<spa
 ##     # of SNPs: 164
 ##     using 1 thread
 ##     # of principal components: 32
-## PCA:    the sum of all selected genotypes (0,1,2) = 3900
+## PCA:    the sum of all selected genotypes (0,1,2) = 3695
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:57:48 2022    (internal increment: 26048)
+## Mon Jun  6 20:36:55 2022    (internal increment: 26048)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:57:48 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:57:48 2022    Done.
+## Mon Jun  6 20:36:55 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:36:55 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
 target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(target,<span class="dt">method=</span><span class="st">"snprel"</span>,<span class="dt">npc=</span><span class="dv">1</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
-## Excluding 62 SNPs (monomorphic: TRUE, MAF: NaN, missing rate: NaN)
+## Excluding 54 SNPs (monomorphic: TRUE, MAF: NaN, missing rate: NaN)
 ##     # of samples: 50
-##     # of SNPs: 938
+##     # of SNPs: 946
 ##     using 1 thread
 ##     sliding window: 500,000 basepairs, Inf SNPs
 ##     |LD| threshold: 0.2
 ##     method: composite
 ## Chromosome 18: 16.13%, 106/657
-## Chromosome 21: 17.20%, 59/343
-## 165 markers are selected in total.
-## LD pruning finished! 165 SNPs will be used for PCA.
+## Chromosome 21: 16.62%, 57/343
+## 163 markers are selected in total.
+## LD pruning finished! 163 SNPs will be used for PCA.
 ## 
 ## Performing PCA...
 ## Principal Component Analysis (PCA) on genotypes:
-## Excluding 835 SNPs (non-autosomes or non-selection)
+## Excluding 837 SNPs (non-autosomes or non-selection)
 ## Excluding 0 SNP (monomorphic: TRUE, MAF: NaN, missing rate: NaN)
 ##     # of samples: 50
-##     # of SNPs: 165
+##     # of SNPs: 163
 ##     using 1 thread
 ##     # of principal components: 32
-## PCA:    the sum of all selected genotypes (0,1,2) = 3987
+## PCA:    the sum of all selected genotypes (0,1,2) = 4148
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:57:49 2022    (internal increment: 26048)
+## Mon Jun  6 20:36:55 2022    (internal increment: 26048)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:57:49 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:57:49 2022    Done.
+## Mon Jun  6 20:36:55 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:36:55 2022    Done.
 ## Selecting number of PCs to include
 ##   with hard-cutoff at 1 PCs</code></pre></div>
 <p>Now, summary statistics</p>
@@ -199,18 +199,18 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 19 associations (uncorrected p-values).</span>
+<span class="co">## Found 27 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : Yes</span>
-<span class="co">## Found 19 associations (uncorrected p-values).</span>
+<span class="co">## Found 29 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 31 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 50 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -220,24 +220,24 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 22 associations (uncorrected p-values).</span>
+<span class="co">## Found 11 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : Yes</span>
-<span class="co">## Found 24 associations (uncorrected p-values).</span>
+<span class="co">## Found 11 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 38 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 27 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 31 associations found out of 657 markers</span>
-<span class="co">##   Part 21: 38 associations found out of 343 markers</span>
+<span class="co">##   Part 18: 50 associations found out of 657 markers</span>
+<span class="co">##   Part 21: 27 associations found out of 343 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 69 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 77 associations with (uncorrected) combined p-values).</span>
 
 <span class="co"># With no PCs</span>
 <span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gwaFuns.html">gwa</a></span><span class="op">(</span><span class="va">base</span>,response<span class="op">=</span><span class="st">"BMI"</span>,covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,
@@ -253,18 +253,18 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 17 associations (uncorrected p-values).</span>
+<span class="co">## Found 25 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 17 associations (uncorrected p-values).</span>
+<span class="co">## Found 26 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 46 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 49 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -274,24 +274,24 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 25 associations (uncorrected p-values).</span>
+<span class="co">## Found 13 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 21 associations (uncorrected p-values).</span>
+<span class="co">## Found 13 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 34 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 25 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 46 associations found out of 657 markers</span>
-<span class="co">##   Part 21: 34 associations found out of 343 markers</span>
+<span class="co">##   Part 18: 49 associations found out of 657 markers</span>
+<span class="co">##   Part 21: 25 associations found out of 343 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 80 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 74 associations with (uncorrected) combined p-values).</span>
     
 <span class="co"># With 1 PCs and one more covariate</span>
 <span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gwaFuns.html">gwa</a></span><span class="op">(</span><span class="va">base</span>,response<span class="op">=</span><span class="st">"BMI"</span>,covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span>,<span class="st">"Case_Control"</span><span class="op">)</span>,
@@ -307,18 +307,18 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 69 associations (uncorrected p-values).</span>
+<span class="co">## Found 40 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : Yes</span>
-<span class="co">## Found 25 associations (uncorrected p-values).</span>
+<span class="co">## Found 23 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 61 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 64 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -328,24 +328,24 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 33 associations (uncorrected p-values).</span>
+<span class="co">## Found 10 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Preparing data for statgenGWAS...</span>
 <span class="co">## Performing GWAS with statgenGWAS model</span>
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : Yes</span>
-<span class="co">## Found 16 associations (uncorrected p-values).</span>
+<span class="co">## Found 10 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 31 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 21 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 61 associations found out of 657 markers</span>
-<span class="co">##   Part 21: 31 associations found out of 343 markers</span>
+<span class="co">##   Part 18: 64 associations found out of 657 markers</span>
+<span class="co">##   Part 21: 21 associations found out of 343 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 92 associations with (uncorrected) combined p-values).</span></code></pre></div>
+<span class="co">## Overall, found 85 associations with (uncorrected) combined p-values).</span></code></pre></div>
 <p>Verify that we have three different models:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/listAttrFuns.html">listGwa</a></span><span class="op">(</span><span class="va">base</span><span class="op">)</span>
@@ -362,14 +362,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">lassoPrs1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prsFuns.html">lassosumPRS</a></span><span class="op">(</span>base<span class="op">=</span><span class="va">base</span>,target<span class="op">=</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,
         covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_ETXUS0626J</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_ETXUS0626J</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_TYBRI8059C</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_TYBRI8059C</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_ETXUS0626J/plink_lassosum_target_MKJKH0960I.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_ETXUS0626J/plink_lassosum_target_MKJKH0960I.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_ETXUS0626J/plink_lassosum_target_MKJKH0960I.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_TYBRI8059C/plink_lassosum_target_JOOKT3267U.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_TYBRI8059C/plink_lassosum_target_JOOKT3267U.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_TYBRI8059C/plink_lassosum_target_JOOKT3267U.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -386,18 +386,18 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0175370886238609</span>
+<span class="co">## Done! R^2 is: 0.0097569064977603</span>
 
 <span class="va">lassoPrs2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prsFuns.html">lassosumPRS</a></span><span class="op">(</span>base<span class="op">=</span><span class="va">base</span>,target<span class="op">=</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,
     covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_CQWHL7766Y</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_CQWHL7766Y</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_ZZTCA3632F</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_ZZTCA3632F</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_CQWHL7766Y/plink_lassosum_target_BUQPA4749F.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_CQWHL7766Y/plink_lassosum_target_BUQPA4749F.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_CQWHL7766Y/plink_lassosum_target_BUQPA4749F.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_ZZTCA3632F/plink_lassosum_target_NXZCZ1838B.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_ZZTCA3632F/plink_lassosum_target_NXZCZ1838B.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_ZZTCA3632F/plink_lassosum_target_NXZCZ1838B.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -414,18 +414,18 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0528354299230865</span>
+<span class="co">## Done! R^2 is: 0.00673532592199985</span>
         
 <span class="va">lassoPrs3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prsFuns.html">lassosumPRS</a></span><span class="op">(</span>base<span class="op">=</span><span class="va">base</span>,target<span class="op">=</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,
     covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span>,<span class="st">"Case_Control"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_PRDBL7622F</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_PRDBL7622F</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_YUXVY2261D</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_YUXVY2261D</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_PRDBL7622F/plink_lassosum_target_GKDRD4751K.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_PRDBL7622F/plink_lassosum_target_GKDRD4751K.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_PRDBL7622F/plink_lassosum_target_GKDRD4751K.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_YUXVY2261D/plink_lassosum_target_KDTOB4328E.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_YUXVY2261D/plink_lassosum_target_KDTOB4328E.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_YUXVY2261D/plink_lassosum_target_KDTOB4328E.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -442,7 +442,7 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0188222631225712</span></code></pre></div>
+<span class="co">## Done! R^2 is: 0.0062491480825485</span></code></pre></div>
 <p>Peak at the contents of the lassosum PRS:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lassoPrs1</span><span class="op">)</span>
@@ -452,14 +452,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## rs1940651         18  2006123  rs1940651           G                A</span>
 <span class="co">## rs1940658         18  2029280  rs1940658           A                G</span>
 <span class="co">## rs1940670         18  2042445  rs1940670           A                G</span>
-<span class="co">## rs508857          18  2101958   rs508857           A                G</span>
+<span class="co">## rs1954825         18  2068872  rs1954825           A                G</span>
 <span class="co">##           locus_name effect_weight        OR  asm</span>
-<span class="co">## rs1009238         NA   -0.03356763 0.9669895 hg19</span>
-<span class="co">## rs1940646         NA    0.02301112 1.0232779 hg19</span>
-<span class="co">## rs1940651         NA   -0.14073585 0.8687188 hg19</span>
-<span class="co">## rs1940658         NA   -0.01327724 0.9868105 hg19</span>
-<span class="co">## rs1940670         NA    0.40244651 1.4954789 hg19</span>
-<span class="co">## rs508857          NA   -0.07546377 0.9273133 hg19</span>
+<span class="co">## rs1009238         NA  -0.247913478 0.7804275 hg19</span>
+<span class="co">## rs1940646         NA   0.130474846 1.1393693 hg19</span>
+<span class="co">## rs1940651         NA  -0.309550457 0.7337767 hg19</span>
+<span class="co">## rs1940658         NA  -0.174989920 0.8394655 hg19</span>
+<span class="co">## rs1940670         NA   0.209654564 1.2332520 hg19</span>
+<span class="co">## rs1954825         NA  -0.009394257 0.9906497 hg19</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lassoPrs3</span><span class="op">)</span>
 <span class="co">##           chromosome position variant_id risk_allele reference_allele</span>
@@ -468,14 +468,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## rs1940651         18  2006123  rs1940651           G                A</span>
 <span class="co">## rs1940658         18  2029280  rs1940658           A                G</span>
 <span class="co">## rs1940670         18  2042445  rs1940670           A                G</span>
-<span class="co">## rs579292          18  2075770   rs579292           A                G</span>
+<span class="co">## rs1954825         18  2068872  rs1954825           A                G</span>
 <span class="co">##           locus_name effect_weight        OR  asm</span>
-<span class="co">## rs1009238         NA   -0.10536140 0.8999992 hg19</span>
-<span class="co">## rs1940646         NA    0.21153851 1.2355775 hg19</span>
-<span class="co">## rs1940651         NA   -0.17171852 0.8422162 hg19</span>
-<span class="co">## rs1940658         NA   -0.07363955 0.9290065 hg19</span>
-<span class="co">## rs1940670         NA    0.36186276 1.4360018 hg19</span>
-<span class="co">## rs579292          NA   -0.04268063 0.9582174 hg19</span></code></pre></div>
+<span class="co">## rs1009238         NA  -0.143099565 0.8666678 hg19</span>
+<span class="co">## rs1940646         NA   0.272987989 1.3138845 hg19</span>
+<span class="co">## rs1940651         NA  -0.230740685 0.7939453 hg19</span>
+<span class="co">## rs1940658         NA  -0.010749823 0.9893078 hg19</span>
+<span class="co">## rs1940670         NA   0.160116411 1.1736475 hg19</span>
+<span class="co">## rs1954825         NA  -0.007496655 0.9925314 hg19</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="prs-analysis-with-prsice2">PRS analysis with PRSice2<a class="anchor" aria-label="anchor" href="#prs-analysis-with-prsice2"></a>
@@ -493,131 +493,141 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
     <span class="va">prsicePrs3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prsFuns.html">prsicePRS</a></span><span class="op">(</span>base<span class="op">=</span><span class="va">base</span>,target<span class="op">=</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,
         covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span>,<span class="st">"Case_Control"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span>,perm<span class="op">=</span><span class="fl">100</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_OIPDH5538B</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_OIPDH5538B</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_DVLME6409V</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_DVLME6409V</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_OIPDH5538B/plink_prsice_PBBJC2503E.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_OIPDH5538B/plink_prsice_PBBJC2503E.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_OIPDH5538B/plink_prsice_PBBJC2503E.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_DVLME6409V/plink_prsice_EBIFZ2906D.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_DVLME6409V/plink_prsice_EBIFZ2906D.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_DVLME6409V/plink_prsice_EBIFZ2906D.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_OIPDH5538B/base_PBBJC2503E \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_DVLME6409V/base_EBIFZ2906D \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_OIPDH5538B/pheno_PBBJC2503E \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_OIPDH5538B/plink_prsice_PBBJC2503E \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_OIPDH5538B/covar_PBBJC2503E \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_DVLME6409V/pheno_EBIFZ2906D \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_DVLME6409V/plink_prsice_EBIFZ2906D \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_DVLME6409V/covar_EBIFZ2906D \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_PBBJC2503E \</span>
+<span class="co">##   --out prsice_out_EBIFZ2906D \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0369313</span>
-<span class="co">## Full model R^2 is: 0.146879</span>
-<span class="co">## Null model R^2 is: 0.109948</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_QLFZL1758J</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_QLFZL1758J</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0539102</span>
+<span class="co">## Full model R^2 is: 0.316611</span>
+<span class="co">## Null model R^2 is: 0.262701</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_ZVBNY2949S</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_ZVBNY2949S</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_QLFZL1758J/plink_prsice_ZODXA2706J.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_QLFZL1758J/plink_prsice_ZODXA2706J.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_QLFZL1758J/plink_prsice_ZODXA2706J.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/plink_prsice_YPSLL9846T.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/plink_prsice_YPSLL9846T.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/plink_prsice_YPSLL9846T.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_QLFZL1758J/base_ZODXA2706J \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/base_YPSLL9846T \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_QLFZL1758J/pheno_ZODXA2706J \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_QLFZL1758J/plink_prsice_ZODXA2706J \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_QLFZL1758J/covar_ZODXA2706J \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/pheno_YPSLL9846T \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/plink_prsice_YPSLL9846T \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_ZVBNY2949S/covar_YPSLL9846T \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_ZODXA2706J \</span>
+<span class="co">##   --out prsice_out_YPSLL9846T \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0367948</span>
-<span class="co">## Full model R^2 is: 0.142178</span>
-<span class="co">## Null model R^2 is: 0.105384</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_GWKES1830D</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_GWKES1830D</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0601267</span>
+<span class="co">## Full model R^2 is: 0.321912</span>
+<span class="co">## Null model R^2 is: 0.261785</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_XLKVF4743C</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_XLKVF4743C</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_GWKES1830D/plink_prsice_DUIIJ9952P.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_GWKES1830D/plink_prsice_DUIIJ9952P.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_GWKES1830D/plink_prsice_DUIIJ9952P.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_XLKVF4743C/plink_prsice_ETJRV5338B.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_XLKVF4743C/plink_prsice_ETJRV5338B.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_XLKVF4743C/plink_prsice_ETJRV5338B.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_GWKES1830D/base_DUIIJ9952P \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_XLKVF4743C/base_ETJRV5338B \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_GWKES1830D/pheno_DUIIJ9952P \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_GWKES1830D/plink_prsice_DUIIJ9952P \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_GWKES1830D/covar_DUIIJ9952P \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_XLKVF4743C/pheno_ETJRV5338B \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_XLKVF4743C/plink_prsice_ETJRV5338B \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_XLKVF4743C/covar_ETJRV5338B \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_DUIIJ9952P \</span>
+<span class="co">##   --out prsice_out_ETJRV5338B \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0218937</span>
-<span class="co">## Full model R^2 is: 0.375997</span>
-<span class="co">## Null model R^2 is: 0.354104</span></code></pre></div>
+<span class="co">## Adjusted PRSice R^2 is: 0.0533969</span>
+<span class="co">## Full model R^2 is: 0.514054</span>
+<span class="co">## Null model R^2 is: 0.460657</span></code></pre></div>
 <p>Peak at the contents of the lassosum PRS:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prsicePrs1</span><span class="op">)</span>
 <span class="co">##            chromosome position variant_id risk_allele reference_allele</span>
+<span class="co">## rs292367           18  5096936   rs292367           C                A</span>
+<span class="co">## rs11661323         18 24286162 rs11661323           G                A</span>
 <span class="co">## rs11876399         18  3615943 rs11876399           G                A</span>
-<span class="co">##            locus_name effect_weight         OR  asm</span>
-<span class="co">## rs11876399         NA     -2.780566 0.06200341 hg19</span>
+<span class="co">## rs2825678          21 20986798  rs2825678           G                A</span>
+<span class="co">## rs1025366          18 24414687  rs1025366           A                G</span>
+<span class="co">## rs1116852          21 22237121  rs1116852           G                A</span>
+<span class="co">##            locus_name effect_weight           OR  asm</span>
+<span class="co">## rs292367           NA     -4.606073  0.009990977 hg19</span>
+<span class="co">## rs11661323         NA     -3.192376  0.041074182 hg19</span>
+<span class="co">## rs11876399         NA     -2.544476  0.078514167 hg19</span>
+<span class="co">## rs2825678          NA      2.895029 18.084025962 hg19</span>
+<span class="co">## rs1025366          NA      3.740726 42.128558194 hg19</span>
+<span class="co">## rs1116852          NA     -2.733084  0.065018462 hg19</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prsicePrs3</span><span class="op">)</span>
 <span class="co">##           chromosome position variant_id risk_allele reference_allele</span>
+<span class="co">## rs1565082         18 21692286  rs1565082           G                A</span>
+<span class="co">## rs6506156         18  4040429  rs6506156           G                A</span>
 <span class="co">## rs979916          21 23607112   rs979916           A                G</span>
-<span class="co">## rs2826023         21 21498290  rs2826023           A                G</span>
-<span class="co">## rs9977668         21 22044940  rs9977668           G                A</span>
-<span class="co">## rs7280065         21 24827764  rs7280065           G                A</span>
-<span class="co">## rs2826810         21 22727138  rs2826810           C                A</span>
-<span class="co">## rs1940670         18  2042445  rs1940670           A                G</span>
-<span class="co">##           locus_name effect_weight         OR  asm</span>
-<span class="co">## rs979916          NA     -3.733789 0.02390211 hg19</span>
-<span class="co">## rs2826023         NA     -2.556728 0.07755806 hg19</span>
-<span class="co">## rs9977668         NA     -2.999237 0.04982508 hg19</span>
-<span class="co">## rs7280065         NA     -2.743046 0.06437396 hg19</span>
-<span class="co">## rs2826810         NA     -2.819718 0.05962272 hg19</span>
-<span class="co">## rs1940670         NA      1.725512 5.61539632 hg19</span></code></pre></div>
+<span class="co">## rs1740090         21 23258743  rs1740090           G                A</span>
+<span class="co">## rs2827694         21 24094938  rs2827694           G                A</span>
+<span class="co">## rs4800708         18 23595985  rs4800708           G                A</span>
+<span class="co">##           locus_name effect_weight           OR  asm</span>
+<span class="co">## rs1565082         NA      2.715768 15.116217068 hg19</span>
+<span class="co">## rs6506156         NA     -2.582677  0.075571456 hg19</span>
+<span class="co">## rs979916          NA     -2.491635  0.082774514 hg19</span>
+<span class="co">## rs1740090         NA      2.323451 10.210849861 hg19</span>
+<span class="co">## rs2827694         NA     -4.638936  0.009667979 hg19</span>
+<span class="co">## rs4800708         NA     -5.555143  0.003867516 hg19</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="prs-analysis-with-more-than-one-algorithm">PRS analysis with more than one algorithm<a class="anchor" aria-label="anchor" href="#prs-analysis-with-more-than-one-algorithm"></a>
@@ -643,14 +653,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_LCAQR0699L</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_LCAQR0699L</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_KHVOY7223J</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_KHVOY7223J</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_LCAQR0699L/plink_lassosum_target_STYWF0523P.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_LCAQR0699L/plink_lassosum_target_STYWF0523P.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_LCAQR0699L/plink_lassosum_target_STYWF0523P.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_KHVOY7223J/plink_lassosum_target_NVLSL1478Q.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_KHVOY7223J/plink_lassosum_target_NVLSL1478Q.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_KHVOY7223J/plink_lassosum_target_NVLSL1478Q.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -667,43 +677,43 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0175370886238609</span>
+<span class="co">## Done! R^2 is: 0.0097569064977603</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_CORHL2531V</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_CORHL2531V</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_IOIVT8138Z</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_IOIVT8138Z</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_CORHL2531V/plink_prsice_OFVZE4193M.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_CORHL2531V/plink_prsice_OFVZE4193M.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_CORHL2531V/plink_prsice_OFVZE4193M.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/plink_prsice_RWNCK7354U.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/plink_prsice_RWNCK7354U.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/plink_prsice_RWNCK7354U.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_CORHL2531V/base_OFVZE4193M \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/base_RWNCK7354U \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_CORHL2531V/pheno_OFVZE4193M \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_CORHL2531V/plink_prsice_OFVZE4193M \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_CORHL2531V/covar_OFVZE4193M \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/pheno_RWNCK7354U \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/plink_prsice_RWNCK7354U \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_IOIVT8138Z/covar_RWNCK7354U \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_OFVZE4193M \</span>
+<span class="co">##   --out prsice_out_RWNCK7354U \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0369313</span>
-<span class="co">## Full model R^2 is: 0.146879</span>
-<span class="co">## Null model R^2 is: 0.109948</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0539102</span>
+<span class="co">## Full model R^2 is: 0.316611</span>
+<span class="co">## Null model R^2 is: 0.262701</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
@@ -711,14 +721,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_HJPIH0663S</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_HJPIH0663S</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_LPOUD9139B</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_LPOUD9139B</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_HJPIH0663S/plink_lassosum_target_KUAYB3231B.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_HJPIH0663S/plink_lassosum_target_KUAYB3231B.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_HJPIH0663S/plink_lassosum_target_KUAYB3231B.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_LPOUD9139B/plink_lassosum_target_RYRSE8634F.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_LPOUD9139B/plink_lassosum_target_RYRSE8634F.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_LPOUD9139B/plink_lassosum_target_RYRSE8634F.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -735,43 +745,43 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0528354299230865</span>
+<span class="co">## Done! R^2 is: 0.00673532592199985</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_VBYHS2459E</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_VBYHS2459E</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_XFTYC0318P</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_XFTYC0318P</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_VBYHS2459E/plink_prsice_HNJXC6565F.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_VBYHS2459E/plink_prsice_HNJXC6565F.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_VBYHS2459E/plink_prsice_HNJXC6565F.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_XFTYC0318P/plink_prsice_LAEFA5392R.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_XFTYC0318P/plink_prsice_LAEFA5392R.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_XFTYC0318P/plink_prsice_LAEFA5392R.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_VBYHS2459E/base_HNJXC6565F \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_XFTYC0318P/base_LAEFA5392R \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_VBYHS2459E/pheno_HNJXC6565F \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_VBYHS2459E/plink_prsice_HNJXC6565F \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_VBYHS2459E/covar_HNJXC6565F \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_XFTYC0318P/pheno_LAEFA5392R \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_XFTYC0318P/plink_prsice_LAEFA5392R \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_XFTYC0318P/covar_LAEFA5392R \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_HNJXC6565F \</span>
+<span class="co">##   --out prsice_out_LAEFA5392R \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0367948</span>
-<span class="co">## Full model R^2 is: 0.142178</span>
-<span class="co">## Null model R^2 is: 0.105384</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0601267</span>
+<span class="co">## Full model R^2 is: 0.321912</span>
+<span class="co">## Null model R^2 is: 0.261785</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
@@ -779,14 +789,14 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_JNGBP4362E</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_JNGBP4362E</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_XBBKS2871F</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_XBBKS2871F</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_JNGBP4362E/plink_lassosum_target_KZUAH0700H.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_JNGBP4362E/plink_lassosum_target_KZUAH0700H.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/lassosum_JNGBP4362E/plink_lassosum_target_KZUAH0700H.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_XBBKS2871F/plink_lassosum_target_ZSCHW1126I.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_XBBKS2871F/plink_lassosum_target_ZSCHW1126I.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/lassosum_XBBKS2871F/plink_lassosum_target_ZSCHW1126I.bed (SNP-major mode)</span>
 <span class="co">##   copying linkage disequilibrium block files...</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running lassosum PRS algorithm</span>
@@ -803,43 +813,43 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 50 out of 50 samples kept in pheno.</span>
 <span class="co">## 50 out of 50 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0188222631225712</span>
+<span class="co">## Done! R^2 is: 0.0062491480825485</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_LCNEC7673G</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_LCNEC7673G</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_CBPCN7260O</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_CBPCN7260O</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
 <span class="co">##   preparing PLINK temporary files - target...</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpvgB5i7/prsice_LCNEC7673G/plink_prsice_GSEYM2498C.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_LCNEC7673G/plink_prsice_GSEYM2498C.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpvgB5i7/prsice_LCNEC7673G/plink_prsice_GSEYM2498C.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpaxQu3z/prsice_CBPCN7260O/plink_prsice_BZIZN9108F.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_CBPCN7260O/plink_prsice_BZIZN9108F.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpaxQu3z/prsice_CBPCN7260O/plink_prsice_BZIZN9108F.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## Running PRSice PRS algorithm in calculate mode</span>
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpvgB5i7/prsice_LCNEC7673G/base_GSEYM2498C \</span>
+<span class="co">##   --base /tmp/RtmpaxQu3z/prsice_CBPCN7260O/base_BZIZN9108F \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpvgB5i7/prsice_LCNEC7673G/pheno_GSEYM2498C \</span>
-<span class="co">##   --target /tmp/RtmpvgB5i7/prsice_LCNEC7673G/plink_prsice_GSEYM2498C \</span>
-<span class="co">##   --cov /tmp/RtmpvgB5i7/prsice_LCNEC7673G/covar_GSEYM2498C \</span>
+<span class="co">##   --pheno /tmp/RtmpaxQu3z/prsice_CBPCN7260O/pheno_BZIZN9108F \</span>
+<span class="co">##   --target /tmp/RtmpaxQu3z/prsice_CBPCN7260O/plink_prsice_BZIZN9108F \</span>
+<span class="co">##   --cov /tmp/RtmpaxQu3z/prsice_CBPCN7260O/covar_BZIZN9108F \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 1 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_GSEYM2498C \</span>
+<span class="co">##   --out prsice_out_BZIZN9108F \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0218937</span>
-<span class="co">## Full model R^2 is: 0.375997</span>
-<span class="co">## Null model R^2 is: 0.354104</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0533969</span>
+<span class="co">## Full model R^2 is: 0.514054</span>
+<span class="co">## Null model R^2 is: 0.460657</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span></code></pre></div>
@@ -859,32 +869,32 @@ target &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<s
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GWASExperiment-class.html">prsbetas</a></span><span class="op">(</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,npcs<span class="op">=</span><span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>
-<span class="co">##              lassosum prsice</span>
-<span class="co">## rs1009238 -0.03356763      0</span>
-<span class="co">## rs1940646  0.02301112      0</span>
-<span class="co">## rs1940651 -0.14073585      0</span>
-<span class="co">## rs1940658 -0.01327724      0</span>
-<span class="co">## rs1940670  0.40244651      0</span>
-<span class="co">## rs1954825  0.00000000      0</span></code></pre></div>
+<span class="co">##               lassosum    prsice</span>
+<span class="co">## rs1009238 -0.247913478  0.000000</span>
+<span class="co">## rs1940646  0.130474846  0.000000</span>
+<span class="co">## rs1940651 -0.309550457 -2.103724</span>
+<span class="co">## rs1940658 -0.174989920  0.000000</span>
+<span class="co">## rs1940670  0.209654564  0.000000</span>
+<span class="co">## rs1954825 -0.009394257  0.000000</span></code></pre></div>
 <p>Or another model:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GWASExperiment-class.html">prsbetas</a></span><span class="op">(</span><span class="va">target</span>,response<span class="op">=</span><span class="st">"BMI"</span>,covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span>,
     <span class="st">"Case_Control"</span><span class="op">)</span>,npcs<span class="op">=</span><span class="fl">1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>
-<span class="co">##              lassosum   prsice</span>
-<span class="co">## rs1009238 -0.10536140 0.000000</span>
-<span class="co">## rs1940646  0.21153851 0.000000</span>
-<span class="co">## rs1940651 -0.17171852 0.000000</span>
-<span class="co">## rs1940658 -0.07363955 0.000000</span>
-<span class="co">## rs1940670  0.36186276 1.725512</span>
-<span class="co">## rs1954825  0.00000000 0.000000</span></code></pre></div>
+<span class="co">##               lassosum   prsice</span>
+<span class="co">## rs1009238 -0.143099565 0.000000</span>
+<span class="co">## rs1940646  0.272987989 1.856082</span>
+<span class="co">## rs1940651 -0.230740685 0.000000</span>
+<span class="co">## rs1940658 -0.010749823 0.000000</span>
+<span class="co">## rs1940670  0.160116411 1.417651</span>
+<span class="co">## rs1954825 -0.007496655 0.000000</span></code></pre></div>
 <p>It is possible of course to use the total dataset for PRS analysis with a lot of overfit:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(toy,<span class="dt">package=</span><span class="st">"prisma"</span>)
 
 <span class="kw">gdsfile</span>(toy) &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="dt">package=</span><span class="st">"prisma"</span>,<span class="st">"extdata"</span>,<span class="st">"toy.gds"</span>)
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -910,12 +920,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:59:20 2022    (internal increment: 13024)
+## Mon Jun  6 20:38:32 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
-[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 1s
-## Fri Jun  3 14:59:21 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:59:21 2022    Done.
+[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
+## Mon Jun  6 20:38:32 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:38:32 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -932,9 +942,9 @@ toy &lt;-<span class="st"> </span><span class="kw">gwa</span>(base,<span class="
 ## Trait(s)    : BMI
 ## Covariate(s): Age, Gender, Case_Control
 ## Use PCs     : Yes
-## Found 25 associations (uncorrected p-values).
+## Found 23 associations (uncorrected p-values).
 ## 
-## Overall, found 25 associations with (uncorrected) combined p-values).
+## Overall, found 23 associations with (uncorrected) combined p-values).
 ## 
 ## ========== Analyzing chromosome/part 21
 ## 
@@ -943,15 +953,15 @@ toy &lt;-<span class="st"> </span><span class="kw">gwa</span>(base,<span class="
 ## Trait(s)    : BMI
 ## Covariate(s): Age, Gender, Case_Control
 ## Use PCs     : Yes
-## Found 16 associations (uncorrected p-values).
+## Found 10 associations (uncorrected p-values).
 ## 
-## Overall, found 16 associations with (uncorrected) combined p-values).
+## Overall, found 10 associations with (uncorrected) combined p-values).
 ## 
 ## Finished, the following putative associations were found per part:
-##   Part 18: 25 associations found out of 657 markers
-##   Part 21: 16 associations found out of 343 markers
+##   Part 18: 23 associations found out of 657 markers
+##   Part 21: 10 associations found out of 343 markers
 ## 
-## Overall, found 41 associations with (uncorrected) combined p-values).
+## Overall, found 33 associations with (uncorrected) combined p-values).
 
 <span class="cf">if</span> (.Platform<span class="op">$</span>OS.type <span class="op">==</span><span class="st"> "unix"</span> <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">grepl</span>(<span class="st">"^darwin"</span>,R.version<span class="op">$</span>os) 
     <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">Sys.which</span>(<span class="st">"PRSice_linux"</span>) <span class="op">!=</span><span class="st"> ""</span>) {
@@ -965,14 +975,14 @@ toy &lt;-<span class="st"> </span><span class="kw">gwa</span>(base,<span class="
 ## Starting PRS analysis with lassosum, prsice
 ## 
 ## ========== Running PRS analysis with lassosum
-## lassosum operations will be executed at /tmp/RtmpvgB5i7/lassosum_LAXEO6496D
-## Preparing lassosum run at workspace directory: /tmp/RtmpvgB5i7/lassosum_LAXEO6496D
+## lassosum operations will be executed at /tmp/RtmpaxQu3z/lassosum_HMLHQ4605N
+## Preparing lassosum run at workspace directory: /tmp/RtmpaxQu3z/lassosum_HMLHQ4605N
 ##   preparing summary statistics...
 ##   preparing PLINK temporary files for target...
 ## Preflight...
-## Writing FAM file to /tmp/RtmpvgB5i7/lassosum_LAXEO6496D/plink_lassosum_target_JJJFY5019G.fam 
-## Writing extended MAP file to /tmp/RtmpvgB5i7/lassosum_LAXEO6496D/plink_lassosum_target_JJJFY5019G.bim 
-## Writing BED file to /tmp/RtmpvgB5i7/lassosum_LAXEO6496D/plink_lassosum_target_JJJFY5019G.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpaxQu3z/lassosum_HMLHQ4605N/plink_lassosum_target_WCAKQ5564T.fam 
+## Writing extended MAP file to /tmp/RtmpaxQu3z/lassosum_HMLHQ4605N/plink_lassosum_target_WCAKQ5564T.bim 
+## Writing BED file to /tmp/RtmpaxQu3z/lassosum_HMLHQ4605N/plink_lassosum_target_WCAKQ5564T.bed (SNP-major mode)
 ##   copying linkage disequilibrium block files...
 ## Preparation done!
 ## Running lassosum PRS algorithm
@@ -989,43 +999,43 @@ toy &lt;-<span class="st"> </span><span class="kw">gwa</span>(base,<span class="
 ## Running lassosum validation and PRS calculation
 ## 50 out of 50 samples kept in pheno.
 ## 50 out of 50 samples kept in covar.
-## Done! R^2 is: 0.930939526831895
+## Done! R^2 is: 0.932107366549915
 ## 
 ## ========== Running PRS analysis with prsice
-## prsice operations will be executed at /tmp/RtmpvgB5i7/prsice_AEPWO5989T
-## Preparing PRSice run at workspace directory: /tmp/RtmpvgB5i7/prsice_AEPWO5989T
+## prsice operations will be executed at /tmp/RtmpaxQu3z/prsice_ZDGCW9541C
+## Preparing PRSice run at workspace directory: /tmp/RtmpaxQu3z/prsice_ZDGCW9541C
 ##   preparing summary statistics for the base file...
 ##   preparing the covariates file...
 ##   preparing the phenotype file...
 ##   preparing PLINK temporary files - target...
 ## Preflight...
-## Writing FAM file to /tmp/RtmpvgB5i7/prsice_AEPWO5989T/plink_prsice_TMODH7415L.fam 
-## Writing extended MAP file to /tmp/RtmpvgB5i7/prsice_AEPWO5989T/plink_prsice_TMODH7415L.bim 
-## Writing BED file to /tmp/RtmpvgB5i7/prsice_AEPWO5989T/plink_prsice_TMODH7415L.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/plink_prsice_YYMDC6768L.fam 
+## Writing extended MAP file to /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/plink_prsice_YYMDC6768L.bim 
+## Writing BED file to /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/plink_prsice_YYMDC6768L.bed (SNP-major mode)
 ## Preparation done!
 ## Running PRSice PRS algorithm in calculate mode
 ## 
 ## Executing:
 ## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \
 ##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \
-##   --base /tmp/RtmpvgB5i7/prsice_AEPWO5989T/base_TMODH7415L \
+##   --base /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/base_YYMDC6768L \
 ##   --beta \
 ##   --binary-target F \
-##   --pheno /tmp/RtmpvgB5i7/prsice_AEPWO5989T/pheno_TMODH7415L \
-##   --target /tmp/RtmpvgB5i7/prsice_AEPWO5989T/plink_prsice_TMODH7415L \
-##   --cov /tmp/RtmpvgB5i7/prsice_AEPWO5989T/covar_TMODH7415L \
+##   --pheno /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/pheno_YYMDC6768L \
+##   --target /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/plink_prsice_YYMDC6768L \
+##   --cov /tmp/RtmpaxQu3z/prsice_ZDGCW9541C/covar_YYMDC6768L \
 ##   --clump-kb 250 \
 ##   --clump-r2 0.1 \
 ##   --clump-p 1 \
 ##   --score avg \
 ##   --seed 42 \
-##   --out prsice_out_TMODH7415L \
+##   --out prsice_out_YYMDC6768L \
 ##   --print-snp \
 ##   --perm 100
 ## Done!
-## Adjusted PRSice R^2 is: 0.395084
-## Full model R^2 is: 0.971816
-## Null model R^2 is: 0.576731
+## Adjusted PRSice R^2 is: 0.504299
+## Full model R^2 is: 0.975283
+## Null model R^2 is: 0.470984
 ## 
 ## Running PRS algorithms finished! Processing the results...
 ## Done!</code></pre></div>
@@ -1058,7 +1068,7 @@ toy &lt;-<span class="st"> </span><span class="kw">gwa</span>(base,<span class="
 <span class="co">## [8] base     </span>
 <span class="co">## </span>
 <span class="co">## other attached packages:</span>
-<span class="co">##  [1] prisma_0.0.1                SNPRelate_1.28.0           </span>
+<span class="co">##  [1] prisma_0.0.2                SNPRelate_1.28.0           </span>
 <span class="co">##  [3] gdsfmt_1.30.0               snpStats_1.44.0            </span>
 <span class="co">##  [5] Matrix_1.4-1                survival_3.3-1             </span>
 <span class="co">##  [7] SummarizedExperiment_1.24.0 Biobase_2.54.0             </span>

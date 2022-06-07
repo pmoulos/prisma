@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>Single trait association tests and summary statistics</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-03</h4>
+            <h4 data-toc-skip class="date">2022-06-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/06-gwasfuns.Rmd" class="external-link"><code>vignettes/06-gwasfuns.Rmd</code></a></small>
       <div class="d-none name"><code>06-gwasfuns.Rmd</code></div>
@@ -109,7 +109,7 @@
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -135,12 +135,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:53:12 2022    (internal increment: 13024)
+## Mon Jun  6 20:32:06 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
-[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 1s
-## Fri Jun  3 14:53:13 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:53:13 2022    Done.
+[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
+## Mon Jun  6 20:32:06 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:32:06 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -375,7 +375,7 @@ glmSumstat &lt;-<span class="st"> </span><span class="kw">gwaGlm</span>(toy,<spa
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -401,12 +401,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:54:02 2022    (internal increment: 13024)
+## Mon Jun  6 20:33:00 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:54:02 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:54:02 2022    Done.
+## Mon Jun  6 20:33:00 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:33:00 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -453,7 +453,7 @@ rrSumstat &lt;-<span class="st"> </span><span class="kw">gwaBlup</span>(toy,<spa
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -479,12 +479,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:54:05 2022    (internal increment: 13024)
+## Mon Jun  6 20:33:05 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:54:05 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:54:05 2022    Done.
+## Mon Jun  6 20:33:05 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:33:05 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -520,7 +520,7 @@ sgSumstat &lt;-<span class="st"> </span><span class="kw">gwaStatgen</span>(toy,<
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -546,12 +546,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:54:06 2022    (internal increment: 13024)
+## Mon Jun  6 20:33:06 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:54:06 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:54:06 2022    Done.
+## Mon Jun  6 20:33:06 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:33:06 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -562,14 +562,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 } <span class="cf">else</span> {
     snpSumstat &lt;-<span class="st"> </span><span class="kw">matrix</span>()
 }
-## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_GCDAK5410S
-## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_GCDAK5410S
-##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_GCDAK5410S
-##   writing PLINK files in /tmp/RtmpERQPtb/snptest_GCDAK5410S
+## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_SLDQQ5898S
+## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_SLDQQ5898S
+##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_SLDQQ5898S
+##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_SLDQQ5898S
 ## Preflight...
-## Writing FAM file to /tmp/RtmpERQPtb/snptest_GCDAK5410S/plink_snptest_XGZZB9091U.fam 
-## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_GCDAK5410S/plink_snptest_XGZZB9091U.bim 
-## Writing BED file to /tmp/RtmpERQPtb/snptest_GCDAK5410S/plink_snptest_XGZZB9091U.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/plink_snptest_RZAMU4649H.fam 
+## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/plink_snptest_RZAMU4649H.bim 
+## Writing BED file to /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/plink_snptest_RZAMU4649H.bed (SNP-major mode)
 ## Preparation done!
 ## 
 ## Performing GWAS with SNPTEST
@@ -579,13 +579,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## 
 ## Executing:
 ## /home/panos/.local/share/R/snptest-2.5.4/snptest \
-##   -data /tmp/RtmpERQPtb/snptest_GCDAK5410S/plink_snptest_XGZZB9091U.bed \
-##     /tmp/RtmpERQPtb/snptest_GCDAK5410S/pheno.sample \
+##   -data /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/plink_snptest_RZAMU4649H.bed \
+##     /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/pheno.sample \
 ##   -frequentist 1 \
 ##   -method score \
 ##   -pheno BMI \
 ##   -cov_all \
-##   -o /tmp/RtmpERQPtb/snptest_GCDAK5410S/snptest.out
+##   -o /tmp/RtmpPHwuf6/snptest_SLDQQ5898S/snptest.out
 ## Found 38 associations (uncorrected p-values).</code></pre></div>
 <p>The contents of the <code>snpSumstat</code> matrix:</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
@@ -605,14 +605,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>
     <span class="va">snpSumstat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_YYJOE5590H</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_YYJOE5590H</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_YYJOE5590H</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_YYJOE5590H</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_BYLLO1875F</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_BYLLO1875F</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_BYLLO1875F</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_BYLLO1875F</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_YYJOE5590H/plink_snptest_HBCKM4830R.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_YYJOE5590H/plink_snptest_HBCKM4830R.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_YYJOE5590H/plink_snptest_HBCKM4830R.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_BYLLO1875F/plink_snptest_ZPSCO2758C.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_BYLLO1875F/plink_snptest_ZPSCO2758C.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_BYLLO1875F/plink_snptest_ZPSCO2758C.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -622,13 +622,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_YYJOE5590H/plink_snptest_HBCKM4830R.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_YYJOE5590H/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_BYLLO1875F/plink_snptest_ZPSCO2758C.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_BYLLO1875F/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_YYJOE5590H/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_BYLLO1875F/snptest.out</span>
 <span class="co">## Found 36 associations (uncorrected p-values).</span></code></pre></div>
 <p>SNPTEST with <code>Case_Control</code> as the phenotype. In this case we must convert the <code>Case_Control</code> values from <code>1</code> and <code>2</code> to <code>0</code> and <code>1</code> as SNPTEST complains...</p>
 <div class="sourceCode"><pre class="downlit sourceCode r">
@@ -644,14 +644,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>
     <span class="va">snpSumstat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_QBZZZ7503P</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_QBZZZ7503P</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_QBZZZ7503P</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_QBZZZ7503P</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_OGHNM0655C</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_OGHNM0655C</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_OGHNM0655C</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_OGHNM0655C</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_QBZZZ7503P/plink_snptest_YKROY9223J.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_QBZZZ7503P/plink_snptest_YKROY9223J.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_QBZZZ7503P/plink_snptest_YKROY9223J.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_OGHNM0655C/plink_snptest_PTVGW6658Z.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_OGHNM0655C/plink_snptest_PTVGW6658Z.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_OGHNM0655C/plink_snptest_PTVGW6658Z.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -661,13 +661,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_QBZZZ7503P/plink_snptest_YKROY9223J.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_QBZZZ7503P/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_OGHNM0655C/plink_snptest_PTVGW6658Z.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_OGHNM0655C/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno Case_Control2 \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_QBZZZ7503P/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_OGHNM0655C/snptest.out</span>
 <span class="co">## Found 63 associations (uncorrected p-values).</span></code></pre></div>
 </div>
 <div class="section level3">
@@ -681,7 +681,7 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -707,12 +707,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:54:18 2022    (internal increment: 13024)
+## Mon Jun  6 20:33:18 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
-[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 1s
-## Fri Jun  3 14:54:19 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:54:19 2022    Done.
+[<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
+## Mon Jun  6 20:33:18 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:33:18 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -723,15 +723,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 } <span class="cf">else</span> {
     plSumstat &lt;-<span class="st"> </span><span class="kw">matrix</span>()
 }
-## plink operations will be executed at /tmp/RtmpERQPtb/plink_CYUFO7836I
-## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_CYUFO7836I
+## plink operations will be executed at /tmp/RtmpPHwuf6/plink_VFMGY3290Q
+## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_VFMGY3290Q
 ##   writing the PLINK phenotype file...
 ##   writing the covariates file...
-##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_CYUFO7836I
+##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_VFMGY3290Q
 ## Preflight...
-## Writing FAM file to /tmp/RtmpERQPtb/plink_CYUFO7836I/plink_plink_WYXFP6193Y.fam 
-## Writing extended MAP file to /tmp/RtmpERQPtb/plink_CYUFO7836I/plink_plink_WYXFP6193Y.bim 
-## Writing BED file to /tmp/RtmpERQPtb/plink_CYUFO7836I/plink_plink_WYXFP6193Y.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpPHwuf6/plink_VFMGY3290Q/plink_plink_BIEPK7257V.fam 
+## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_VFMGY3290Q/plink_plink_BIEPK7257V.bim 
+## Writing BED file to /tmp/RtmpPHwuf6/plink_VFMGY3290Q/plink_plink_BIEPK7257V.bed (SNP-major mode)
 ## Preparation done!
 ## 
 ## Performing GWAS with PLINK
@@ -741,13 +741,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## 
 ## Executing:
 ## /home/panos/.local/share/R/plink-1.90/plink \
-##   --bfile /tmp/RtmpERQPtb/plink_CYUFO7836I/plink_plink_WYXFP6193Y \
-##   --pheno /tmp/RtmpERQPtb/plink_CYUFO7836I/pheno_WYXFP6193Y \
+##   --bfile /tmp/RtmpPHwuf6/plink_VFMGY3290Q/plink_plink_BIEPK7257V \
+##   --pheno /tmp/RtmpPHwuf6/plink_VFMGY3290Q/pheno_BIEPK7257V \
 ##   --allow-no-sex \
 ##   --ci 0.95 \
 ##   --seed 42 \
-##   --out /tmp/RtmpERQPtb/plink_CYUFO7836I/out_WYXFP6193Y \
-##   --covar /tmp/RtmpERQPtb/plink_CYUFO7836I/covar_WYXFP6193Y \
+##   --out /tmp/RtmpPHwuf6/plink_VFMGY3290Q/out_BIEPK7257V \
+##   --covar /tmp/RtmpPHwuf6/plink_VFMGY3290Q/covar_BIEPK7257V \
 ##   --linear perm
 ## Found 43 associations (uncorrected p-values).</code></pre></div>
 <p>The contents of the <code>plSumstat</code> matrix:</p>
@@ -768,15 +768,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>
     <span class="va">plSumstat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="co">## plink operations will be executed at /tmp/RtmpERQPtb/plink_AAFQJ1875G</span>
-<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_AAFQJ1875G</span>
+<span class="co">## plink operations will be executed at /tmp/RtmpPHwuf6/plink_GNDFN5486O</span>
+<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_GNDFN5486O</span>
 <span class="co">##   writing the PLINK phenotype file...</span>
 <span class="co">##   writing the covariates file...</span>
-<span class="co">##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_AAFQJ1875G</span>
+<span class="co">##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_GNDFN5486O</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/plink_AAFQJ1875G/plink_plink_UIIWG0063T.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/plink_AAFQJ1875G/plink_plink_UIIWG0063T.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/plink_AAFQJ1875G/plink_plink_UIIWG0063T.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/plink_GNDFN5486O/plink_plink_KKRFY4296S.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_GNDFN5486O/plink_plink_KKRFY4296S.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/plink_GNDFN5486O/plink_plink_KKRFY4296S.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with PLINK</span>
@@ -786,13 +786,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="co">##   --bfile /tmp/RtmpERQPtb/plink_AAFQJ1875G/plink_plink_UIIWG0063T \</span>
-<span class="co">##   --pheno /tmp/RtmpERQPtb/plink_AAFQJ1875G/pheno_UIIWG0063T \</span>
+<span class="co">##   --bfile /tmp/RtmpPHwuf6/plink_GNDFN5486O/plink_plink_KKRFY4296S \</span>
+<span class="co">##   --pheno /tmp/RtmpPHwuf6/plink_GNDFN5486O/pheno_KKRFY4296S \</span>
 <span class="co">##   --allow-no-sex \</span>
 <span class="co">##   --ci 0.95 \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out /tmp/RtmpERQPtb/plink_AAFQJ1875G/out_UIIWG0063T \</span>
-<span class="co">##   --covar /tmp/RtmpERQPtb/plink_AAFQJ1875G/covar_UIIWG0063T \</span>
+<span class="co">##   --out /tmp/RtmpPHwuf6/plink_GNDFN5486O/out_KKRFY4296S \</span>
+<span class="co">##   --covar /tmp/RtmpPHwuf6/plink_GNDFN5486O/covar_KKRFY4296S \</span>
 <span class="co">##   --logistic beta perm</span>
 <span class="co">## Found 54 associations (uncorrected p-values).</span></code></pre></div>
 </div>
@@ -807,7 +807,7 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co"># Only 1 PC will be returned because of dataset size</span>
 toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span class="kw">calcPcaCovar</span>(toy,<span class="dt">method=</span><span class="st">"snprel"</span>))
 ## Performing PCA to select covariates to include in associations
-## Reading GDS file /tmp/RtmplLIKfg/temp_libpath4f71185f9e1c/prisma/extdata/toy.gds...
+## Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...
 ## Performing LD pruning...
 ## SNP pruning based on LD:
 ## Excluding 0 SNP (non-autosomes or non-selection)
@@ -833,12 +833,12 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ##     # of principal components: 32
 ## PCA:    the sum of all selected genotypes (0,1,2) = 10268
 ## CPU capabilities: Double-Precision SSE2
-## Fri Jun  3 14:54:56 2022    (internal increment: 13024)
+## Mon Jun  6 20:33:54 2022    (internal increment: 13024)
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Fri Jun  3 14:54:56 2022    Begin (eigenvalues and eigenvectors)
-## Fri Jun  3 14:54:56 2022    Done.
+## Mon Jun  6 20:33:54 2022    Begin (eigenvalues and eigenvectors)
+## Mon Jun  6 20:33:54 2022    Done.
 ## Selecting number of PCs to include
 ##   with Tracy-Widom test for significant eigenvalues
 ##     selected 1 PCs
@@ -869,14 +869,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## Covariate(s): Age, Gender
 ## Use PCs     : Yes
 ## Found 24 associations (uncorrected p-values).
-## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_LGXQE6587O
-## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_LGXQE6587O
-##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_LGXQE6587O
-##   writing PLINK files in /tmp/RtmpERQPtb/snptest_LGXQE6587O
+## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_COQKD2277R
+## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_COQKD2277R
+##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_COQKD2277R
+##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_COQKD2277R
 ## Preflight...
-## Writing FAM file to /tmp/RtmpERQPtb/snptest_LGXQE6587O/plink_snptest_JQNVL3095K.fam 
-## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_LGXQE6587O/plink_snptest_JQNVL3095K.bim 
-## Writing BED file to /tmp/RtmpERQPtb/snptest_LGXQE6587O/plink_snptest_JQNVL3095K.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpPHwuf6/snptest_COQKD2277R/plink_snptest_UFSHT8740V.fam 
+## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_COQKD2277R/plink_snptest_UFSHT8740V.bim 
+## Writing BED file to /tmp/RtmpPHwuf6/snptest_COQKD2277R/plink_snptest_UFSHT8740V.bed (SNP-major mode)
 ## Preparation done!
 ## 
 ## Performing GWAS with SNPTEST
@@ -886,13 +886,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## 
 ## Executing:
 ## /home/panos/.local/share/R/snptest-2.5.4/snptest \
-##   -data /tmp/RtmpERQPtb/snptest_LGXQE6587O/plink_snptest_JQNVL3095K.bed \
-##     /tmp/RtmpERQPtb/snptest_LGXQE6587O/pheno.sample \
+##   -data /tmp/RtmpPHwuf6/snptest_COQKD2277R/plink_snptest_UFSHT8740V.bed \
+##     /tmp/RtmpPHwuf6/snptest_COQKD2277R/pheno.sample \
 ##   -frequentist 1 \
 ##   -method score \
 ##   -pheno BMI \
 ##   -cov_all \
-##   -o /tmp/RtmpERQPtb/snptest_LGXQE6587O/snptest.out
+##   -o /tmp/RtmpPHwuf6/snptest_COQKD2277R/snptest.out
 ## Found 22 associations (uncorrected p-values).
 ## 
 ## Combining p-values from multi-GWAS using fisher method
@@ -915,14 +915,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## Covariate(s): Age, Gender
 ## Use PCs     : Yes
 ## Found 18 associations (uncorrected p-values).
-## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_ZZHIX7252B
-## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_ZZHIX7252B
-##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_ZZHIX7252B
-##   writing PLINK files in /tmp/RtmpERQPtb/snptest_ZZHIX7252B
+## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_QPVCQ0883T
+## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_QPVCQ0883T
+##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_QPVCQ0883T
+##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_QPVCQ0883T
 ## Preflight...
-## Writing FAM file to /tmp/RtmpERQPtb/snptest_ZZHIX7252B/plink_snptest_YAVJA5800T.fam 
-## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_ZZHIX7252B/plink_snptest_YAVJA5800T.bim 
-## Writing BED file to /tmp/RtmpERQPtb/snptest_ZZHIX7252B/plink_snptest_YAVJA5800T.bed (SNP-major mode)
+## Writing FAM file to /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/plink_snptest_EQHBW5154V.fam 
+## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/plink_snptest_EQHBW5154V.bim 
+## Writing BED file to /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/plink_snptest_EQHBW5154V.bed (SNP-major mode)
 ## Preparation done!
 ## 
 ## Performing GWAS with SNPTEST
@@ -932,13 +932,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 ## 
 ## Executing:
 ## /home/panos/.local/share/R/snptest-2.5.4/snptest \
-##   -data /tmp/RtmpERQPtb/snptest_ZZHIX7252B/plink_snptest_YAVJA5800T.bed \
-##     /tmp/RtmpERQPtb/snptest_ZZHIX7252B/pheno.sample \
+##   -data /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/plink_snptest_EQHBW5154V.bed \
+##     /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/pheno.sample \
 ##   -frequentist 1 \
 ##   -method score \
 ##   -pheno BMI \
 ##   -cov_all \
-##   -o /tmp/RtmpERQPtb/snptest_ZZHIX7252B/snptest.out
+##   -o /tmp/RtmpPHwuf6/snptest_QPVCQ0883T/snptest.out
 ## Found 16 associations (uncorrected p-values).
 ## 
 ## Combining p-values from multi-GWAS using fisher method
@@ -978,14 +978,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 25 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_KRRHJ4022K</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_KRRHJ4022K</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_KRRHJ4022K</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_KRRHJ4022K</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_FGJRT6809P</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_FGJRT6809P</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_FGJRT6809P</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_FGJRT6809P</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_KRRHJ4022K/plink_snptest_RNDCW8324P.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_KRRHJ4022K/plink_snptest_RNDCW8324P.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_KRRHJ4022K/plink_snptest_RNDCW8324P.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_FGJRT6809P/plink_snptest_XAHDO5210E.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_FGJRT6809P/plink_snptest_XAHDO5210E.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_FGJRT6809P/plink_snptest_XAHDO5210E.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -995,13 +995,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_KRRHJ4022K/plink_snptest_RNDCW8324P.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_KRRHJ4022K/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_FGJRT6809P/plink_snptest_XAHDO5210E.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_FGJRT6809P/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_KRRHJ4022K/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_FGJRT6809P/snptest.out</span>
 <span class="co">## Found 28 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1024,14 +1024,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 16 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_FBSWK1961L</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_FBSWK1961L</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_FBSWK1961L</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_FBSWK1961L</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_ODLGM4531L</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_ODLGM4531L</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_ODLGM4531L</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_ODLGM4531L</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_FBSWK1961L/plink_snptest_YEQND2067J.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_FBSWK1961L/plink_snptest_YEQND2067J.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_FBSWK1961L/plink_snptest_YEQND2067J.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_ODLGM4531L/plink_snptest_QFZPA8763Z.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_ODLGM4531L/plink_snptest_QFZPA8763Z.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_ODLGM4531L/plink_snptest_QFZPA8763Z.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -1041,13 +1041,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_FBSWK1961L/plink_snptest_YEQND2067J.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_FBSWK1961L/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_ODLGM4531L/plink_snptest_QFZPA8763Z.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_ODLGM4531L/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_FBSWK1961L/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_ODLGM4531L/snptest.out</span>
 <span class="co">## Found 17 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1088,14 +1088,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">## Found 53 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_NUBLA8299Y</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_NUBLA8299Y</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_NUBLA8299Y</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_NUBLA8299Y</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_EPPXW5838M</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_EPPXW5838M</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_EPPXW5838M</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_EPPXW5838M</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_NUBLA8299Y/plink_snptest_USYAO5583I.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_NUBLA8299Y/plink_snptest_USYAO5583I.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_NUBLA8299Y/plink_snptest_USYAO5583I.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_EPPXW5838M/plink_snptest_FVSNY4040A.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_EPPXW5838M/plink_snptest_FVSNY4040A.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_EPPXW5838M/plink_snptest_FVSNY4040A.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -1105,13 +1105,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_NUBLA8299Y/plink_snptest_USYAO5583I.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_NUBLA8299Y/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_EPPXW5838M/plink_snptest_FVSNY4040A.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_EPPXW5838M/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_NUBLA8299Y/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_EPPXW5838M/snptest.out</span>
 <span class="co">## Found 22 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1134,14 +1134,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">## Found 16 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_VDBID4481L</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_VDBID4481L</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_VDBID4481L</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_VDBID4481L</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_WRGTO6972S</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_WRGTO6972S</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_WRGTO6972S</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_WRGTO6972S</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_VDBID4481L/plink_snptest_EYFZU2146L.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_VDBID4481L/plink_snptest_EYFZU2146L.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_VDBID4481L/plink_snptest_EYFZU2146L.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_WRGTO6972S/plink_snptest_LTIDH4684E.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_WRGTO6972S/plink_snptest_LTIDH4684E.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_WRGTO6972S/plink_snptest_LTIDH4684E.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -1151,13 +1151,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_VDBID4481L/plink_snptest_EYFZU2146L.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_VDBID4481L/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_WRGTO6972S/plink_snptest_LTIDH4684E.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_WRGTO6972S/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_VDBID4481L/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_WRGTO6972S/snptest.out</span>
 <span class="co">## Found 14 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1197,14 +1197,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 23 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_NLYYP1755S</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_NLYYP1755S</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_NLYYP1755S</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_NLYYP1755S</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_PRMMF1810Y</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_PRMMF1810Y</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_PRMMF1810Y</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_PRMMF1810Y</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_NLYYP1755S/plink_snptest_OADIR1105Q.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_NLYYP1755S/plink_snptest_OADIR1105Q.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_NLYYP1755S/plink_snptest_OADIR1105Q.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/plink_snptest_DKVSR3365R.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/plink_snptest_DKVSR3365R.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/plink_snptest_DKVSR3365R.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -1214,13 +1214,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_NLYYP1755S/plink_snptest_OADIR1105Q.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_NLYYP1755S/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/plink_snptest_DKVSR3365R.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_NLYYP1755S/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_PRMMF1810Y/snptest.out</span>
 <span class="co">## Found 22 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1243,14 +1243,14 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, Case_Control</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 13 associations (uncorrected p-values).</span>
-<span class="co">## snptest operations will be executed at /tmp/RtmpERQPtb/snptest_CXKTF3881Z</span>
-<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpERQPtb/snptest_CXKTF3881Z</span>
-<span class="co">##  writing SNPTEST sample file in /tmp/RtmpERQPtb/snptest_CXKTF3881Z</span>
-<span class="co">##   writing PLINK files in /tmp/RtmpERQPtb/snptest_CXKTF3881Z</span>
+<span class="co">## snptest operations will be executed at /tmp/RtmpPHwuf6/snptest_IFMWK3677M</span>
+<span class="co">## Preparing SNPTEST association run at workspace directory: /tmp/RtmpPHwuf6/snptest_IFMWK3677M</span>
+<span class="co">##  writing SNPTEST sample file in /tmp/RtmpPHwuf6/snptest_IFMWK3677M</span>
+<span class="co">##   writing PLINK files in /tmp/RtmpPHwuf6/snptest_IFMWK3677M</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/snptest_CXKTF3881Z/plink_snptest_MYETT1122P.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/snptest_CXKTF3881Z/plink_snptest_MYETT1122P.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/snptest_CXKTF3881Z/plink_snptest_MYETT1122P.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/snptest_IFMWK3677M/plink_snptest_JNNHN6437Z.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/snptest_IFMWK3677M/plink_snptest_JNNHN6437Z.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/snptest_IFMWK3677M/plink_snptest_JNNHN6437Z.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with SNPTEST</span>
@@ -1260,13 +1260,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="co">##   -data /tmp/RtmpERQPtb/snptest_CXKTF3881Z/plink_snptest_MYETT1122P.bed \</span>
-<span class="co">##     /tmp/RtmpERQPtb/snptest_CXKTF3881Z/pheno.sample \</span>
+<span class="co">##   -data /tmp/RtmpPHwuf6/snptest_IFMWK3677M/plink_snptest_JNNHN6437Z.bed \</span>
+<span class="co">##     /tmp/RtmpPHwuf6/snptest_IFMWK3677M/pheno.sample \</span>
 <span class="co">##   -frequentist 1 \</span>
 <span class="co">##   -method score \</span>
 <span class="co">##   -pheno BMI \</span>
 <span class="co">##   -cov_all \</span>
-<span class="co">##   -o /tmp/RtmpERQPtb/snptest_CXKTF3881Z/snptest.out</span>
+<span class="co">##   -o /tmp/RtmpPHwuf6/snptest_IFMWK3677M/snptest.out</span>
 <span class="co">## Found 13 associations (uncorrected p-values).</span>
 <span class="co">## </span>
 <span class="co">## Combining p-values from multi-GWAS using fisher method</span>
@@ -1307,15 +1307,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, BMI</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">## Found 33 associations (uncorrected p-values).</span>
-<span class="co">## plink operations will be executed at /tmp/RtmpERQPtb/plink_QCQPK9868J</span>
-<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_QCQPK9868J</span>
+<span class="co">## plink operations will be executed at /tmp/RtmpPHwuf6/plink_CRUVJ8812F</span>
+<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_CRUVJ8812F</span>
 <span class="co">##   writing the PLINK phenotype file...</span>
 <span class="co">##   writing the covariates file...</span>
-<span class="co">##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_QCQPK9868J</span>
+<span class="co">##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_CRUVJ8812F</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/plink_QCQPK9868J/plink_plink_WCZTH5614S.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/plink_QCQPK9868J/plink_plink_WCZTH5614S.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/plink_QCQPK9868J/plink_plink_WCZTH5614S.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/plink_CRUVJ8812F/plink_plink_QBLSL8132T.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_CRUVJ8812F/plink_plink_QBLSL8132T.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/plink_CRUVJ8812F/plink_plink_QBLSL8132T.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with PLINK</span>
@@ -1325,13 +1325,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="co">##   --bfile /tmp/RtmpERQPtb/plink_QCQPK9868J/plink_plink_WCZTH5614S \</span>
-<span class="co">##   --pheno /tmp/RtmpERQPtb/plink_QCQPK9868J/pheno_WCZTH5614S \</span>
+<span class="co">##   --bfile /tmp/RtmpPHwuf6/plink_CRUVJ8812F/plink_plink_QBLSL8132T \</span>
+<span class="co">##   --pheno /tmp/RtmpPHwuf6/plink_CRUVJ8812F/pheno_QBLSL8132T \</span>
 <span class="co">##   --allow-no-sex \</span>
 <span class="co">##   --ci 0.95 \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out /tmp/RtmpERQPtb/plink_QCQPK9868J/out_WCZTH5614S \</span>
-<span class="co">##   --covar /tmp/RtmpERQPtb/plink_QCQPK9868J/covar_WCZTH5614S \</span>
+<span class="co">##   --out /tmp/RtmpPHwuf6/plink_CRUVJ8812F/out_QBLSL8132T \</span>
+<span class="co">##   --covar /tmp/RtmpPHwuf6/plink_CRUVJ8812F/covar_QBLSL8132T \</span>
 <span class="co">##   --logistic beta perm</span>
 <span class="co">## Found 36 associations (uncorrected p-values).</span>
 <span class="co">## </span>
@@ -1355,15 +1355,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, BMI</span>
 <span class="co">## Use PCs     : Yes</span>
 <span class="co">## Found 22 associations (uncorrected p-values).</span>
-<span class="co">## plink operations will be executed at /tmp/RtmpERQPtb/plink_TPJHO8420B</span>
-<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_TPJHO8420B</span>
+<span class="co">## plink operations will be executed at /tmp/RtmpPHwuf6/plink_YFGBR5935O</span>
+<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_YFGBR5935O</span>
 <span class="co">##   writing the PLINK phenotype file...</span>
 <span class="co">##   writing the covariates file...</span>
-<span class="co">##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_TPJHO8420B</span>
+<span class="co">##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_YFGBR5935O</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/plink_TPJHO8420B/plink_plink_LNSUP6297W.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/plink_TPJHO8420B/plink_plink_LNSUP6297W.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/plink_TPJHO8420B/plink_plink_LNSUP6297W.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/plink_YFGBR5935O/plink_plink_ZWXDN2389E.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_YFGBR5935O/plink_plink_ZWXDN2389E.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/plink_YFGBR5935O/plink_plink_ZWXDN2389E.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with PLINK</span>
@@ -1373,13 +1373,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="co">##   --bfile /tmp/RtmpERQPtb/plink_TPJHO8420B/plink_plink_LNSUP6297W \</span>
-<span class="co">##   --pheno /tmp/RtmpERQPtb/plink_TPJHO8420B/pheno_LNSUP6297W \</span>
+<span class="co">##   --bfile /tmp/RtmpPHwuf6/plink_YFGBR5935O/plink_plink_ZWXDN2389E \</span>
+<span class="co">##   --pheno /tmp/RtmpPHwuf6/plink_YFGBR5935O/pheno_ZWXDN2389E \</span>
 <span class="co">##   --allow-no-sex \</span>
 <span class="co">##   --ci 0.95 \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out /tmp/RtmpERQPtb/plink_TPJHO8420B/out_LNSUP6297W \</span>
-<span class="co">##   --covar /tmp/RtmpERQPtb/plink_TPJHO8420B/covar_LNSUP6297W \</span>
+<span class="co">##   --out /tmp/RtmpPHwuf6/plink_YFGBR5935O/out_ZWXDN2389E \</span>
+<span class="co">##   --covar /tmp/RtmpPHwuf6/plink_YFGBR5935O/covar_ZWXDN2389E \</span>
 <span class="co">##   --logistic beta perm</span>
 <span class="co">## Found 18 associations (uncorrected p-values).</span>
 <span class="co">## </span>
@@ -1420,15 +1420,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, BMI</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 31 associations (uncorrected p-values).</span>
-<span class="co">## plink operations will be executed at /tmp/RtmpERQPtb/plink_FJDTW2929J</span>
-<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_FJDTW2929J</span>
+<span class="co">## plink operations will be executed at /tmp/RtmpPHwuf6/plink_SNTJN9609W</span>
+<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_SNTJN9609W</span>
 <span class="co">##   writing the PLINK phenotype file...</span>
 <span class="co">##   writing the covariates file...</span>
-<span class="co">##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_FJDTW2929J</span>
+<span class="co">##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_SNTJN9609W</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/plink_FJDTW2929J/plink_plink_YBNRD3487P.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/plink_FJDTW2929J/plink_plink_YBNRD3487P.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/plink_FJDTW2929J/plink_plink_YBNRD3487P.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/plink_SNTJN9609W/plink_plink_ILQRX2634W.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_SNTJN9609W/plink_plink_ILQRX2634W.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/plink_SNTJN9609W/plink_plink_ILQRX2634W.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with PLINK</span>
@@ -1438,13 +1438,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="co">##   --bfile /tmp/RtmpERQPtb/plink_FJDTW2929J/plink_plink_YBNRD3487P \</span>
-<span class="co">##   --pheno /tmp/RtmpERQPtb/plink_FJDTW2929J/pheno_YBNRD3487P \</span>
+<span class="co">##   --bfile /tmp/RtmpPHwuf6/plink_SNTJN9609W/plink_plink_ILQRX2634W \</span>
+<span class="co">##   --pheno /tmp/RtmpPHwuf6/plink_SNTJN9609W/pheno_ILQRX2634W \</span>
 <span class="co">##   --allow-no-sex \</span>
 <span class="co">##   --ci 0.95 \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out /tmp/RtmpERQPtb/plink_FJDTW2929J/out_YBNRD3487P \</span>
-<span class="co">##   --covar /tmp/RtmpERQPtb/plink_FJDTW2929J/covar_YBNRD3487P \</span>
+<span class="co">##   --out /tmp/RtmpPHwuf6/plink_SNTJN9609W/out_ILQRX2634W \</span>
+<span class="co">##   --covar /tmp/RtmpPHwuf6/plink_SNTJN9609W/covar_ILQRX2634W \</span>
 <span class="co">##   --logistic beta perm</span>
 <span class="co">## Found 32 associations (uncorrected p-values).</span>
 <span class="co">## </span>
@@ -1468,15 +1468,15 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## Covariate(s): Age, Gender, BMI</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">## Found 20 associations (uncorrected p-values).</span>
-<span class="co">## plink operations will be executed at /tmp/RtmpERQPtb/plink_TVNGK3371F</span>
-<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpERQPtb/plink_TVNGK3371F</span>
+<span class="co">## plink operations will be executed at /tmp/RtmpPHwuf6/plink_CZNMI1328N</span>
+<span class="co">## Preparing PLINK association run at workspace directory: /tmp/RtmpPHwuf6/plink_CZNMI1328N</span>
 <span class="co">##   writing the PLINK phenotype file...</span>
 <span class="co">##   writing the covariates file...</span>
-<span class="co">##   writing PLINK genotype files in /tmp/RtmpERQPtb/plink_TVNGK3371F</span>
+<span class="co">##   writing PLINK genotype files in /tmp/RtmpPHwuf6/plink_CZNMI1328N</span>
 <span class="co">## Preflight...</span>
-<span class="co">## Writing FAM file to /tmp/RtmpERQPtb/plink_TVNGK3371F/plink_plink_ABLTE1715Y.fam </span>
-<span class="co">## Writing extended MAP file to /tmp/RtmpERQPtb/plink_TVNGK3371F/plink_plink_ABLTE1715Y.bim </span>
-<span class="co">## Writing BED file to /tmp/RtmpERQPtb/plink_TVNGK3371F/plink_plink_ABLTE1715Y.bed (SNP-major mode)</span>
+<span class="co">## Writing FAM file to /tmp/RtmpPHwuf6/plink_CZNMI1328N/plink_plink_PZZQS2762N.fam </span>
+<span class="co">## Writing extended MAP file to /tmp/RtmpPHwuf6/plink_CZNMI1328N/plink_plink_PZZQS2762N.bim </span>
+<span class="co">## Writing BED file to /tmp/RtmpPHwuf6/plink_CZNMI1328N/plink_plink_PZZQS2762N.bed (SNP-major mode)</span>
 <span class="co">## Preparation done!</span>
 <span class="co">## </span>
 <span class="co">## Performing GWAS with PLINK</span>
@@ -1486,13 +1486,13 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## </span>
 <span class="co">## Executing:</span>
 <span class="co">## /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="co">##   --bfile /tmp/RtmpERQPtb/plink_TVNGK3371F/plink_plink_ABLTE1715Y \</span>
-<span class="co">##   --pheno /tmp/RtmpERQPtb/plink_TVNGK3371F/pheno_ABLTE1715Y \</span>
+<span class="co">##   --bfile /tmp/RtmpPHwuf6/plink_CZNMI1328N/plink_plink_PZZQS2762N \</span>
+<span class="co">##   --pheno /tmp/RtmpPHwuf6/plink_CZNMI1328N/pheno_PZZQS2762N \</span>
 <span class="co">##   --allow-no-sex \</span>
 <span class="co">##   --ci 0.95 \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out /tmp/RtmpERQPtb/plink_TVNGK3371F/out_ABLTE1715Y \</span>
-<span class="co">##   --covar /tmp/RtmpERQPtb/plink_TVNGK3371F/covar_ABLTE1715Y \</span>
+<span class="co">##   --out /tmp/RtmpPHwuf6/plink_CZNMI1328N/out_PZZQS2762N \</span>
+<span class="co">##   --covar /tmp/RtmpPHwuf6/plink_CZNMI1328N/covar_PZZQS2762N \</span>
 <span class="co">##   --logistic beta perm</span>
 <span class="co">## Found 19 associations (uncorrected p-values).</span>
 <span class="co">## </span>
@@ -1624,7 +1624,7 @@ toy &lt;-<span class="st"> </span><span class="kw">suppressWarnings</span>(<span
 <span class="co">## [8] base     </span>
 <span class="co">## </span>
 <span class="co">## other attached packages:</span>
-<span class="co">##  [1] prisma_0.0.1                SNPRelate_1.28.0           </span>
+<span class="co">##  [1] prisma_0.0.2                SNPRelate_1.28.0           </span>
 <span class="co">##  [3] gdsfmt_1.30.0               snpStats_1.44.0            </span>
 <span class="co">##  [5] Matrix_1.4-1                survival_3.3-1             </span>
 <span class="co">##  [7] SummarizedExperiment_1.24.0 Biobase_2.54.0             </span>
