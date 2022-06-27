@@ -797,7 +797,7 @@ prsRegressionMetrics <- function(snpSelection,gwe,response,covariates=NULL,
 
 applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     pcs=FALSE,minSnps=2,prsCalc=c("avg","sum","std"),times=10,family=NULL,
-    rc=NULL,...) {
+    summary=TRUE,rc=NULL,...) {
     prsCalc <- prsCalc[1]
     .checkTextArgs("PRS calculation type (prsCalc)",prsCalc,
         c("avg","sum","std"),multiarg=FALSE)
@@ -811,7 +811,7 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     p <- p[,c(response,covariates),drop=FALSE]
     phenotypes(gwe) <- p
     
-    # Very first thing! Subse the gwe according to snpSelection content. If
+    # Very first thing! Subset the gwe according to snpSelection content. If
     # nothing found, stop!
     if (!identical(rownames(snpSelection),snpSelection$variant_id))
         rownames(snpSelection) <- snpSelection$variant_id
@@ -822,7 +822,7 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
             "required but ",length(cm)," were found!")
     if (length(cm) < nrow(snpSelection))
         disp(nrow(snpSelection) - length(cm)," SNPs were not found in the ",
-            "input GWASExperiment object.\nContinuing with teh rest ",
+            "input GWASExperiment object.\nContinuing with the rest ",
             length(cm)," SNPs...")
     else if (length(cm) == nrow(snpSelection))
         disp("All input PRS SNPs found in the input object! Proceeding...")
@@ -869,12 +869,17 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     # run, i.e. select at random nrow(snpSelection) SNPs and their effects
     # calculate the metrics. Overall, they should be less accurate. But which
     # effects should be taken etc...
-    if (times == 0)
+    if (times == 0) {
+        if (summary)
+            .printApplySummary(metricsObj)
         return(metricsObj)
+    }
     if ((is.null(effects(gwe)) || (is(effects(gwe),"SimpleList") 
         && length(effects(gwe)) == 0)) && times > 0) {
          disp("No summary statistics found in the input object. No ",
              "SNP randomization will be performed.")
+         if (summary)
+            .printApplySummary(metricsObj)
          return(metricsObj)
     }
     
@@ -883,6 +888,7 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
         return(sample(nrow(gwe),nrow(snpSelection)))
     })
     # 2. Calculate metrics for random SNPs
+    disp("\nBootstraping...")
     metricsList <- cmclapply(seq_along(indexList),function(i) {
         #disp("===== SNP randomization ",i)
         obj <- gwe[indexList[[i]],,drop=FALSE]
@@ -922,7 +928,72 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
         bootp=bootp
     )
     
+    if (summary)
+        .printApplySummary(metricsObj)
     return(metricsObj)
+}
+
+.printApplySummary <- function(o) {
+    m <- o$metrics
+    
+    disp("\nPerformance summary statistics")
+    disp(.symbolBar("-",64))
+    disp("R^2 of the full regression model including the PRS           : ",
+        round(m["full_r2"],5))
+    disp("R^2 of the reduced regression model excluding the PRS        : ",
+        round(m["reduced_r2"],5))
+    disp("Adjusted R^2 of the PRS full model contribution              : ",
+        round(m["prs_r2"],5))
+    disp("R between observed & predicted values with the full model    : ",
+        round(m["full_pred_cor"],5))
+    disp("R between observed & predicted values with the reduced model : ",
+        round(m["reduced_pred_cor"],5))
+    disp("PRS effect p-value                                           : ",
+        formatC(m["prs_pvalue"],format="e",digits=5))
+    disp("RMSE of the full regression model including the PRS          : ",
+        round(m["full_rmse"],5))
+    disp("RMSE of the reduced regression model excluding the PRS       : ",
+        round(m["reduced_rmse"],5))
+    disp("MAE of the full regression model including the PRS           : ",
+        round(m["full_mae"],5))
+    disp("MAE of the reduced regression model excluding the PRS        : ",
+        round(m["reduced_mae"],5))
+        
+    if ("permutations" %in% names(o)) {
+        p <- o$permutations$metrics
+        disp("\nPermutation performance summary statistics")
+        disp(.symbolBar("-",64))
+        disp("R^2 of the full regression model including the PRS           : ",
+            round(mean(p[,"full_r2"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"full_r2"],na.rm=TRUE),5))
+        disp("R^2 of the reduced regression model excluding the PRS        : ",
+            round(mean(p[,"reduced_r2"],na.rm=TRUE),5))
+        disp("Adjusted R^2 of the PRS full model contribution              : ",
+            round(mean(p[,"prs_r2"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"prs_r2"],na.rm=TRUE),5))
+        disp("R between observed & predicted values with the full model    : ",
+            round(mean(p[,"full_pred_cor"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"full_pred_cor"],na.rm=TRUE),5))
+        disp("R between observed & predicted values with the reduced model : ",
+            round(mean(p[,"reduced_pred_cor"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"reduced_pred_cor"],na.rm=TRUE),5))
+        disp("Minimum PRS effect p-value                                   : ",
+            formatC(min(p[,"prs_pvalue"],na.rm=TRUE),format="e",digits=5))
+        disp("Maximum PRS effect p-value                                   : ",
+            formatC(max(p[,"prs_pvalue"],na.rm=TRUE),format="e",digits=5))
+        disp("RMSE of the full regression model including the PRS          : ",
+            round(mean(p[,"full_rmse"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"full_rmse"],na.rm=TRUE),5))
+        disp("RMSE of the reduced regression model excluding the PRS       : ",
+            round(mean(p[,"reduced_rmse"],na.rm=TRUE),5))
+        disp("MAE of the full regression model including the PRS           : ",
+            round(mean(p[,"full_mae"],na.rm=TRUE),5)," +/- ",
+            round(sd(p[,"full_mae"],na.rm=TRUE),5))
+        disp("MAE of the reduced regression model excluding the PRS        : ",
+            round(mean(p[,"reduced_mae"],na.rm=TRUE),5))
+        disp("Bootstrap p-value for the PRS R^2                            : ",
+            round(o$permutations$bootp,5))
+    }
 }
 
 .applyPrsWorker <- function(snpSelection,gwe,response,prsCalc,family,...) {
@@ -994,6 +1065,7 @@ applyPRS <- function(snpSelection,gwe,response,covariates=NULL,
     
     # Now return an object...
     return(list(
+        prs=snpSelection,
         metrics=c(
             reduced_r2=redR2,
             full_r2=fullR2,

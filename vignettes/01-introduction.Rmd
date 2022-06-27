@@ -18,17 +18,17 @@ The rise of modern genotyping technologies such as Next Generation Sequencing
 (Whole Exome and Whole Genome Sequencing) as well as the continuous thriving of
 older genotyping technologies such as genotyping DNA microarrays have allowed an
 unprecedented collection of massive, large-cohort and population-level genetic
-data spanning a variety of application, from medical research to consumer
+data spanning a variety of applications, from medical research to consumer
 genomics. At the same time, several perspective and sometimes country-level
 studies are reaching maturity levels regarding the amount and quality of 
 data collected at various levels such as anthropometric, phenotypic, biomarker
-and genetic levels, and some times other molecular -omics layers such as gene 
+and genetic levels, and sometimes other molecular -omics layers such as gene 
 expression. The aforementioned facts have allowed not only for more accurate
 and versatile Genome-Wide Association Studies to identify the potential genetic
 cause for many simple or more complex genetic traits but also combine phenotypic
 and genotypic data in unique ways to derive multi-way genetic signatures that
 characterize individuals with respect to several anthropometric features as well
-as these traits and biomarker levels. These genetic signatures have a seamingly
+as these traits and biomarker levels. These genetic signatures have a seemingly
 endless portfolio of applications, spanning the characterization of the 
 predisposition of an individual to general healthstyle issues such as obesity
 and up to estimating the risk to several diseases like cancer and other 
@@ -60,12 +60,12 @@ comprise covariates in regression models that attempt to explain observed
 genotypic/phenotypic relationships. While this approach seems over-simplified,
 nevertheless it has been shown in numerous studies that genetic scores are able
 to explain the aforementioned variabilities and most times even outperform 
-complex Machine Learning approaches. Then, after a succesful model construction,
-a distribution of PRS is constructed based on the ppopulation used to extract
-and calculate the PRS, and based on this distribution, the risk of new samples
-can be assessed according to the position of the new PRS in the reference
-distribution. The process of extracting a PRS is not very complex itself and
-includes the main following steps:
+complex Machine Learning approaches. Then, after a successful model 
+construction, a distribution of PRS is constructed based on the population used 
+to extract and calculate the PRS, and based on this distribution, the risk of 
+new samples can be assessed according to the position of the new PRS in the 
+reference distribution. The process of extracting a PRS is not very complex 
+itself and includes the main following steps:
 
 * Derivation of summary statistics (regression coefficients/Odds Ratios, 
 p-values etc.) for each variant from a major and representative population 
@@ -198,6 +198,7 @@ towards the final steps of model evaluation.
 
 This is the main PRS candidate extraction pipeline and performs the following 
 steps:
+
 1. Split of the input data object to a usually larger training set and a smaller 
 independent test set.
 2. De novo quality control on the training and test sets as well as optional PCA 
@@ -226,10 +227,10 @@ following steps:
 
 1. Create sets of PRS candidates from step (5) of the de novo PRS extraction 
 pipeline based on:
-  a. Fixed quantiles of the frequency distribution (e.g. 10%, 20%, 30%, 40%, 
-  50%, 60%, 75%, 80%, 90%, 95%, 99%).
-  b. A stepwise set creation process based on frequency of appearance, i.e. each 
-  set contains SNPs that appear 5, 6, … up to the maximum number of appearances.
+    a. Fixed quantiles of the frequency distribution (e.g. 10%, 20%, 30%, 40%, 
+    50%, 60%, 75%, 80%, 90%, 95%, 99%).
+    b. A stepwise set creation process based on frequency of appearance, i.e. each 
+    set contains SNPs that appear 5, 6, … up to the maximum number of appearances.
 2. For each set created at (1), split de novo the initial data object in a 
 training and test set. Using the training test, reperform GWA tests to extract 
 summary statistics (the averaged effects are not used) and use PRSice2 in 
@@ -306,11 +307,12 @@ desirable.
 After executing a possible evaluation pipeline, the best PRS is firstly 
 evaluated graphically by:
 
-i. A bar plot of average adjusted PRS R2 ± standard deviations for each SNP 
-frequency cutoff where it can be checked if there is a cutoff increasing the 
-R2 as compared to the baseline (R2 from the de novo PRS extraction iterations).
+i. A bar plot of average adjusted PRS R<sup>2</sup> ± standard deviations for 
+each SNP frequency cutoff where it can be checked if there is a cutoff 
+increasing the R<sup>2</sup> as compared to the baseline (R<sup>2</sup> from the 
+de novo PRS extraction iterations).
 ii. A dot plot of the PRISMA adjusted PRS R2 R_P^2, where it can be inspected 
-where the adjusted R2 is potentially maximized.
+where the adjusted R<sup>2</sup> is potentially maximized.
 iii. A dot plot of SNP frequencies.
 
 ### Automatic PRS selection

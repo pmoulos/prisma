@@ -50,3 +50,31 @@ prismaReport <- function(gwe,prismaOut,cvMetricsOut,lookupOut,path=NULL) {
     
     return(re)
 }
+
+prsEvalReport <- function(evalList,path=NULL) {
+    if (is.null(path))  # prsWorkspace from prismaOut
+        path <- paste0("prs_eval_report_",format(Sys.time(),"%Y%m%d%H%M%S"))
+    if (!dir.exists(path))
+        dir.create(path,showWarnings=FALSE,recursive=TRUE)
+    
+    if (is.null(names(evalList))) { # PRSs must be somehow described
+        nsnp <- unlist(lapply(evalList,function(x) {
+            return(nrow(x$prs))
+        }))
+        names(evalList) <- paste("PRS ",seq_along(evalList)," - ",nsnp,sep="")
+    }
+    
+    REP_ENV <- new.env(parent=globalenv())
+    REP_ENV$evalList <- evalList
+    
+    file.copy(#from="/media/raid/software/prisma/inst/eval_report.Rmd",
+        from=system.file(package="prisma","eval_report.Rmd"),
+        to=file.path(path,"eval_report.Rmd"),overwrite=TRUE)
+    render(
+        input=file.path(path,"eval_report.Rmd"),
+        output_file="index.html",
+        output_dir=path,
+        envir=REP_ENV
+    )
+    unlink(file.path(path,"eval_report.Rmd"),force=TRUE)
+}

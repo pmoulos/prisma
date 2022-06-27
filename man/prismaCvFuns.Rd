@@ -18,7 +18,7 @@
     applyPRS(snpSelection, gwe, response, 
         covariates = NULL, pcs = FALSE, minSnps = 2,
         prsCalc = c("avg", "sum", "std"), times = 10,
-        family = NULL, rc = NULL,...)
+        family = NULL, summary = TRUE, rc = NULL,...)
 }
 \arguments{
     \item{prismaOut}{an output from the \code{link{prisma}}
@@ -74,6 +74,9 @@
     parallel calculations. Default is \code{NULL} for no
     parallelization.}
     
+    \item{summary}{Display the evaluation summarized metrics
+    in more human readable format and make plots.}
+    
     \item{...}{Further arguments passed to regression 
     functions, like \code{glm}.}
 }
@@ -93,8 +96,10 @@
     of \code{prsCrossValidate}. For the collected metrics,
     see Details.
     
-    For \code{applyPRS} a list with three or four members:
+    For \code{applyPRS} a list with four or five members:
     \itemize{
+        \item \code{prs}: The input PRS (\code{snpSelection}
+        data frame).
         \item \code{metrics}: The same as the cross
         validation metrics - see Details.
         \item \code{values}: A data frame with the following

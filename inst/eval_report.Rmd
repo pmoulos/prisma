@@ -1,0 +1,235 @@
+---
+title: PRS evaluation report
+subtitle: "`r cat('A project name here')`"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  rmdformats::robobook:
+    fig_width: 7
+    fig_height: 7
+    fig_caption: true
+    highlight: kate
+    lightbox: true
+    #thumbnails: true
+    #gallery: true
+    cards: true
+    use_bookdown: false
+    mathjax: null
+    self_contained: false
+---
+
+<style>
+body {
+    text-align: justify;
+}
+
+.lightbold {
+    font-weight: 500;
+}
+
+.figure-hint {
+    margin: 24px 48px;
+    text-align: justify;
+    font-size: 0.9em;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: #333333 !important;
+}
+</style>
+
+```{r knitr_init, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+library(kableExtra)
+
+# Global options
+options(max.print="75")
+opts_knit$set(progress=FALSE,verbose=FALSE)
+opts_chunk$set(
+    echo=FALSE,
+    cache=FALSE,
+    prompt=FALSE,
+    tidy=TRUE,
+    comment=NA,
+    message=FALSE,
+    warning=FALSE,
+    results="asis",
+    eval=TRUE,
+    fig.align="center"
+)
+opts_knit$set(width=75)
+```
+
+```{r report_init}
+library(DT)
+library(ggplot2)
+library(htmltools)
+library(magrittr)
+library(pander)
+library(grid)
+library(DT)
+library(htmltools)
+
+nosci <- function(x,d) {
+    format(round(x,d),scientific=FALSE)
+}
+```
+
+```{r dt_hack, include=FALSE}
+DT::datatable(NULL)
+```
+
+```{r results_eval}
+# Create the selectors
+cat("<hr style='height: 2px;'>")
+
+for (n in names(evalList)) {
+    pandoc.header(n,level=1)
+    
+    pandoc.header("Performance summary statistics",level=3)
+    m <- evalList[[n]]$metrics
+    perfSum <- data.frame(
+        Metric=c(
+            "R<sup>2</sup> of the full regression model including the PRS",
+            "R<sup>2</sup> of the reduced regression model excluding the PRS",
+            "Adjusted R<sup>2</sup> of the PRS full model contribution",
+            "R between observed & predicted values with the full model",
+            "R between observed & predicted values with the reduced model",
+            "PRS effect p-value",
+            "RMSE of the full regression model including the PRS",
+            "RMSE of the reduced regression model excluding the PRS",
+            "MAE of the full regression model including the PRS",
+            "MAE of the reduced regression model excluding the PRS"
+        ),
+        Value=c(
+            round(m["full_r2"],5),
+            round(m["reduced_r2"],5),
+            round(m["prs_r2"],5),
+            round(m["full_pred_cor"],5),
+            round(m["reduced_pred_cor"],5),
+            formatC(m["prs_pvalue"],format="e",digits=5),
+            round(m["full_rmse"],5),
+            round(m["reduced_rmse"],5),
+            round(m["full_mae"],5),
+            round(m["reduced_mae"],5)
+        )
+    )
+    rownames(perfSum) <- NULL
+    
+    perfSum %>% 
+        kbl(escape=FALSE) %>%
+        kable_styling(bootstrap_options=c("striped","hover",
+            "responsive")) %>%
+        column_spec(1,bold=TRUE) %>% 
+        htmltools::HTML() %>% 
+        print()
+    
+    if ("permutations" %in% names(evalList[[n]])) {
+        pandoc.header("Permutation performance summary statistics",level=3)
+        p <- evalList[[n]]$permutations$metrics
+        
+        permSum <- data.frame(
+            Metric=c(
+                "R<sup>2</sup> of the full regression model including the PRS",
+                "R<sup>2</sup> of the reduced regression model excluding the PRS",
+                "Adjusted R<sup>2</sup> of the PRS full model contribution",
+                "R between observed & predicted values with the full model",
+                "R between observed & predicted values with the reduced model",
+                "Minimum PRS effect p-value",
+                "Maximum PRS effect p-value",
+                "RMSE of the full regression model including the PRS",
+                "RMSE of the reduced regression model excluding the PRS",
+                "MAE of the full regression model including the PRS",
+                "MAE of the reduced regression model excluding the PRS",
+                "Bootstrap p-value for the PRS R<sup>2</sup>"
+            ),
+            Value=c(
+                paste0(round(mean(p[,"full_r2"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"full_r2"],na.rm=TRUE),5)),
+                round(mean(p[,"reduced_r2"],na.rm=TRUE),5),
+                paste0(round(mean(p[,"prs_r2"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"prs_r2"],na.rm=TRUE),5)),
+                paste0(round(mean(p[,"full_pred_cor"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"full_pred_cor"],na.rm=TRUE),5)),
+                paste0(round(mean(p[,"reduced_pred_cor"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"reduced_pred_cor"],na.rm=TRUE),5)),
+                formatC(min(p[,"prs_pvalue"],na.rm=TRUE),format="e",digits=5),
+                formatC(max(p[,"prs_pvalue"],na.rm=TRUE),format="e",digits=5),
+                paste0(round(mean(p[,"full_rmse"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"full_rmse"],na.rm=TRUE),5)),
+                round(mean(p[,"reduced_rmse"],na.rm=TRUE),5),
+                paste0(round(mean(p[,"full_mae"],na.rm=TRUE),5)," +/- ",
+                    round(sd(p[,"full_mae"],na.rm=TRUE),5)),
+                round(mean(p[,"reduced_mae"],na.rm=TRUE),5),
+                round(evalList[[n]]$permutations$bootp,5)
+            )
+        )
+        rownames(permSum) <- NULL
+        
+        permSum %>% 
+            kbl(escape=FALSE) %>%
+            kable_styling(bootstrap_options=c("striped","hover",
+                "responsive")) %>%
+            column_spec(1,bold=TRUE) %>% 
+            htmltools::HTML() %>% 
+            print()
+    }
+    
+    snps <- evalList[[n]]$prs
+    snps <- snps[,-c(9,10)]
+    snps[,"effect_weight"] <- round(snps[,"effect_weight"],5)
+    snps[,"variant_id"] <- paste("<a href='https://www.ncbi.nlm.nih.gov",
+        "/snp/",snps[,"variant_id"],"' target='_blank'>",
+        snps[,"variant_id"],"</a>",sep="")
+    na <- is.na(snps$locus_name)
+    snps[!na,"locus_name"] <- paste("<a href='https://www.genenames.org/",
+        "data/gene-symbol-report/#!/symbol/",snps[!na,"locus_name"],
+        "' target='_blank'>",snps[!na,"locus_name"],"</a>",sep="")
+    colnames(snps)[1] <- "chrom"
+    colnames(snps)[5] <- "ref_allele"
+    
+    # Display less SNPs, avoid annoying warning messages, since all SNPs are
+    # available for download
+    topSnps <- FALSE
+    if (nrow(snps) > 1000) {
+        snps <- snps[seq_len(1000),]
+        topSnps <- TRUE
+    }
+        
+    cat("<div class='row'><div class='col-sm-6'>")
+    cat("<span style='text-align: center'><h5>Correlation of PRS with ",
+        "phenotype</h5></span>")
+    print(evalList[[n]]$plots$scatter)
+    cat("</div><div class='col-sm-6'>")
+    cat("<span style='text-align: center'><h5>PRS distribution</h5></span>")
+    print(evalList[[n]]$plots$hist)
+    cat("</div></div>")
+    
+    cat("<h4>SNPs and effect weights in PRS</h4>")
+    if (topSnps)
+        cat("<div style='font-weight:600;font-size:0.8em;color:#E30101;'>",
+            "The following table presents only the first 1000 SNPs in the ",
+            "PRS. Use the download link below to retrieve the full ",
+            "PRS.</div>")
+    
+    cat("<div class='prstable-helper-wrapper' id='prstable_",n,"'>",sep="")
+    cat("<div style='overflow-y: auto;'>")
+    thePrsTable <- DT::datatable(
+        snps,
+        rownames=FALSE,
+        width="95%",
+        height=460,
+        style="bootstrap",
+        class="table-condensed table-striped table-responsive",
+        elementId=paste("prstable_",n,"_",sep=""),
+        escape=FALSE,
+        options=list(
+            scrollX=TRUE,
+            scrollY=TRUE,
+            dom='lfrtip'
+        )
+    )
+    print(htmltools::tagList(tags$div(class="prstable-container",thePrsTable)))
+    cat("</div></div>")
+}
+```
