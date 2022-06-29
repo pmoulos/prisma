@@ -22,7 +22,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -359,7 +359,7 @@
 <span class="r-in">    <span class="co"># Only 1 PC will be returned because of dataset size</span></span>
 <span class="r-in">    <span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="calcPcaCovar.html">calcPcaCovar</a></span><span class="op">(</span><span class="va">toy</span>,method<span class="op">=</span><span class="st">"snprel"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing PCA to select covariates to include in associations</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading GDS file /tmp/RtmpezHjqb/temp_libpath372f48f1c2bc/prisma/extdata/toy.gds...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading GDS file /tmp/RtmpNyjSJA/temp_libpath7f4b1e2d8b11/prisma/extdata/toy.gds...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing LD pruning...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SNP pruning based on LD:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Excluding 0 SNP (non-autosomes or non-selection)</span>
@@ -385,10 +385,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of principal components: 32</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> PCA:    the sum of all selected genotypes (0,1,2) = 10268</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> CPU capabilities: Double-Precision SSE2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:06:52 2022    (internal increment: 13024)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:06:52 2022    Begin (eigenvalues and eigenvectors)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:06:52 2022    Done.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:37:40 2022    (internal increment: 13024)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 1s</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:37:41 2022    Begin (eigenvalues and eigenvectors)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:37:41 2022    Done.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Selecting number of PCs to include</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   with Tracy-Widom test for significant eigenvalues</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     selected 1 PCs</span>
@@ -480,14 +480,14 @@
 <span class="r-in">    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"snptest"</span><span class="op">)</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span></span>
 <span class="r-in">        <span class="va">snpSumstat</span> <span class="op">&lt;-</span> <span class="fu">gwaSnptest</span><span class="op">(</span><span class="va">toy</span>,response<span class="op">=</span><span class="st">"BMI"</span>,</span>
 <span class="r-in">            covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> snptest operations will be executed at /tmp/Rtmpxo9Dha/snptest_AZQIL3254L</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing SNPTEST association run at workspace directory: /tmp/Rtmpxo9Dha/snptest_AZQIL3254L</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  writing SNPTEST sample file in /tmp/Rtmpxo9Dha/snptest_AZQIL3254L</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   writing PLINK files in /tmp/Rtmpxo9Dha/snptest_AZQIL3254L</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> snptest operations will be executed at /tmp/Rtmps2YAD0/snptest_AZQIL3254L</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing SNPTEST association run at workspace directory: /tmp/Rtmps2YAD0/snptest_AZQIL3254L</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  writing SNPTEST sample file in /tmp/Rtmps2YAD0/snptest_AZQIL3254L</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   writing PLINK files in /tmp/Rtmps2YAD0/snptest_AZQIL3254L</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmps2YAD0/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmps2YAD0/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmps2YAD0/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing GWAS with SNPTEST</span>
@@ -497,27 +497,27 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> /home/panos/.local/share/R/snptest-2.5.4/snptest \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   -data /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bed \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/pheno.sample \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   -data /tmp/Rtmps2YAD0/snptest_AZQIL3254L/plink_snptest_DPKHE3458Z.bed \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     /tmp/Rtmps2YAD0/snptest_AZQIL3254L/pheno.sample \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   -frequentist 1 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   -method score \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   -pheno BMI \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   -cov_all \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   -o /tmp/Rtmpxo9Dha/snptest_AZQIL3254L/snptest.out</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   -o /tmp/Rtmps2YAD0/snptest_AZQIL3254L/snptest.out</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Found 38 associations (uncorrected p-values).</span>
 <span class="r-in">    </span>
 <span class="r-in">    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"plink"</span><span class="op">)</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span></span>
 <span class="r-in">        <span class="va">plSumstat</span> <span class="op">&lt;-</span> <span class="fu">gwaPlink</span><span class="op">(</span><span class="va">toy</span>,response<span class="op">=</span><span class="st">"BMI"</span>,</span>
 <span class="r-in">            covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Age"</span>,<span class="st">"Gender"</span><span class="op">)</span>,pcs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> plink operations will be executed at /tmp/Rtmpxo9Dha/plink_PIICY8094S</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PLINK association run at workspace directory: /tmp/Rtmpxo9Dha/plink_PIICY8094S</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> plink operations will be executed at /tmp/Rtmps2YAD0/plink_PIICY8094S</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Preparing PLINK association run at workspace directory: /tmp/Rtmps2YAD0/plink_PIICY8094S</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   writing the PLINK phenotype file...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   writing the covariates file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   writing PLINK genotype files in /tmp/Rtmpxo9Dha/plink_PIICY8094S</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   writing PLINK genotype files in /tmp/Rtmps2YAD0/plink_PIICY8094S</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preflight...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmpxo9Dha/plink_PIICY8094S/plink_plink_QJCXD6659L.fam </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmpxo9Dha/plink_PIICY8094S/plink_plink_QJCXD6659L.bim </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmpxo9Dha/plink_PIICY8094S/plink_plink_QJCXD6659L.bed (SNP-major mode)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing FAM file to /tmp/Rtmps2YAD0/plink_PIICY8094S/plink_plink_QJCXD6659L.fam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing extended MAP file to /tmp/Rtmps2YAD0/plink_PIICY8094S/plink_plink_QJCXD6659L.bim </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Writing BED file to /tmp/Rtmps2YAD0/plink_PIICY8094S/plink_plink_QJCXD6659L.bed (SNP-major mode)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Preparation done!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Performing GWAS with PLINK</span>
@@ -527,13 +527,13 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Executing:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> /home/panos/.local/share/R/plink-1.90/plink \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --bfile /tmp/Rtmpxo9Dha/plink_PIICY8094S/plink_plink_QJCXD6659L \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmpxo9Dha/plink_PIICY8094S/pheno_QJCXD6659L \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --bfile /tmp/Rtmps2YAD0/plink_PIICY8094S/plink_plink_QJCXD6659L \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --pheno /tmp/Rtmps2YAD0/plink_PIICY8094S/pheno_QJCXD6659L \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --allow-no-sex \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --ci 0.95 \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --seed 42 \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --out /tmp/Rtmpxo9Dha/plink_PIICY8094S/out_QJCXD6659L \</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   --covar /tmp/Rtmpxo9Dha/plink_PIICY8094S/covar_QJCXD6659L \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --out /tmp/Rtmps2YAD0/plink_PIICY8094S/out_QJCXD6659L \</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   --covar /tmp/Rtmps2YAD0/plink_PIICY8094S/covar_QJCXD6659L \</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   --linear perm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Found 43 associations (uncorrected p-values).</span>
 </code></pre></div>

@@ -16,7 +16,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -154,22 +154,22 @@
 <span class="r-in">    <span class="co"># Without phenotypes</span></span>
 <span class="r-in">    <span class="va">gwe</span> <span class="op">&lt;-</span> <span class="fu">importGWAS</span><span class="op">(</span><span class="va">input</span>,backend<span class="op">=</span><span class="st">"snpStats"</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with snpStats framework</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with SNPRelate framework and storing output tp /tmp/Rtmpxo9Dha/file381e758455ea</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with SNPRelate framework and storing output tp /tmp/Rtmps2YAD0/file14c7c0de2bb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Start file conversion from PLINK BED to SNP GDS ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         SNP-major mode (Sample X SNP), 603 bytes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:07:41 2022     (store sample id, snp id, position, and chromosome)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:38:24 2022     (store sample id, snp id, position, and chromosome)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     start writing: 120 samples, 20 SNPs ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:07:41 2022 	Done.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:38:24 2022 	Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Optimize the access efficiency ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Clean up the fragments of GDS file:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     open the file '/tmp/Rtmpxo9Dha/file381e758455ea' (5.1K)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     open the file '/tmp/Rtmps2YAD0/file14c7c0de2bb' (5.1K)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of fragments: 50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     save to '/tmp/Rtmpxo9Dha/file381e758455ea.tmp'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     rename '/tmp/Rtmpxo9Dha/file381e758455ea.tmp' (4.8K, reduced: 312B)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     save to '/tmp/Rtmps2YAD0/file14c7c0de2bb.tmp'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     rename '/tmp/Rtmps2YAD0/file14c7c0de2bb.tmp' (4.8K, reduced: 312B)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of fragments: 24</span>
 <span class="r-in">    </span>
 <span class="r-in">    <span class="co"># With phenotypes</span></span>
@@ -182,22 +182,22 @@
 <span class="r-in">    <span class="op">)</span></span>
 <span class="r-in">    <span class="va">gwe</span> <span class="op">&lt;-</span> <span class="fu">importGWAS</span><span class="op">(</span><span class="va">input</span>,phenos<span class="op">=</span><span class="va">pseudopheno</span>,backend<span class="op">=</span><span class="st">"snpStats"</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with snpStats framework</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with SNPRelate framework and storing output tp /tmp/Rtmpxo9Dha/file381eb4f614c</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading PLINK files with SNPRelate framework and storing output tp /tmp/Rtmps2YAD0/file14c6a724626</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Start file conversion from PLINK BED to SNP GDS ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         SNP-major mode (Sample X SNP), 603 bytes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:07:41 2022     (store sample id, snp id, position, and chromosome)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:38:24 2022     (store sample id, snp id, position, and chromosome)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     start writing: 120 samples, 20 SNPs ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [..................................................]  0%, ETC: ---        [==================================================] 100%, completed, 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mon Jun  6 20:07:41 2022 	Done.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Wed Jun 29 19:38:24 2022 	Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Optimize the access efficiency ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Clean up the fragments of GDS file:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     open the file '/tmp/Rtmpxo9Dha/file381eb4f614c' (5.1K)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     open the file '/tmp/Rtmps2YAD0/file14c6a724626' (5.1K)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of fragments: 50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     save to '/tmp/Rtmpxo9Dha/file381eb4f614c.tmp'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     rename '/tmp/Rtmpxo9Dha/file381eb4f614c.tmp' (4.8K, reduced: 312B)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     save to '/tmp/Rtmps2YAD0/file14c6a724626.tmp'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     rename '/tmp/Rtmps2YAD0/file14c6a724626.tmp' (4.8K, reduced: 312B)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of fragments: 24</span>
 </code></pre></div>
     </div>

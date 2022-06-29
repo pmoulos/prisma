@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>Introduction to the prisma package</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-06</h4>
+            <h4 data-toc-skip class="date">2022-06-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/01-introduction.Rmd" class="external-link"><code>vignettes/01-introduction.Rmd</code></a></small>
       <div class="d-none name"><code>01-introduction.Rmd</code></div>
@@ -87,9 +87,9 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>The rise of modern genotyping technologies such as Next Generation Sequencing (Whole Exome and Whole Genome Sequencing) as well as the continuous thriving of older genotyping technologies such as genotyping DNA microarrays have allowed an unprecedented collection of massive, large-cohort and population-level genetic data spanning a variety of application, from medical research to consumer genomics. At the same time, several perspective and sometimes country-level studies are reaching maturity levels regarding the amount and quality of data collected at various levels such as anthropometric, phenotypic, biomarker and genetic levels, and some times other molecular -omics layers such as gene expression. The aforementioned facts have allowed not only for more accurate and versatile Genome-Wide Association Studies to identify the potential genetic cause for many simple or more complex genetic traits but also combine phenotypic and genotypic data in unique ways to derive multi-way genetic signatures that characterize individuals with respect to several anthropometric features as well as these traits and biomarker levels. These genetic signatures have a seamingly endless portfolio of applications, spanning the characterization of the predisposition of an individual to general healthstyle issues such as obesity and up to estimating the risk to several diseases like cancer and other potential life-threatening conditions including cardiovascular disease and kidney malfunction. They are also used to characterize less life-threatening conditions but which deteriorate the general well-being such as psychological disease and anomalies of the central nervous system.</p>
+<p>The rise of modern genotyping technologies such as Next Generation Sequencing (Whole Exome and Whole Genome Sequencing) as well as the continuous thriving of older genotyping technologies such as genotyping DNA microarrays have allowed an unprecedented collection of massive, large-cohort and population-level genetic data spanning a variety of applications, from medical research to consumer genomics. At the same time, several perspective and sometimes country-level studies are reaching maturity levels regarding the amount and quality of data collected at various levels such as anthropometric, phenotypic, biomarker and genetic levels, and sometimes other molecular -omics layers such as gene expression. The aforementioned facts have allowed not only for more accurate and versatile Genome-Wide Association Studies to identify the potential genetic cause for many simple or more complex genetic traits but also combine phenotypic and genotypic data in unique ways to derive multi-way genetic signatures that characterize individuals with respect to several anthropometric features as well as these traits and biomarker levels. These genetic signatures have a seemingly endless portfolio of applications, spanning the characterization of the predisposition of an individual to general healthstyle issues such as obesity and up to estimating the risk to several diseases like cancer and other potential life-threatening conditions including cardiovascular disease and kidney malfunction. They are also used to characterize less life-threatening conditions but which deteriorate the general well-being such as psychological disease and anomalies of the central nervous system.</p>
 <p>The aforementioned biotechnological thriving as well as the increased complete data sources availability (coupled genotypic and phenotypic records for large cohorts) are gradually allowing the creation and exploration of Polygenic Risk Scores as risk predictors and evaluators for a variety of disease and healthstyle conditions. Polygenic Risk Scores (PRS) are (usually) simple genotype scoring schemes which take into account many variants of an individual and based on the calculated score, attempt to assess a heritable risk of developing/expressing a particular phenotype or combination of phenotypes. These phenotypes can be disease-related phenotypes such as cancer, cardiovascular disease and obesity, or plain lifestyle traits such as endurance in sports or effects of caffeine. They are different from the Genetic Risk Scores (GRS) in the sense that while GRSs are compiled from a (usually) limited number of well characterized variants related to a particular phenotype across the literature with strong statistical evidence, PRSs are more relaxed regarding statistical power and comprise a usually much number of variants accounting for the additive genetic risk of an individual given his/hers total genetic profile.</p>
-<p>PRS and GRS are essentially variables constructed based on the (weighted) sum of genotypes (usually coded as 0, 1, 2 according to the alleles of a genotype) and comprise covariates in regression models that attempt to explain observed genotypic/phenotypic relationships. While this approach seems over-simplified, nevertheless it has been shown in numerous studies that genetic scores are able to explain the aforementioned variabilities and most times even outperform complex Machine Learning approaches. Then, after a succesful model construction, a distribution of PRS is constructed based on the ppopulation used to extract and calculate the PRS, and based on this distribution, the risk of new samples can be assessed according to the position of the new PRS in the reference distribution. The process of extracting a PRS is not very complex itself and includes the main following steps:</p>
+<p>PRS and GRS are essentially variables constructed based on the (weighted) sum of genotypes (usually coded as 0, 1, 2 according to the alleles of a genotype) and comprise covariates in regression models that attempt to explain observed genotypic/phenotypic relationships. While this approach seems over-simplified, nevertheless it has been shown in numerous studies that genetic scores are able to explain the aforementioned variabilities and most times even outperform complex Machine Learning approaches. Then, after a successful model construction, a distribution of PRS is constructed based on the population used to extract and calculate the PRS, and based on this distribution, the risk of new samples can be assessed according to the position of the new PRS in the reference distribution. The process of extracting a PRS is not very complex itself and includes the main following steps:</p>
 <ul>
 <li>Derivation of summary statistics (regression coefficients/Odds Ratios, p-values etc.) for each variant from a major and representative population study (often a GWAS) recording also the phenotypes of interest.</li>
 <li>Filtering of these variants according to their potential informative redundancy (Linkage Disequilbrium), content with respect to the population (Hardy-Weinberg Equilibrium) and statistical significance/power to contribute to the phenotype under investigation (effects as assessed from regression coefficients, p-values). This process is often refered as <em>Clumping + Thresholding</em> and although popular is not the sole method to reduce noise while extracting a PRS. Another often complementary process is <em>penalized regression</em> or <em>lasso</em>.</li>
@@ -139,7 +139,13 @@
 <div class="section level4">
 <h4 id="de-novo-prs-extraction-pipeline">De novo PRS extraction pipeline<a class="anchor" aria-label="anchor" href="#de-novo-prs-extraction-pipeline"></a>
 </h4>
-<p>This is the main PRS candidate extraction pipeline and performs the following steps: 1. Split of the input data object to a usually larger training set and a smaller independent test set. 2. De novo quality control on the training and test sets as well as optional PCA in the training set to capture local population structure to be used as covariates in the subsequent GWA tests. 3. Execution of GWA tests against a phenotype using one or more of the supported methods to extract summary statistics (SNP effects and p-values). 4. Execution of one or more PRS extraction algorithms to derive PRS candidate SNPs.</p>
+<p>This is the main PRS candidate extraction pipeline and performs the following steps:</p>
+<ol style="list-style-type: decimal">
+<li>Split of the input data object to a usually larger training set and a smaller independent test set.</li>
+<li>De novo quality control on the training and test sets as well as optional PCA in the training set to capture local population structure to be used as covariates in the subsequent GWA tests.</li>
+<li>Execution of GWA tests against a phenotype using one or more of the supported methods to extract summary statistics (SNP effects and p-values).</li>
+<li>Execution of one or more PRS extraction algorithms to derive PRS candidate SNPs.</li>
+</ol>
 <p>Steps (1) – (4) are executed N times with different training and test sets to capture as much variation in the selection process as possible. Subsequently:</p>
 <ol start="5" style="list-style-type: decimal">
 <li>The candidate SNPs from PRSs extracted at each iteration are aggregated and the frequency of their appearance is recorded. At the same time, new effects are calculated either by averaging the SNP effects from each iteration, a <a href="https://www.biorxiv.org/content/10.1101/133785v8.full.pdf" class="external-link">statistically valid process</a> which generally corrects for overfitting, or by weighted averaging of the effects based on the performance of PRSs constructed at each iteration (as measured by the adjusted PRS R<sup>2</sup> returned by PRSice2).</li>
@@ -150,13 +156,12 @@
 </h4>
 <p>This is an evaluation of a de novo extracted PRS pipeline and performs the following steps:</p>
 <ol style="list-style-type: decimal">
-<li>Create sets of PRS candidates from step (5) of the de novo PRS extraction pipeline based on:</li>
-</ol>
+<li>Create sets of PRS candidates from step (5) of the de novo PRS extraction pipeline based on:
 <ol style="list-style-type: lower-alpha">
 <li>Fixed quantiles of the frequency distribution (e.g. 10%, 20%, 30%, 40%, 50%, 60%, 75%, 80%, 90%, 95%, 99%).</li>
 <li>A stepwise set creation process based on frequency of appearance, i.e. each set contains SNPs that appear 5, 6, … up to the maximum number of appearances.</li>
 </ol>
-<ol start="2" style="list-style-type: decimal">
+</li>
 <li>For each set created at (1), split de novo the initial data object in a training and test set. Using the training test, reperform GWA tests to extract summary statistics (the averaged effects are not used) and use PRSice2 in <em>PRS application</em> mode to assess the PRS sets of (1) on the test set with the new summary statistics.</li>
 <li>Evaluate each PRS application using the adjusted PRS R2 coefficient of PRSice2.</li>
 </ol>
@@ -197,8 +202,8 @@
 </h4>
 <p>After executing a possible evaluation pipeline, the best PRS is firstly evaluated graphically by:</p>
 <ol style="list-style-type: lower-roman">
-<li>A bar plot of average adjusted PRS R2 ± standard deviations for each SNP frequency cutoff where it can be checked if there is a cutoff increasing the R2 as compared to the baseline (R2 from the de novo PRS extraction iterations).</li>
-<li>A dot plot of the PRISMA adjusted PRS R2 R_P^2, where it can be inspected where the adjusted R2 is potentially maximized.</li>
+<li>A bar plot of average adjusted PRS R<sup>2</sup> ± standard deviations for each SNP frequency cutoff where it can be checked if there is a cutoff increasing the R<sup>2</sup> as compared to the baseline (R<sup>2</sup> from the de novo PRS extraction iterations).</li>
+<li>A dot plot of the PRISMA adjusted PRS R2 R_P^2, where it can be inspected where the adjusted R<sup>2</sup> is potentially maximized.</li>
 <li>A dot plot of SNP frequencies.</li>
 </ol>
 </div>
@@ -415,14 +420,14 @@
 <span class="op">)</span>
 <span class="co">## </span>
 <span class="co">## $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$</span>
-<span class="co">## This is PRISMA 0.0.2 PRS builder</span>
+<span class="co">## This is PRISMA 0.0.3 PRS builder</span>
 <span class="co">## $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$</span>
 <span class="co">## </span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
-<span class="co">## 2022-06-06 20:21:49 - Try 1</span>
+<span class="co">## 2022-06-29 19:51:20 - Try 1</span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
 <span class="co">## </span>
-<span class="co">## 2022-06-06 20:21:49: Data processing started...</span>
+<span class="co">## 2022-06-29 19:51:20: Data processing started...</span>
 <span class="co">## </span>
 <span class="co">## Input</span>
 <span class="co">## --------------------------------------------------------------------</span>
@@ -505,7 +510,7 @@
 <span class="co">## </span>
 <span class="co">## Miscellaneous options</span>
 <span class="co">## --------------------------------------------------------------------</span>
-<span class="co">## Local workspace directory (prsWorkspace) : /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2</span>
+<span class="co">## Local workspace directory (prsWorkspace) : /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea</span>
 <span class="co">## Cleanup level (cleanup)                  : intermediate</span>
 <span class="co">## PRS pipeline output type (dnOutput)      : normal</span>
 <span class="co">## Output level (output)                    : normal</span>
@@ -519,9 +524,9 @@
 <span class="co">## ################################################################</span>
 <span class="co">## 1. Discovery of de novo PRS candidates</span>
 <span class="co">## ################################################################</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline</span>
 <span class="co">## </span>
-<span class="co">## Executing denovo pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_iter_1.log</span>
+<span class="co">## Executing denovo pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_iter_1.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 1</span>
 <span class="co">## ================================================================</span>
@@ -545,8 +550,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 120</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
+<span class="co">##   Minor Allele Frequency    : 129</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -571,7 +576,7 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 124</span>
+<span class="co">##   Minor Allele Frequency    : 121</span>
 <span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
@@ -592,9 +597,9 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
+<span class="co">## Found 25 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 25 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -604,23 +609,23 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
+<span class="co">## Found 17 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 17 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 13 associations found out of 562 markers</span>
-<span class="co">##   Part 21: 13 associations found out of 317 markers</span>
+<span class="co">##   Part 18: 25 associations found out of 562 markers</span>
+<span class="co">##   Part 21: 17 associations found out of 307 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 26 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 42 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -630,11 +635,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0299419330259365</span>
+<span class="co">## Done! R^2 is: 0.048892155621309</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -646,31 +651,31 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1/base_ASEYL8061W \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1/base_WYBNK3948Q \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1/pheno_ASEYL8061W \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1/plink_prsice_ASEYL8061W \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1/covar_ASEYL8061W \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1/pheno_WYBNK3948Q \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1/plink_prsice_WYBNK3948Q \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1/covar_WYBNK3948Q \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_ASEYL8061W \</span>
+<span class="co">##   --out prsice_out_WYBNK3948Q \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.128117</span>
-<span class="co">## Full model R^2 is: 0.460406</span>
-<span class="co">## Null model R^2 is: 0.332289</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0398248</span>
+<span class="co">## Full model R^2 is: 0.469798</span>
+<span class="co">## Null model R^2 is: 0.429973</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_1/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_1/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_iter_2.log</span>
+<span class="co">## Executing denovo pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_iter_2.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 2</span>
 <span class="co">## ================================================================</span>
@@ -694,8 +699,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 116</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
+<span class="co">##   Minor Allele Frequency    : 119</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -720,8 +725,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 142</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
+<span class="co">##   Minor Allele Frequency    : 123</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 4</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -741,9 +746,9 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 28 associations (uncorrected p-values).</span>
+<span class="co">## Found 26 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 28 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 26 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -753,23 +758,23 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
+<span class="co">## Found 16 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 16 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 28 associations found out of 569 markers</span>
-<span class="co">##   Part 21: 13 associations found out of 315 markers</span>
+<span class="co">##   Part 18: 26 associations found out of 566 markers</span>
+<span class="co">##   Part 21: 16 associations found out of 314 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 41 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 42 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -779,11 +784,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.000260334133183589</span>
+<span class="co">## Done! R^2 is: 0.0752307535870321</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -795,31 +800,31 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2/base_RPITG5899K \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2/base_VYKBU4584F \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2/pheno_RPITG5899K \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2/plink_prsice_RPITG5899K \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2/covar_RPITG5899K \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2/pheno_VYKBU4584F \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2/plink_prsice_VYKBU4584F \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2/covar_VYKBU4584F \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_RPITG5899K \</span>
+<span class="co">##   --out prsice_out_VYKBU4584F \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0462982</span>
-<span class="co">## Full model R^2 is: 0.454096</span>
-<span class="co">## Null model R^2 is: 0.407798</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0679207</span>
+<span class="co">## Full model R^2 is: 0.549454</span>
+<span class="co">## Null model R^2 is: 0.481533</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_2/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_2/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_iter_3.log</span>
+<span class="co">## Executing denovo pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_iter_3.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 3</span>
 <span class="co">## ================================================================</span>
@@ -844,7 +849,7 @@
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
 <span class="co">##   Minor Allele Frequency    : 120</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 4</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -869,8 +874,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 122</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
+<span class="co">##   Minor Allele Frequency    : 129</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 0</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -902,23 +907,23 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs2824974 to rs2828316</span>
-<span class="co">## Found 15 associations (uncorrected p-values).</span>
+<span class="co">## Found 12 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 15 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 12 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 28 associations found out of 566 markers</span>
-<span class="co">##   Part 21: 15 associations found out of 314 markers</span>
+<span class="co">##   Part 18: 28 associations found out of 565 markers</span>
+<span class="co">##   Part 21: 12 associations found out of 313 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 43 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 40 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -928,11 +933,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.00649079901227329</span>
+<span class="co">## Done! R^2 is: 0.0251674805786676</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -944,31 +949,31 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3/base_IURIS9128L \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3/base_GMDQN1071W \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3/pheno_IURIS9128L \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3/plink_prsice_IURIS9128L \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3/covar_IURIS9128L \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3/pheno_GMDQN1071W \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3/plink_prsice_GMDQN1071W \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3/covar_GMDQN1071W \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_IURIS9128L \</span>
+<span class="co">##   --out prsice_out_GMDQN1071W \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0704192</span>
-<span class="co">## Full model R^2 is: 0.620807</span>
-<span class="co">## Null model R^2 is: 0.550387</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.158023</span>
+<span class="co">## Full model R^2 is: 0.646705</span>
+<span class="co">## Null model R^2 is: 0.488682</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_3/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_3/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_iter_4.log</span>
+<span class="co">## Executing denovo pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_iter_4.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 4</span>
 <span class="co">## ================================================================</span>
@@ -992,7 +997,7 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 123</span>
+<span class="co">##   Minor Allele Frequency    : 120</span>
 <span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
@@ -1018,7 +1023,7 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 124</span>
+<span class="co">##   Minor Allele Frequency    : 121</span>
 <span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
@@ -1039,9 +1044,9 @@
 <span class="co">## Regression  : gaussian (predicted)</span>
 <span class="co">## Use PCs     : No</span>
 <span class="co">##   testing SNPs from rs1009238 to rs1568327</span>
-<span class="co">## Found 19 associations (uncorrected p-values).</span>
+<span class="co">## Found 17 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 19 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 17 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -1056,18 +1061,18 @@
 <span class="co">## Overall, found 14 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 19 associations found out of 566 markers</span>
-<span class="co">##   Part 21: 14 associations found out of 311 markers</span>
+<span class="co">##   Part 18: 17 associations found out of 567 markers</span>
+<span class="co">##   Part 21: 14 associations found out of 312 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 33 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 31 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -1077,11 +1082,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0745972421160187</span>
+<span class="co">## Done! R^2 is: 0.000276495684981287</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -1093,40 +1098,40 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4/base_FPGMY8235M \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4/base_UXSIJ8078R \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4/pheno_FPGMY8235M \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4/plink_prsice_FPGMY8235M \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4/covar_FPGMY8235M \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4/pheno_UXSIJ8078R \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4/plink_prsice_UXSIJ8078R \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4/covar_UXSIJ8078R \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_FPGMY8235M \</span>
+<span class="co">##   --out prsice_out_UXSIJ8078R \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0861154</span>
-<span class="co">## Full model R^2 is: 0.604763</span>
-<span class="co">## Null model R^2 is: 0.518648</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.124796</span>
+<span class="co">## Full model R^2 is: 0.568861</span>
+<span class="co">## Null model R^2 is: 0.444066</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline/TAQGFLMFRTW7949V_denovo_4/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline/RRGYRONVGEZ7234T_denovo_4/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/baseline</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/baseline</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 2. Calculation of PRS evaluation metrics</span>
 <span class="co">## ################################################################</span>
 <span class="co">## Aggregation mode: intersect</span>
-<span class="co">##   iteration 1 yields 8 markers</span>
-<span class="co">##   iteration 2 yields 10 markers</span>
-<span class="co">##   iteration 3 yields 187 markers</span>
-<span class="co">##   iteration 4 yields 80 markers</span>
+<span class="co">##   iteration 1 yields 176 markers</span>
+<span class="co">##   iteration 2 yields 14 markers</span>
+<span class="co">##   iteration 3 yields 5 markers</span>
+<span class="co">##   iteration 4 yields 3 markers</span>
 <span class="co">## Calculating frequencies</span>
 <span class="co">## Averaging effects with mean</span>
 <span class="co">## Constructing output</span>
@@ -1135,9 +1140,9 @@
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Frequency 2 &lt;-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2</span>
 <span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_iter_1.log</span>
+<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_iter_1.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
 <span class="co">## ================================================================</span>
@@ -1150,15 +1155,14 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9977668</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs978731</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_evaluate_1/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_evaluate_1/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_iter_2.log</span>
+<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_iter_2.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
 <span class="co">## ================================================================</span>
-<span class="co">## 2 SNPs not found in target data! Excluding...</span>
 <span class="co">## </span>
 <span class="co">## Regressing with GLM</span>
 <span class="co">## Trait(s)    : BMI</span>
@@ -1168,11 +1172,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9977668</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs978731</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_evaluate_2/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_evaluate_2/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_iter_3.log</span>
+<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_iter_3.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
 <span class="co">## ================================================================</span>
@@ -1185,14 +1189,15 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9977668</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs978731</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_evaluate_3/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_evaluate_3/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_iter_4.log</span>
+<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_iter_4.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
 <span class="co">## ================================================================</span>
+<span class="co">## 1 SNPs not found in target data! Excluding...</span>
 <span class="co">## </span>
 <span class="co">## Regressing with GLM</span>
 <span class="co">## Trait(s)    : BMI</span>
@@ -1202,18 +1207,18 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs9977668</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs978731</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2/2_evaluate_4/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2/2_evaluate_4/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/2</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/2</span>
 <span class="co">## </span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Frequency 3 &lt;-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3</span>
 <span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_iter_1.log</span>
+<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_iter_1.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
 <span class="co">## ================================================================</span>
@@ -1226,11 +1231,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs8093690</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_evaluate_1/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_evaluate_1/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_iter_2.log</span>
+<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_iter_2.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
 <span class="co">## ================================================================</span>
@@ -1243,11 +1248,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs8093690</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_evaluate_2/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_evaluate_2/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_iter_3.log</span>
+<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_iter_3.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
 <span class="co">## ================================================================</span>
@@ -1260,11 +1265,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs8093690</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_evaluate_3/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_evaluate_3/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_iter_4.log</span>
+<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_iter_4.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
 <span class="co">## ================================================================</span>
@@ -1277,91 +1282,16 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs8093690</span>
+<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3/3_evaluate_4/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3/3_evaluate_4/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/3</span>
-<span class="co">## </span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Frequency 4 &lt;-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4</span>
-<span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_iter_1.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_evaluate_1/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_iter_2.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_evaluate_2/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_iter_3.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_evaluate_3/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_iter_4.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
-<span class="co">## ================================================================</span>
-<span class="co">## </span>
-<span class="co">## Regressing with GLM</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Regression  : gaussian (predicted)</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Creating the reduced model</span>
-<span class="co">## Creating the null model</span>
-<span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs1740090 to rs7280065</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4/4_evaluate_4/evaluate_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/glm/selection/4</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/glm/selection/3</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 3. Selection of best PRS candidate markers</span>
 <span class="co">## ################################################################</span>
-<span class="co">## The optimal number of markers for PRS based on prs_r2 is 3 at prs_r2=0.12735</span>
+<span class="co">## The optimal number of markers for PRS based on prs_r2 is 3 at prs_r2=0.12797</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 4. Wrap-up and graphics</span>
@@ -1387,9 +1317,9 @@
 <span class="co">## ################################################################</span>
 <span class="co">## 1. Discovery of de novo PRS candidates</span>
 <span class="co">## ################################################################</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline</span>
 <span class="co">## </span>
-<span class="co">## Executing denovo pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_iter_1.log</span>
+<span class="co">## Executing denovo pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_iter_1.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 1</span>
 <span class="co">## ================================================================</span>
@@ -1439,8 +1369,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 118</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
+<span class="co">##   Minor Allele Frequency    : 125</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -1459,9 +1389,9 @@
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Case_Control, Gender, Age</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 28 associations (uncorrected p-values).</span>
+<span class="co">## Found 26 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 28 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 26 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -1470,23 +1400,23 @@
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Case_Control, Gender, Age</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 17 associations (uncorrected p-values).</span>
+<span class="co">## Found 12 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 17 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 12 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 28 associations found out of 565 markers</span>
-<span class="co">##   Part 21: 17 associations found out of 315 markers</span>
+<span class="co">##   Part 18: 26 associations found out of 565 markers</span>
+<span class="co">##   Part 21: 12 associations found out of 315 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 45 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 38 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -1496,11 +1426,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0290419547627459</span>
+<span class="co">## Done! R^2 is: 0.0435723580067371</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -1512,31 +1442,31 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1/base_WDLAA4420N \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1/base_KTOIW6044B \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1/pheno_WDLAA4420N \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1/plink_prsice_WDLAA4420N \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1/covar_WDLAA4420N \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1/pheno_KTOIW6044B \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1/plink_prsice_KTOIW6044B \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1/covar_KTOIW6044B \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_WDLAA4420N \</span>
+<span class="co">##   --out prsice_out_KTOIW6044B \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0367345</span>
-<span class="co">## Full model R^2 is: 0.678118</span>
-<span class="co">## Null model R^2 is: 0.641384</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.275677</span>
+<span class="co">## Full model R^2 is: 0.621515</span>
+<span class="co">## Null model R^2 is: 0.345837</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_1/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_1/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_iter_2.log</span>
+<span class="co">## Executing denovo pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_iter_2.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 2</span>
 <span class="co">## ================================================================</span>
@@ -1560,8 +1490,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 120</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 4</span>
+<span class="co">##   Minor Allele Frequency    : 122</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -1586,8 +1516,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 128</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
+<span class="co">##   Minor Allele Frequency    : 125</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -1606,9 +1536,9 @@
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Case_Control, Gender, Age</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 20 associations (uncorrected p-values).</span>
+<span class="co">## Found 16 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 20 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 16 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ========== Analyzing chromosome/part 21</span>
 <span class="co">## </span>
@@ -1617,23 +1547,23 @@
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Case_Control, Gender, Age</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 19 associations (uncorrected p-values).</span>
+<span class="co">## Found 14 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 19 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 14 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 20 associations found out of 565 markers</span>
-<span class="co">##   Part 21: 19 associations found out of 313 markers</span>
+<span class="co">##   Part 18: 16 associations found out of 567 markers</span>
+<span class="co">##   Part 21: 14 associations found out of 308 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 39 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 30 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -1643,11 +1573,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.00454142411810441</span>
+<span class="co">## Done! R^2 is: 0.000219066969252743</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -1659,31 +1589,31 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2/base_HKQMJ5481Y \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2/base_HZOBI4425F \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2/pheno_HKQMJ5481Y \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2/plink_prsice_HKQMJ5481Y \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2/covar_HKQMJ5481Y \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2/pheno_HZOBI4425F \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2/plink_prsice_HZOBI4425F \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2/covar_HZOBI4425F \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_HKQMJ5481Y \</span>
+<span class="co">##   --out prsice_out_HZOBI4425F \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.102703</span>
-<span class="co">## Full model R^2 is: 0.770589</span>
-<span class="co">## Null model R^2 is: 0.667886</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0204872</span>
+<span class="co">## Full model R^2 is: 0.370863</span>
+<span class="co">## Null model R^2 is: 0.350376</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_2/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_2/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_iter_3.log</span>
+<span class="co">## Executing denovo pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_iter_3.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Denovo pipeline iteration 3</span>
 <span class="co">## ================================================================</span>
@@ -1707,8 +1637,8 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 124</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 1</span>
+<span class="co">##   Minor Allele Frequency    : 121</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
 <span class="co">##   Sample call rate          : 0</span>
@@ -1733,154 +1663,7 @@
 <span class="co">## ----- Filtering report: -----</span>
 <span class="co">## Filtered SNPs:</span>
 <span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 118</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 0</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) GWAS -----</span>
-<span class="co">## </span>
-<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 18</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 22 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 22 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ========== Analyzing chromosome/part 21</span>
-<span class="co">## </span>
-<span class="co">## Preparing data for statgenGWAS...</span>
-<span class="co">## Performing GWAS with statgenGWAS model</span>
-<span class="co">## Trait(s)    : BMI</span>
-<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
-<span class="co">## Use PCs     : No</span>
-<span class="co">## Found 17 associations (uncorrected p-values).</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 17 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 22 associations found out of 563 markers</span>
-<span class="co">##   Part 21: 17 associations found out of 313 markers</span>
-<span class="co">## </span>
-<span class="co">## Overall, found 39 associations with (uncorrected) combined p-values).</span>
-<span class="co">## </span>
-<span class="co">## ----- PRS analysis with base and target -----</span>
-<span class="co">## </span>
-<span class="co">## Starting PRS analysis with lassosum, prsice</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">##   preparing summary statistics...</span>
-<span class="co">##   preparing PLINK temporary files for target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">##   copying linkage disequilibrium block files...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running lassosum PRS algorithm</span>
-<span class="co">## Running lassosum validation and PRS calculation</span>
-<span class="co">## 20 out of 20 samples kept in pheno.</span>
-<span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0085994593263661</span>
-<span class="co">## </span>
-<span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3</span>
-<span class="co">##   preparing summary statistics for the base file...</span>
-<span class="co">##   preparing the covariates file...</span>
-<span class="co">##   preparing the phenotype file...</span>
-<span class="co">##   preparing PLINK temporary files - target...</span>
-<span class="co">## Preflight...</span>
-<span class="co">## Preparation done!</span>
-<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
-<span class="co">## </span>
-<span class="co">## Executing:</span>
-<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
-<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3/base_MHDVL4655S \</span>
-<span class="co">##   --beta \</span>
-<span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3/pheno_MHDVL4655S \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3/plink_prsice_MHDVL4655S \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3/covar_MHDVL4655S \</span>
-<span class="co">##   --clump-kb 250 \</span>
-<span class="co">##   --clump-r2 0.1 \</span>
-<span class="co">##   --clump-p 0.75 \</span>
-<span class="co">##   --score avg \</span>
-<span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_MHDVL4655S \</span>
-<span class="co">##   --print-snp \</span>
-<span class="co">##   --perm 100</span>
-<span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.163973</span>
-<span class="co">## Full model R^2 is: 0.581528</span>
-<span class="co">## Null model R^2 is: 0.417555</span>
-<span class="co">## </span>
-<span class="co">## Running PRS algorithms finished! Processing the results...</span>
-<span class="co">## Done!</span>
-<span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_3/denovo_result.RData-----</span>
-<span class="co">## ================================================================</span>
-<span class="co">## Executing denovo pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_iter_4.log</span>
-<span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Denovo pipeline iteration 4</span>
-<span class="co">## ================================================================</span>
-<span class="co">## ----- Dataset partitioning -----</span>
-<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
-<span class="co">## </span>
-<span class="co">## ----- Training (base) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 119</span>
-<span class="co">##   Hardy-Weinberg equilibrium: 4</span>
-<span class="co">## </span>
-<span class="co">## Filtered samples:</span>
-<span class="co">##   Sample call rate          : 0</span>
-<span class="co">##   Heterozygosity            : 0</span>
-<span class="co">##   Inbreed                   : 0</span>
-<span class="co">## </span>
-<span class="co">## </span>
-<span class="co">## ----- Test (target) QC -----</span>
-<span class="co">## </span>
-<span class="co">## Performing basic filtering</span>
-<span class="co">##   Calculating SNP summaries for filtering</span>
-<span class="co">##   SNP filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Minor Allele Frequency</span>
-<span class="co">##     Hardy-Weinberg equilibrium</span>
-<span class="co">##   Sample filters</span>
-<span class="co">##     Call rate</span>
-<span class="co">##     Heterozygosity</span>
-<span class="co">##   Summarizing SNP filter results</span>
-<span class="co">##   Summarizing sample filter results</span>
-<span class="co">## </span>
-<span class="co">## ----- Filtering report: -----</span>
-<span class="co">## Filtered SNPs:</span>
-<span class="co">##   SNP call rate             : 0</span>
-<span class="co">##   Minor Allele Frequency    : 120</span>
+<span class="co">##   Minor Allele Frequency    : 116</span>
 <span class="co">##   Hardy-Weinberg equilibrium: 2</span>
 <span class="co">## </span>
 <span class="co">## Filtered samples:</span>
@@ -1911,23 +1694,23 @@
 <span class="co">## Trait(s)    : BMI</span>
 <span class="co">## Covariate(s): Case_Control, Gender, Age</span>
 <span class="co">## Use PCs     : No</span>
-<span class="co">## Found 13 associations (uncorrected p-values).</span>
+<span class="co">## Found 14 associations (uncorrected p-values).</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 13 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 14 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## Finished, the following putative associations were found per part:</span>
-<span class="co">##   Part 18: 21 associations found out of 563 markers</span>
-<span class="co">##   Part 21: 13 associations found out of 316 markers</span>
+<span class="co">##   Part 18: 21 associations found out of 565 markers</span>
+<span class="co">##   Part 21: 14 associations found out of 312 markers</span>
 <span class="co">## </span>
-<span class="co">## Overall, found 34 associations with (uncorrected) combined p-values).</span>
+<span class="co">## Overall, found 35 associations with (uncorrected) combined p-values).</span>
 <span class="co">## </span>
 <span class="co">## ----- PRS analysis with base and target -----</span>
 <span class="co">## </span>
 <span class="co">## Starting PRS analysis with lassosum, prsice</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with lassosum</span>
-<span class="co">## lassosum operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4</span>
-<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3</span>
 <span class="co">##   preparing summary statistics...</span>
 <span class="co">##   preparing PLINK temporary files for target...</span>
 <span class="co">## Preflight...</span>
@@ -1937,11 +1720,11 @@
 <span class="co">## Running lassosum validation and PRS calculation</span>
 <span class="co">## 20 out of 20 samples kept in pheno.</span>
 <span class="co">## 20 out of 20 samples kept in covar.</span>
-<span class="co">## Done! R^2 is: 0.0180435952879536</span>
+<span class="co">## Done! R^2 is: 0.072061423608053</span>
 <span class="co">## </span>
 <span class="co">## ========== Running PRS analysis with prsice</span>
-<span class="co">## prsice operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4</span>
-<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3</span>
 <span class="co">##   preparing summary statistics for the base file...</span>
 <span class="co">##   preparing the covariates file...</span>
 <span class="co">##   preparing the phenotype file...</span>
@@ -1953,40 +1736,187 @@
 <span class="co">## Executing:</span>
 <span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
 <span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
-<span class="co">##   --base /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4/base_VSKNM0230S \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3/base_QDKSZ5942E \</span>
 <span class="co">##   --beta \</span>
 <span class="co">##   --binary-target F \</span>
-<span class="co">##   --pheno /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4/pheno_VSKNM0230S \</span>
-<span class="co">##   --target /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4/plink_prsice_VSKNM0230S \</span>
-<span class="co">##   --cov /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4/covar_VSKNM0230S \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3/pheno_QDKSZ5942E \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3/plink_prsice_QDKSZ5942E \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3/covar_QDKSZ5942E \</span>
 <span class="co">##   --clump-kb 250 \</span>
 <span class="co">##   --clump-r2 0.1 \</span>
 <span class="co">##   --clump-p 0.75 \</span>
 <span class="co">##   --score avg \</span>
 <span class="co">##   --seed 42 \</span>
-<span class="co">##   --out prsice_out_VSKNM0230S \</span>
+<span class="co">##   --out prsice_out_QDKSZ5942E \</span>
 <span class="co">##   --print-snp \</span>
 <span class="co">##   --perm 100</span>
 <span class="co">## Done!</span>
-<span class="co">## Adjusted PRSice R^2 is: 0.0654275</span>
-<span class="co">## Full model R^2 is: 0.554396</span>
-<span class="co">## Null model R^2 is: 0.488968</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.0975434</span>
+<span class="co">## Full model R^2 is: 0.685402</span>
+<span class="co">## Null model R^2 is: 0.587858</span>
 <span class="co">## </span>
 <span class="co">## Running PRS algorithms finished! Processing the results...</span>
 <span class="co">## Done!</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline/TAQGFLMFRTW7949V_denovo_4/denovo_result.RData-----</span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_3/denovo_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/baseline</span>
+<span class="co">## Executing denovo pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_iter_4.log</span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Denovo pipeline iteration 4</span>
+<span class="co">## ================================================================</span>
+<span class="co">## ----- Dataset partitioning -----</span>
+<span class="co">## Partitioning dataset into 1 partitions by BMI</span>
+<span class="co">## </span>
+<span class="co">## ----- Training (base) QC -----</span>
+<span class="co">## </span>
+<span class="co">## Performing basic filtering</span>
+<span class="co">##   Calculating SNP summaries for filtering</span>
+<span class="co">##   SNP filters</span>
+<span class="co">##     Call rate</span>
+<span class="co">##     Minor Allele Frequency</span>
+<span class="co">##     Hardy-Weinberg equilibrium</span>
+<span class="co">##   Sample filters</span>
+<span class="co">##     Call rate</span>
+<span class="co">##     Heterozygosity</span>
+<span class="co">##   Summarizing SNP filter results</span>
+<span class="co">##   Summarizing sample filter results</span>
+<span class="co">## </span>
+<span class="co">## ----- Filtering report: -----</span>
+<span class="co">## Filtered SNPs:</span>
+<span class="co">##   SNP call rate             : 0</span>
+<span class="co">##   Minor Allele Frequency    : 120</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 2</span>
+<span class="co">## </span>
+<span class="co">## Filtered samples:</span>
+<span class="co">##   Sample call rate          : 0</span>
+<span class="co">##   Heterozygosity            : 0</span>
+<span class="co">##   Inbreed                   : 0</span>
+<span class="co">## </span>
+<span class="co">## </span>
+<span class="co">## ----- Test (target) QC -----</span>
+<span class="co">## </span>
+<span class="co">## Performing basic filtering</span>
+<span class="co">##   Calculating SNP summaries for filtering</span>
+<span class="co">##   SNP filters</span>
+<span class="co">##     Call rate</span>
+<span class="co">##     Minor Allele Frequency</span>
+<span class="co">##     Hardy-Weinberg equilibrium</span>
+<span class="co">##   Sample filters</span>
+<span class="co">##     Call rate</span>
+<span class="co">##     Heterozygosity</span>
+<span class="co">##   Summarizing SNP filter results</span>
+<span class="co">##   Summarizing sample filter results</span>
+<span class="co">## </span>
+<span class="co">## ----- Filtering report: -----</span>
+<span class="co">## Filtered SNPs:</span>
+<span class="co">##   SNP call rate             : 0</span>
+<span class="co">##   Minor Allele Frequency    : 127</span>
+<span class="co">##   Hardy-Weinberg equilibrium: 3</span>
+<span class="co">## </span>
+<span class="co">## Filtered samples:</span>
+<span class="co">##   Sample call rate          : 0</span>
+<span class="co">##   Heterozygosity            : 0</span>
+<span class="co">##   Inbreed                   : 0</span>
+<span class="co">## </span>
+<span class="co">## </span>
+<span class="co">## ----- Training (base) GWAS -----</span>
+<span class="co">## </span>
+<span class="co">## Starting GWA analysis in 2 chunks with 1 methods: statgen</span>
+<span class="co">## </span>
+<span class="co">## ========== Analyzing chromosome/part 18</span>
+<span class="co">## </span>
+<span class="co">## Preparing data for statgenGWAS...</span>
+<span class="co">## Performing GWAS with statgenGWAS model</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Found 20 associations (uncorrected p-values).</span>
+<span class="co">## </span>
+<span class="co">## Overall, found 20 associations with (uncorrected) combined p-values).</span>
+<span class="co">## </span>
+<span class="co">## ========== Analyzing chromosome/part 21</span>
+<span class="co">## </span>
+<span class="co">## Preparing data for statgenGWAS...</span>
+<span class="co">## Performing GWAS with statgenGWAS model</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Found 14 associations (uncorrected p-values).</span>
+<span class="co">## </span>
+<span class="co">## Overall, found 14 associations with (uncorrected) combined p-values).</span>
+<span class="co">## </span>
+<span class="co">## Finished, the following putative associations were found per part:</span>
+<span class="co">##   Part 18: 20 associations found out of 565 markers</span>
+<span class="co">##   Part 21: 14 associations found out of 314 markers</span>
+<span class="co">## </span>
+<span class="co">## Overall, found 34 associations with (uncorrected) combined p-values).</span>
+<span class="co">## </span>
+<span class="co">## ----- PRS analysis with base and target -----</span>
+<span class="co">## </span>
+<span class="co">## Starting PRS analysis with lassosum, prsice</span>
+<span class="co">## </span>
+<span class="co">## ========== Running PRS analysis with lassosum</span>
+<span class="co">## lassosum operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">## Preparing lassosum run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">##   preparing summary statistics...</span>
+<span class="co">##   preparing PLINK temporary files for target...</span>
+<span class="co">## Preflight...</span>
+<span class="co">##   copying linkage disequilibrium block files...</span>
+<span class="co">## Preparation done!</span>
+<span class="co">## Running lassosum PRS algorithm</span>
+<span class="co">## Running lassosum validation and PRS calculation</span>
+<span class="co">## 20 out of 20 samples kept in pheno.</span>
+<span class="co">## 20 out of 20 samples kept in covar.</span>
+<span class="co">## Done! R^2 is: 0.118685477546743</span>
+<span class="co">## </span>
+<span class="co">## ========== Running PRS analysis with prsice</span>
+<span class="co">## prsice operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">## Preparing PRSice run at workspace directory: /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4</span>
+<span class="co">##   preparing summary statistics for the base file...</span>
+<span class="co">##   preparing the covariates file...</span>
+<span class="co">##   preparing the phenotype file...</span>
+<span class="co">##   preparing PLINK temporary files - target...</span>
+<span class="co">## Preflight...</span>
+<span class="co">## Preparation done!</span>
+<span class="co">## Running PRSice PRS algorithm in calculate mode</span>
+<span class="co">## </span>
+<span class="co">## Executing:</span>
+<span class="co">## Rscript /home/panos/.local/share/R/prsice-2.3.3/PRSice.R \</span>
+<span class="co">##   --prsice /home/panos/.local/share/R/prsice-2.3.3/PRSice_linux \</span>
+<span class="co">##   --base /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4/base_PHLZH0731K \</span>
+<span class="co">##   --beta \</span>
+<span class="co">##   --binary-target F \</span>
+<span class="co">##   --pheno /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4/pheno_PHLZH0731K \</span>
+<span class="co">##   --target /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4/plink_prsice_PHLZH0731K \</span>
+<span class="co">##   --cov /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4/covar_PHLZH0731K \</span>
+<span class="co">##   --clump-kb 250 \</span>
+<span class="co">##   --clump-r2 0.1 \</span>
+<span class="co">##   --clump-p 0.75 \</span>
+<span class="co">##   --score avg \</span>
+<span class="co">##   --seed 42 \</span>
+<span class="co">##   --out prsice_out_PHLZH0731K \</span>
+<span class="co">##   --print-snp \</span>
+<span class="co">##   --perm 100</span>
+<span class="co">## Done!</span>
+<span class="co">## Adjusted PRSice R^2 is: 0.027207</span>
+<span class="co">## Full model R^2 is: 0.728989</span>
+<span class="co">## Null model R^2 is: 0.701782</span>
+<span class="co">## </span>
+<span class="co">## Running PRS algorithms finished! Processing the results...</span>
+<span class="co">## Done!</span>
+<span class="co">## </span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline/RRGYRONVGEZ7234T_denovo_4/denovo_result.RData-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/baseline</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 2. Calculation of PRS evaluation metrics</span>
 <span class="co">## ################################################################</span>
 <span class="co">## Aggregation mode: intersect</span>
-<span class="co">##   iteration 1 yields 1 markers</span>
-<span class="co">##   iteration 2 yields 5 markers</span>
-<span class="co">##   iteration 3 yields 23 markers</span>
-<span class="co">##   iteration 4 yields 2 markers</span>
+<span class="co">##   iteration 1 yields 58 markers</span>
+<span class="co">##   iteration 2 yields 126 markers</span>
+<span class="co">##   iteration 3 yields 6 markers</span>
+<span class="co">##   iteration 4 yields 3 markers</span>
 <span class="co">## Calculating frequencies</span>
 <span class="co">## Averaging effects with mean</span>
 <span class="co">## Constructing output</span>
@@ -1995,9 +1925,9 @@
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Frequency 2 &lt;-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## prisma operations will be executed at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2</span>
 <span class="co">## </span>
-<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_iter_1.log</span>
+<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_iter_1.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
 <span class="co">## ================================================================</span>
@@ -2010,11 +1940,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9961244</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 1 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_evaluate_1/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_evaluate_1/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_iter_2.log</span>
+<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_iter_2.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
 <span class="co">## ================================================================</span>
@@ -2027,14 +1957,15 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9961244</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 2 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_evaluate_2/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_evaluate_2/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_iter_3.log</span>
+<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_iter_3.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
 <span class="co">## ================================================================</span>
+<span class="co">## 1 SNPs not found in target data! Excluding...</span>
 <span class="co">## </span>
 <span class="co">## Regressing with GLM</span>
 <span class="co">## Trait(s)    : BMI</span>
@@ -2044,11 +1975,11 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9961244</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 3 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_evaluate_3/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_evaluate_3/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_iter_4.log</span>
+<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_iter_4.log</span>
 <span class="co">## ================================================================</span>
 <span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
 <span class="co">## ================================================================</span>
@@ -2061,16 +1992,91 @@
 <span class="co">## Creating the reduced model</span>
 <span class="co">## Creating the null model</span>
 <span class="co">## Testing full models</span>
-<span class="co">##   testing PRS with SNPs from rs508857 to rs7280065</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9961244</span>
 <span class="co">## </span>
-<span class="co">## ----- Saving iteration 4 result to /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2/2_evaluate_4/evaluate_result.RData-----</span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2/2_evaluate_4/evaluate_result.RData-----</span>
 <span class="co">## ================================================================</span>
-<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmpfOBGMb/file9f86ff09697//tmp/RtmpfOBGMb/file9f87292a3d2/statgen/selection/2</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/2</span>
+<span class="co">## </span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Frequency 3 &lt;-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## prisma operations will be executed at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3</span>
+<span class="co">## </span>
+<span class="co">## Executing evaluation pipeline iteration 1, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_iter_1.log</span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Evaluation pipeline iteration 1</span>
+<span class="co">## ================================================================</span>
+<span class="co">## </span>
+<span class="co">## Regressing with GLM</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Regression  : gaussian (predicted)</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Creating the reduced model</span>
+<span class="co">## Creating the null model</span>
+<span class="co">## Testing full models</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9303974</span>
+<span class="co">## </span>
+<span class="co">## ----- Saving iteration 1 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_evaluate_1/evaluate_result.RData-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## Executing evaluation pipeline iteration 2, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_iter_2.log</span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Evaluation pipeline iteration 2</span>
+<span class="co">## ================================================================</span>
+<span class="co">## </span>
+<span class="co">## Regressing with GLM</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Regression  : gaussian (predicted)</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Creating the reduced model</span>
+<span class="co">## Creating the null model</span>
+<span class="co">## Testing full models</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9303974</span>
+<span class="co">## </span>
+<span class="co">## ----- Saving iteration 2 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_evaluate_2/evaluate_result.RData-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## Executing evaluation pipeline iteration 3, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_iter_3.log</span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Evaluation pipeline iteration 3</span>
+<span class="co">## ================================================================</span>
+<span class="co">## </span>
+<span class="co">## Regressing with GLM</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Regression  : gaussian (predicted)</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Creating the reduced model</span>
+<span class="co">## Creating the null model</span>
+<span class="co">## Testing full models</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9303974</span>
+<span class="co">## </span>
+<span class="co">## ----- Saving iteration 3 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_evaluate_3/evaluate_result.RData-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## Executing evaluation pipeline iteration 4, log is at /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_iter_4.log</span>
+<span class="co">## ================================================================</span>
+<span class="co">## -----&gt; Evaluation pipeline iteration 4</span>
+<span class="co">## ================================================================</span>
+<span class="co">## </span>
+<span class="co">## Regressing with GLM</span>
+<span class="co">## Trait(s)    : BMI</span>
+<span class="co">## Covariate(s): Case_Control, Gender, Age</span>
+<span class="co">## Regression  : gaussian (predicted)</span>
+<span class="co">## Use PCs     : No</span>
+<span class="co">## Creating the reduced model</span>
+<span class="co">## Creating the null model</span>
+<span class="co">## Testing full models</span>
+<span class="co">##   testing PRS with SNPs from rs1740090 to rs9303974</span>
+<span class="co">## </span>
+<span class="co">## ----- Saving iteration 4 result to /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3/3_evaluate_4/evaluate_result.RData-----</span>
+<span class="co">## ================================================================</span>
+<span class="co">## Cleaning up temporary program-specific intermediate files from /tmp/RtmplEZkQa/file520a2c05e753//tmp/RtmplEZkQa/file520a2b9a5cea/statgen/selection/3</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 3. Selection of best PRS candidate markers</span>
 <span class="co">## ################################################################</span>
-<span class="co">## The optimal number of markers for PRS based on prs_r2 is 4 at prs_r2=0.16732</span>
+<span class="co">## The optimal number of markers for PRS based on prs_r2 is 5 at prs_r2=0.17666</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
 <span class="co">## 4. Wrap-up and graphics</span>
@@ -2083,10 +2089,10 @@
 <span class="co">## Getting DNA sequences...</span>
 <span class="co">## Getting GC content...</span>
 <span class="co">## </span>
-<span class="co">## 2022-06-06 20:25:41: Data processing finished!</span>
-<span class="co">## Total processing time: 03 minutes 51 seconds</span>
+<span class="co">## 2022-06-29 19:55:00: Data processing finished!</span>
+<span class="co">## Total processing time: 03 minutes 40 seconds</span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
-<span class="co">## 2022-06-06 20:25:41 - Cross-validation</span>
+<span class="co">## 2022-06-29 19:55:00 - Cross-validation</span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
 <span class="co">## </span>
 <span class="co">## ################################################################</span>
@@ -2282,7 +2288,7 @@
 <span class="co">## ################################################################</span>
 <span class="co">## </span>
 <span class="co">## ================================================================</span>
-<span class="co">## -----&gt; Cross-validating PRS candidate with 4 markers</span>
+<span class="co">## -----&gt; Cross-validating PRS candidate with 5 markers</span>
 <span class="co">## ================================================================</span>
 <span class="co">## </span>
 <span class="co">## ----- Leave-out percentage 5% -----</span>
@@ -2470,7 +2476,7 @@
 <span class="co">## ################################################################</span>
 <span class="co">## </span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
-<span class="co">## 2022-06-06 20:26:05 - GWAS Catalog lookup</span>
+<span class="co">## 2022-06-29 19:55:26 - GWAS Catalog lookup</span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
 <span class="co">## -----&gt; Querying for glm</span>
 <span class="co">## Querying GWAS Catalog with the largest PRS</span>
@@ -2478,7 +2484,7 @@
 <span class="co">## Querying GWAS Catalog with the largest PRS</span>
 <span class="co">## </span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
-<span class="co">## 2022-06-06 20:26:08 - Report</span>
+<span class="co">## 2022-06-29 19:55:28 - Report</span>
 <span class="co">## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span>
 <span class="co">## processing file: prisma_report.Rmd</span>
 <span class="co">## </span>
@@ -2492,14 +2498,14 @@
 <span class="co">## </span>
 <span class="co">##     pattern</span>
 <span class="co">## Summarizing cross-validation statistics for PRS with 3 SNPs</span>
-<span class="co">## Summarizing cross-validation statistics for PRS with 4 SNPs</span>
+<span class="co">## Summarizing cross-validation statistics for PRS with 5 SNPs</span>
 <span class="co">## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
 <span class="co">## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
 <span class="co">## A project name here</span>
 <span class="co">## output file: prisma_report.knit.md</span>
-<span class="co">## /usr/bin/pandoc +RTS -K512m -RTS prisma_report.knit.md --to html4 --from markdown+autolink_bare_uris+tex_math_single_backslash --output /tmp/RtmpfOBGMb/file9f86ff09697/index.html --variable 'robobook:true' --variable 'lightbox:true' --variable 'gallery:false' --variable 'cards:true' --variable bs3=TRUE --standalone --section-divs --table-of-contents --toc-depth 2 --template /home/panos/R/x86_64-pc-linux-gnu-library/4.1/rmdformats/templates/template.html --highlight-style kate --variable theme=bootstrap --include-in-header /tmp/RtmpfOBGMb/rmarkdown-str9f855104b09.html</span>
+<span class="co">## /usr/bin/pandoc +RTS -K512m -RTS prisma_report.knit.md --to html4 --from markdown+autolink_bare_uris+tex_math_single_backslash --output /tmp/RtmplEZkQa/file520a2c05e753/index.html --variable 'robobook:true' --variable 'lightbox:true' --variable 'gallery:false' --variable 'cards:true' --variable bs3=TRUE --standalone --section-divs --table-of-contents --toc-depth 2 --template /home/panos/R/x86_64-pc-linux-gnu-library/4.1/rmdformats/templates/template.html --highlight-style kate --variable theme=bootstrap --include-in-header /tmp/RtmplEZkQa/rmarkdown-str520a350aa2b2.html</span>
 <span class="co">## </span>
-<span class="co">## Output created: /tmp/RtmpfOBGMb/file9f86ff09697/index.html</span></code></pre></div>
+<span class="co">## Output created: /tmp/RtmplEZkQa/file520a2c05e753/index.html</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -2534,7 +2540,7 @@
 <span class="co">##  [7] rmdformats_1.0.3                  knitr_1.39                       </span>
 <span class="co">##  [9] BSgenome.Hsapiens.UCSC.hg19_1.4.3 BSgenome_1.62.0                  </span>
 <span class="co">## [11] rtracklayer_1.54.0                Biostrings_2.62.0                </span>
-<span class="co">## [13] XVector_0.34.0                    prisma_0.0.2                     </span>
+<span class="co">## [13] XVector_0.34.0                    prisma_0.0.3                     </span>
 <span class="co">## [15] SNPRelate_1.28.0                  gdsfmt_1.30.0                    </span>
 <span class="co">## [17] snpStats_1.44.0                   Matrix_1.4-1                     </span>
 <span class="co">## [19] survival_3.3-1                    SummarizedExperiment_1.24.0      </span>
@@ -2561,7 +2567,7 @@
 <span class="co">## [40] assertthat_0.2.1       gwasrapidd_0.99.12     BiocIO_1.4.0          </span>
 <span class="co">## [43] Homo.sapiens_1.3.1     scales_1.2.0           gtable_0.3.0          </span>
 <span class="co">## [46] globals_0.15.0         rlang_1.0.2            systemfonts_1.0.4     </span>
-<span class="co">## [49] splines_4.1.3          rsnps_0.5.0.0          sitadela_1.3.1        </span>
+<span class="co">## [49] splines_4.1.3          rsnps_0.5.0.0          sitadela_1.5.1        </span>
 <span class="co">## [52] BiocManager_1.30.16    yaml_2.3.5             reshape2_1.4.4        </span>
 <span class="co">## [55] crosstalk_1.2.0        GenomicFeatures_1.46.5 quantmod_0.4.20       </span>
 <span class="co">## [58] RMySQL_0.10.23         RBGL_1.70.0            tools_4.1.3           </span>

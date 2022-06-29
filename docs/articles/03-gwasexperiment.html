@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
       <img src="" class="logo" alt=""><h1>The GWASExperiment class</h1>
                         <h4 data-toc-skip class="author">Panagiotis Moulos</h4>
             
-            <h4 data-toc-skip class="date">2022-06-06</h4>
+            <h4 data-toc-skip class="date">2022-06-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/pmoulos/prisma/blob/HEAD/vignettes/03-gwasexperiment.Rmd" class="external-link"><code>vignettes/03-gwasexperiment.Rmd</code></a></small>
       <div class="d-none name"><code>03-gwasexperiment.Rmd</code></div>
@@ -288,24 +288,24 @@
 <p>Without phenotypes:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gwe &lt;-<span class="st"> </span><span class="kw">importGWAS</span>(input,<span class="dt">backend=</span><span class="st">"snpStats"</span>)
 ## Reading PLINK files with snpStats framework
-## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpNz2YkH/filed6823cbf419
+## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpGr9Efa/file551b3b1da873
 ## Start file conversion from PLINK BED to SNP GDS ...
 ##     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'
 ##         SNP-major mode (Sample X SNP), 603 bytes
 ##     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'
 ##     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'
-## Mon Jun  6 20:29:57 2022     (store sample id, snp id, position, and chromosome)
+## Wed Jun 29 19:58:56 2022     (store sample id, snp id, position, and chromosome)
 ##     start writing: 120 samples, 20 SNPs ...
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Mon Jun  6 20:29:57 2022     Done.
+## Wed Jun 29 19:58:56 2022     Done.
 ## Optimize the access efficiency ...
 ## Clean up the fragments of GDS file:
-##     open the file '/tmp/RtmpNz2YkH/filed6823cbf419' (5.1K)
+##     open the file '/tmp/RtmpGr9Efa/file551b3b1da873' (5.1K)
 ##     # of fragments: 50
-##     save to '/tmp/RtmpNz2YkH/filed6823cbf419.tmp'
-##     rename '/tmp/RtmpNz2YkH/filed6823cbf419.tmp' (4.8K, reduced: 312B)
+##     save to '/tmp/RtmpGr9Efa/file551b3b1da873.tmp'
+##     rename '/tmp/RtmpGr9Efa/file551b3b1da873.tmp' (4.8K, reduced: 312B)
 ##     # of fragments: 24
 
 gwe
@@ -338,24 +338,24 @@ pseudopheno &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
 )
 gwe &lt;-<span class="st"> </span><span class="kw">importGWAS</span>(input,<span class="dt">phenos=</span>pseudopheno,<span class="dt">backend=</span><span class="st">"snpStats"</span>)
 ## Reading PLINK files with snpStats framework
-## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpNz2YkH/filed684e7dcc74
+## Reading PLINK files with SNPRelate framework and storing output tp /tmp/RtmpGr9Efa/file551b2ac225ed
 ## Start file conversion from PLINK BED to SNP GDS ...
 ##     BED file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bed'
 ##         SNP-major mode (Sample X SNP), 603 bytes
 ##     FAM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.fam'
 ##     BIM file: '/home/panos/R/x86_64-pc-linux-gnu-library/4.1/snpStats/extdata/sample.bim'
-## Mon Jun  6 20:29:58 2022     (store sample id, snp id, position, and chromosome)
+## Wed Jun 29 19:58:56 2022     (store sample id, snp id, position, and chromosome)
 ##     start writing: 120 samples, 20 SNPs ...
 ## 
 [..................................................]  <span class="dv">0</span>%, ETC<span class="op">:</span><span class="st"> </span><span class="op">---</span><span class="st">        </span>
 [<span class="op">==</span><span class="er">================================================</span>] <span class="dv">100</span>%, completed, 0s
-## Mon Jun  6 20:29:58 2022     Done.
+## Wed Jun 29 19:58:56 2022     Done.
 ## Optimize the access efficiency ...
 ## Clean up the fragments of GDS file:
-##     open the file '/tmp/RtmpNz2YkH/filed684e7dcc74' (5.1K)
+##     open the file '/tmp/RtmpGr9Efa/file551b2ac225ed' (5.1K)
 ##     # of fragments: 50
-##     save to '/tmp/RtmpNz2YkH/filed684e7dcc74.tmp'
-##     rename '/tmp/RtmpNz2YkH/filed684e7dcc74.tmp' (4.8K, reduced: 312B)
+##     save to '/tmp/RtmpGr9Efa/file551b2ac225ed.tmp'
+##     rename '/tmp/RtmpGr9Efa/file551b2ac225ed.tmp' (4.8K, reduced: 312B)
 ##     # of fragments: 24
 
 gwe
@@ -400,7 +400,7 @@ gwe
 <span class="co">## [8] base     </span>
 <span class="co">## </span>
 <span class="co">## other attached packages:</span>
-<span class="co">##  [1] prisma_0.0.2                SNPRelate_1.28.0           </span>
+<span class="co">##  [1] prisma_0.0.3                SNPRelate_1.28.0           </span>
 <span class="co">##  [3] gdsfmt_1.30.0               snpStats_1.44.0            </span>
 <span class="co">##  [5] Matrix_1.4-1                survival_3.3-1             </span>
 <span class="co">##  [7] SummarizedExperiment_1.24.0 Biobase_2.54.0             </span>
@@ -459,7 +459,7 @@ gwe
 <span class="co">##  [47] splines_4.1.3                           </span>
 <span class="co">##  [48] rtracklayer_1.54.0                      </span>
 <span class="co">##  [49] rsnps_0.5.0.0                           </span>
-<span class="co">##  [50] sitadela_1.3.1                          </span>
+<span class="co">##  [50] sitadela_1.5.1                          </span>
 <span class="co">##  [51] BiocManager_1.30.16                     </span>
 <span class="co">##  [52] yaml_2.3.5                              </span>
 <span class="co">##  [53] reshape2_1.4.4                          </span>

@@ -22,7 +22,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">prisma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,7 +94,7 @@
     <span class="fu">applyPRS</span><span class="op">(</span><span class="va">snpSelection</span>, <span class="va">gwe</span>, <span class="va">response</span>, 
         covariates <span class="op">=</span> <span class="cn">NULL</span>, pcs <span class="op">=</span> <span class="cn">FALSE</span>, minSnps <span class="op">=</span> <span class="fl">2</span>,
         prsCalc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"avg"</span>, <span class="st">"sum"</span>, <span class="st">"std"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">10</span>,
-        family <span class="op">=</span> <span class="cn">NULL</span>, rc <span class="op">=</span> <span class="cn">NULL</span>,<span class="va">...</span><span class="op">)</span></code></pre></div>
+        family <span class="op">=</span> <span class="cn">NULL</span>, summary <span class="op">=</span> <span class="cn">TRUE</span>, rc <span class="op">=</span> <span class="cn">NULL</span>,<span class="va">...</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -152,6 +152,9 @@
 <dd><p>The fraction of available cores to use for 
     parallel calculations. Default is <code>NULL</code> for no
     parallelization.</p></dd>
+<dt>summary</dt>
+<dd><p>Display the evaluation summarized metrics
+    in more human readable format and make plots.</p></dd>
 <dt>...</dt>
 <dd><p>Further arguments passed to regression 
     functions, like <code>glm</code>.</p></dd>
@@ -172,7 +175,9 @@
     with <code>i=1:ntimes</code>. This data frame is the output
     of <code>prsCrossValidate</code>. For the collected metrics,
     see Details.
-    For <code>applyPRS</code> a list with three or four members:</p><ul><li><p><code>metrics</code>: The same as the cross
+    For <code>applyPRS</code> a list with four or five members:</p><ul><li><p><code>prs</code>: The input PRS (<code>snpSelection</code>
+        data frame).</p></li>
+<li><p><code>metrics</code>: The same as the cross
         validation metrics - see Details.</p></li>
 <li><p><code>values</code>: A data frame with the following
         columns:</p><ul><li><p><code>raw_pheno</code>: The phenotype which
